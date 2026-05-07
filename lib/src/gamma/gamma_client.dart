@@ -51,10 +51,19 @@ final class GammaClient {
 
   /// Returns a single market by slug.
   ///
-  /// Polymarket exposes `/markets/{slugOrId}` for both lookups; the API
-  /// returns the same shape either way. We expose them as separate methods
-  /// so callers see intent.
-  Future<Market?> marketBySlug(String slug) => marketById(slug);
+  /// Gamma's `/markets/{id}` route only accepts numeric ids; slug lookups
+  /// must go through `/markets?slug=...&limit=1`. Returns null if no
+  /// market matches.
+  Future<Market?> marketBySlug(String slug) async {
+    final list = await _transport.getJsonList(
+      '/markets',
+      query: <String, dynamic>{'slug': slug, 'limit': '1'},
+    );
+    if (list.isEmpty) return null;
+    final first = list.first;
+    if (first is Map) return Market.fromJson(first.cast<String, dynamic>());
+    return null;
+  }
 
   /// Cross-entity search.
   Future<SearchResponse> search(SearchParams params) async {

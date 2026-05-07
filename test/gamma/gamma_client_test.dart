@@ -76,17 +76,30 @@ void main() {
       expect(captured!.path, '/markets/42');
     });
 
-    test('marketBySlug delegates to /markets/{slug}', () async {
+    test('marketBySlug GETs /markets?slug=...&limit=1', () async {
       Uri? captured;
       final client = _client((req) async {
         captured = req.url;
         return http.Response(
-          jsonEncode(<String, dynamic>{'id': '42', 'slug': 'btc-100k'}),
+          jsonEncode([
+            <String, dynamic>{'id': '42', 'slug': 'btc-100k'},
+          ]),
           200,
         );
       });
-      await client.marketBySlug('btc-100k');
-      expect(captured!.path, '/markets/btc-100k');
+      final m = await client.marketBySlug('btc-100k');
+      expect(m!.slug, 'btc-100k');
+      expect(captured!.path, '/markets');
+      expect(captured!.queryParameters['slug'], 'btc-100k');
+      expect(captured!.queryParameters['limit'], '1');
+    });
+
+    test('marketBySlug returns null on empty list', () async {
+      final client = _client((req) async {
+        return http.Response('[]', 200);
+      });
+      final m = await client.marketBySlug('does-not-exist');
+      expect(m, isNull);
     });
   });
 

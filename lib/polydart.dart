@@ -28,42 +28,144 @@ export 'src/transport/transport_config.dart' show TransportConfig;
 export 'src/types/types.dart';
 
 import 'src/clob/clob_client.dart';
+import 'src/config/config.dart';
+import 'src/errors/errors.dart';
 import 'src/gamma/gamma_client.dart';
+import 'src/marketdiscovery/market_discovery.dart';
+import 'src/marketresolver/market_resolver.dart';
+import 'src/modes/modes.dart';
 import 'src/transport/http_transport.dart';
 import 'src/transport/transport_config.dart';
 
 const String polydartVersion = '0.1.0-alpha.1';
 
-/// Top-level read-only polydart client.
+/// Top-level polydart client.
 ///
-/// Phase 1 surfaces the Gamma + CLOB read clients. Authenticated flows
-/// (paper, live) arrive in subsequent phases per `docs/PLAN.md`.
+/// Owns one HTTP transport per upstream (Gamma + CLOB) and shares those
+/// transports across every sub-client. Closing the top-level client is
+/// the only correct way to release resources.
+///
+/// Three factories are available today:
+///
+///   * [Polydart.readOnly] — no wallet, no auth, no live writes.
+///   * [Polydart.paper] — read-only protocol surface plus a paper-mode
+///     marker so risk gates can permit simulated submissions. Wallet
+///     wiring lands in Phase 2.
+///
+/// Live mode (`Polydart.live`) requires a [WalletSigner] and lands in
+/// Phase 2; until then [requireLive] inside `lib/src/modes` will block
+/// any live-only call site.
 final class Polydart {
-  Polydart._(this.gamma, this.clob);
+  Polydart._({
+    required this.config,
+    required this.eoaAddress,
+    required this.gamma,
+    required this.clob,
+    required this.resolver,
+    required this.discovery,
+  });
 
-  /// Read-only client. No wallet, no auth, no live writes.
+  /// Constructs a polydart client for [PolydartMode.readOnly].
+  ///
+  /// Pass [config] to override base URLs / timeouts (typically wired from
+  /// [PolydartConfig.fromEnv]). Pass [gammaTransport] / [clobTransport]
+  /// to inject a custom [HttpTransport] (for example one with a shared
+  /// rate limiter or circuit breaker).
   factory Polydart.readOnly({
-    TransportConfig? gammaTransport,
-    TransportConfig? clobTransport,
+    PolydartConfig? config,
+    HttpTransport? gammaTransport,
+    HttpTransport? clobTransport,
   }) {
-    final gt = gammaTransport == null
-        ? null
-        : HttpTransport(config: gammaTransport);
-    final ct = clobTransport == null
-        ? null
-        : HttpTransport(config: clobTransport);
-    return Polydart._(GammaClient(transport: gt), ClobClient(transport: ct));
+    final cfg = (config ?? const PolydartConfig()).copyWith(
+      mode: PolydartMode.readOnly,
+    );
+    return _build(cfg, gammaTransport, clobTransport, eoaAddress: '');
   }
 
-  /// Gamma API surface (search, markets, …).
+  /// Constructs a polydart client for [PolydartMode.paper].
+  ///
+  /// [eoaAddress] is required so future paper-mode flows can derive the
+  /// deposit-wallet address that will own simulated balances. The address
+  /// is not used by Phase 1 surfaces — it's stored for forward
+  /// compatibility.
+  factory Polydart.paper({
+    required String eoaAddress,
+    PolydartConfig? config,
+    HttpTransport? gammaTransport,
+    HttpTransport? clobTransport,
+  }) {
+    if (eoaAddress.trim().isEmpty) {
+      throw const ValidationException(
+        code: ErrorCode.missingField,
+        message: 'eoaAddress is required for Polydart.paper',
+        field: 'eoaAddress',
+      );
+    }
+    final cfg = (config ?? const PolydartConfig()).copyWith(
+      mode: PolydartMode.paper,
+    );
+    return _build(cfg, gammaTransport, clobTransport, eoaAddress: eoaAddress);
+  }
+
+  /// SDK configuration captured at construction time.
+  final PolydartConfig config;
+
+  /// Active operating mode. Sugar for `config.mode`.
+  PolydartMode get mode => config.mode;
+
+  /// EOA address provided to [Polydart.paper] / [Polydart.live]. Empty
+  /// for read-only mode.
+  final String eoaAddress;
+
+  /// Gamma API surface — search, markets, events, …
   final GammaClient gamma;
 
-  /// CLOB API surface (book, price, midpoint, spread, …).
+  /// CLOB API surface — book, price, midpoint, spread, …
   final ClobClient clob;
 
-  /// Closes underlying transports. Idempotent.
+  /// Slug ↔ id ↔ token resolver layered on top of [gamma].
+  final MarketResolver resolver;
+
+  /// Composed Gamma + CLOB enrichment.
+  final MarketDiscovery discovery;
+
+  /// Closes both shared transports. Idempotent.
   void close() {
     gamma.close();
     clob.close();
+  }
+
+  static Polydart _build(
+    PolydartConfig cfg,
+    HttpTransport? gammaTransport,
+    HttpTransport? clobTransport, {
+    required String eoaAddress,
+  }) {
+    final gt =
+        gammaTransport ??
+        HttpTransport(
+          config: TransportConfig(
+            baseUrl: cfg.gammaBaseUrl,
+            timeout: cfg.requestTimeout,
+          ),
+        );
+    final ct =
+        clobTransport ??
+        HttpTransport(
+          config: TransportConfig(
+            baseUrl: cfg.clobBaseUrl,
+            timeout: cfg.requestTimeout,
+          ),
+        );
+    final gamma = GammaClient(transport: gt);
+    final clob = ClobClient(transport: ct);
+    return Polydart._(
+      config: cfg,
+      eoaAddress: eoaAddress,
+      gamma: gamma,
+      clob: clob,
+      resolver: MarketResolver(gamma: gamma),
+      discovery: MarketDiscovery(gamma: gamma, clob: clob),
+    );
   }
 }
