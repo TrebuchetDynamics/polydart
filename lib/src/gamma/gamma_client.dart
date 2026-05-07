@@ -12,10 +12,9 @@ import 'gamma_params.dart';
 
 final class GammaClient {
   GammaClient({HttpTransport? transport})
-      : _transport = transport ??
-            HttpTransport(
-              config: const TransportConfig(baseUrl: defaultBaseUrl),
-            );
+    : _transport =
+          transport ??
+          HttpTransport(config: const TransportConfig(baseUrl: defaultBaseUrl));
 
   /// Public Polymarket Gamma base URL.
   static const String defaultBaseUrl = 'https://gamma-api.polymarket.com';
@@ -33,7 +32,9 @@ final class GammaClient {
   }
 
   /// Lists markets with optional filters.
-  Future<List<Market>> markets([GetMarketsParams params = const GetMarketsParams()]) async {
+  Future<List<Market>> markets([
+    GetMarketsParams params = const GetMarketsParams(),
+  ]) async {
     final list = await _transport.getJsonList(
       '/markets',
       query: params.toQuery(),

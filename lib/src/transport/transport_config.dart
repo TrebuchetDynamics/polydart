@@ -31,6 +31,7 @@ final class TransportConfig {
   /// `retryDelay << (N - 1)`.
   final Duration retryDelay;
 
-  String get normalisedBaseUrl =>
-      baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+  String get normalisedBaseUrl => baseUrl.endsWith('/')
+      ? baseUrl.substring(0, baseUrl.length - 1)
+      : baseUrl;
 }

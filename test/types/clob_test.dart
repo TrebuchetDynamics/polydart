@@ -22,8 +22,7 @@ void main() {
         ]
       }
       ''';
-      final book =
-          OrderBook.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      final book = OrderBook.fromJson(jsonDecode(raw) as Map<String, dynamic>);
       expect(book.market, '0xabc');
       expect(book.assetId, '12345');
       expect(book.bids, hasLength(2));

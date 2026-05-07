@@ -16,12 +16,9 @@ import 'transport_config.dart';
 
 /// HTTP transport. Inject an [http.Client] for testing.
 final class HttpTransport {
-  HttpTransport({
-    required this.config,
-    http.Client? inner,
-    Logger? logger,
-  })  : _inner = inner ?? http.Client(),
-        _logger = logger ?? Logger.silent;
+  HttpTransport({required this.config, http.Client? inner, Logger? logger})
+    : _inner = inner ?? http.Client(),
+      _logger = logger ?? Logger.silent;
 
   final TransportConfig config;
   final http.Client _inner;
@@ -88,8 +85,7 @@ final class HttpTransport {
     bool retry = true,
   }) async {
     final url = _buildUrl(path, query);
-    final maxAttempts =
-        (retry && method == 'GET' ? config.retryMax : 0) + 1;
+    final maxAttempts = (retry && method == 'GET' ? config.retryMax : 0) + 1;
 
     TransportException? lastError;
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
@@ -129,8 +125,7 @@ final class HttpTransport {
         if (resp.statusCode < 200 || resp.statusCode > 299) {
           throw TransportException(
             code: ErrorCode.connectionFailed,
-            message:
-                'HTTP ${resp.statusCode} $url: ${_truncate(resp.body)}',
+            message: 'HTTP ${resp.statusCode} $url: ${_truncate(resp.body)}',
             httpStatus: resp.statusCode,
           );
         }

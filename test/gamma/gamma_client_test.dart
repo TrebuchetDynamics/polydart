@@ -56,13 +56,8 @@ void main() {
         captured = req.url;
         return http.Response('[]', 200);
       });
-      await client.markets(
-        const GetMarketsParams(slug: ['a', 'b']),
-      );
-      expect(
-        captured!.queryParametersAll['slug'],
-        ['a', 'b'],
-      );
+      await client.markets(const GetMarketsParams(slug: ['a', 'b']));
+      expect(captured!.queryParametersAll['slug'], ['a', 'b']);
     });
   });
 
@@ -129,10 +124,7 @@ void main() {
             },
           ],
           'profiles': <Object>[],
-          'pagination': <String, dynamic>{
-            'hasMore': false,
-            'totalResults': 1,
-          },
+          'pagination': <String, dynamic>{'hasMore': false, 'totalResults': 1},
         });
         return http.Response(body, 200);
       });

@@ -51,9 +51,7 @@ void main() {
     test('decodes a JSON list', () async {
       final transport = HttpTransport(
         config: config,
-        inner: MockClient(
-          (req) async => http.Response('[1,2,3]', 200),
-        ),
+        inner: MockClient((req) async => http.Response('[1,2,3]', 200)),
       );
       final list = await transport.getJsonList('/list');
       expect(list, [1, 2, 3]);
@@ -105,8 +103,11 @@ void main() {
       await expectLater(
         transport.getJson('/z'),
         throwsA(
-          isA<TransportException>()
-              .having((e) => e.httpStatus, 'httpStatus', 502),
+          isA<TransportException>().having(
+            (e) => e.httpStatus,
+            'httpStatus',
+            502,
+          ),
         ),
       );
       expect(attempts, 3); // retryMax 2 + initial = 3
@@ -161,8 +162,11 @@ void main() {
       await expectLater(
         transport.getJson('/x'),
         throwsA(
-          isA<TransportException>()
-              .having((e) => e.code, 'code', ErrorCode.timeout),
+          isA<TransportException>().having(
+            (e) => e.code,
+            'code',
+            ErrorCode.timeout,
+          ),
         ),
       );
     });
@@ -178,10 +182,7 @@ void main() {
           return http.Response('{}', 200);
         }),
       );
-      await transport.getJson(
-        '/h',
-        headers: {'X-Custom': 'yes'},
-      );
+      await transport.getJson('/h', headers: {'X-Custom': 'yes'});
       expect(captured!['User-Agent'], 'polydart/0.1');
       expect(captured!['Accept'], 'application/json');
       expect(captured!['X-Custom'], 'yes');

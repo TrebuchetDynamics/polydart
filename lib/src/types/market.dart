@@ -16,9 +16,9 @@ final class Pagination {
   const Pagination({required this.hasMore, required this.totalResults});
 
   factory Pagination.fromJson(Map<String, dynamic> json) => Pagination(
-        hasMore: json['hasMore'] == true,
-        totalResults: _int(json['totalResults']),
-      );
+    hasMore: json['hasMore'] == true,
+    totalResults: _int(json['totalResults']),
+  );
 
   final bool hasMore;
   final int totalResults;
@@ -36,13 +36,13 @@ final class Tag {
   });
 
   factory Tag.fromJson(Map<String, dynamic> json) => Tag(
-        id: json['id']?.toString() ?? '',
-        label: json['label']?.toString() ?? '',
-        slug: json['slug']?.toString() ?? '',
-        forceShow: json['forceShow'] == true,
-        forceHide: json['forceHide'] == true,
-        isCarousel: json['isCarousel'] == true,
-      );
+    id: json['id']?.toString() ?? '',
+    label: json['label']?.toString() ?? '',
+    slug: json['slug']?.toString() ?? '',
+    forceShow: json['forceShow'] == true,
+    forceHide: json['forceHide'] == true,
+    isCarousel: json['isCarousel'] == true,
+  );
 
   final String id;
   final String label;
@@ -62,11 +62,11 @@ final class SearchTag {
   });
 
   factory SearchTag.fromJson(Map<String, dynamic> json) => SearchTag(
-        id: json['id']?.toString() ?? '',
-        label: json['label']?.toString() ?? '',
-        slug: json['slug']?.toString() ?? '',
-        eventCount: _int(json['event_count']),
-      );
+    id: json['id']?.toString() ?? '',
+    label: json['label']?.toString() ?? '',
+    slug: json['slug']?.toString() ?? '',
+    eventCount: _int(json['event_count']),
+  );
 
   final String id;
   final String label;
@@ -84,11 +84,11 @@ final class Profile {
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) => Profile(
-        id: json['id']?.toString() ?? '',
-        name: json['name']?.toString() ?? '',
-        proxyWallet: json['proxyWallet']?.toString() ?? '',
-        profileImage: json['profileImage']?.toString() ?? '',
-      );
+    id: json['id']?.toString() ?? '',
+    name: json['name']?.toString() ?? '',
+    proxyWallet: json['proxyWallet']?.toString() ?? '',
+    profileImage: json['profileImage']?.toString() ?? '',
+  );
 
   final String id;
   final String name;
@@ -130,33 +130,33 @@ final class Market {
   });
 
   factory Market.fromJson(Map<String, dynamic> json) => Market(
-        id: json['id']?.toString() ?? '',
-        question: json['question']?.toString() ?? '',
-        conditionId: json['conditionId']?.toString() ?? '',
-        slug: json['slug']?.toString() ?? '',
-        questionId: json['questionID']?.toString() ?? '',
-        image: json['image']?.toString() ?? '',
-        icon: json['icon']?.toString() ?? '',
-        description: json['description']?.toString() ?? '',
-        category: json['category']?.toString() ?? '',
-        startDate: parseNormalizedDateTime(json['startDate']),
-        endDate: parseNormalizedDateTime(json['endDate']),
-        outcomes: parseStringOrArray(json['outcomes']),
-        outcomePrices: parseStringOrArray(json['outcomePrices']),
-        active: json['active'] == true,
-        closed: json['closed'] == true,
-        archived: json['archived'] == true,
-        acceptingOrders: json['acceptingOrders'] == true,
-        enableOrderBook: json['enableOrderBook'] == true,
-        liquidityNum: _double(json['liquidityNum']),
-        volumeNum: _double(json['volumeNum']),
-        lastTradePrice: _double(json['lastTradePrice']),
-        bestBid: _double(json['bestBid']),
-        bestAsk: _double(json['bestAsk']),
-        clobTokenIds: json['clobTokenIds']?.toString() ?? '',
-        tags: _tags(json['tags']),
-        raw: Map.unmodifiable(json),
-      );
+    id: json['id']?.toString() ?? '',
+    question: json['question']?.toString() ?? '',
+    conditionId: json['conditionId']?.toString() ?? '',
+    slug: json['slug']?.toString() ?? '',
+    questionId: json['questionID']?.toString() ?? '',
+    image: json['image']?.toString() ?? '',
+    icon: json['icon']?.toString() ?? '',
+    description: json['description']?.toString() ?? '',
+    category: json['category']?.toString() ?? '',
+    startDate: parseNormalizedDateTime(json['startDate']),
+    endDate: parseNormalizedDateTime(json['endDate']),
+    outcomes: parseStringOrArray(json['outcomes']),
+    outcomePrices: parseStringOrArray(json['outcomePrices']),
+    active: json['active'] == true,
+    closed: json['closed'] == true,
+    archived: json['archived'] == true,
+    acceptingOrders: json['acceptingOrders'] == true,
+    enableOrderBook: json['enableOrderBook'] == true,
+    liquidityNum: _double(json['liquidityNum']),
+    volumeNum: _double(json['volumeNum']),
+    lastTradePrice: _double(json['lastTradePrice']),
+    bestBid: _double(json['bestBid']),
+    bestAsk: _double(json['bestAsk']),
+    clobTokenIds: json['clobTokenIds']?.toString() ?? '',
+    tags: _tags(json['tags']),
+    raw: Map.unmodifiable(json),
+  );
 
   final String id;
   final String question;
@@ -213,25 +213,25 @@ final class Event {
   });
 
   factory Event.fromJson(Map<String, dynamic> json) => Event(
-        id: json['id']?.toString() ?? '',
-        ticker: json['ticker']?.toString() ?? '',
-        slug: json['slug']?.toString() ?? '',
-        title: json['title']?.toString() ?? '',
-        description: json['description']?.toString() ?? '',
-        image: json['image']?.toString() ?? '',
-        icon: json['icon']?.toString() ?? '',
-        startDate: parseNormalizedDateTime(json['startDate']),
-        endDate: parseNormalizedDateTime(json['endDate']),
-        active: json['active'] == true,
-        closed: json['closed'] == true,
-        archived: json['archived'] == true,
-        featured: json['featured'] == true,
-        liquidity: _double(json['liquidity']),
-        volume: _double(json['volume']),
-        markets: _markets(json['markets']),
-        tags: _tags(json['tags']),
-        raw: Map.unmodifiable(json),
-      );
+    id: json['id']?.toString() ?? '',
+    ticker: json['ticker']?.toString() ?? '',
+    slug: json['slug']?.toString() ?? '',
+    title: json['title']?.toString() ?? '',
+    description: json['description']?.toString() ?? '',
+    image: json['image']?.toString() ?? '',
+    icon: json['icon']?.toString() ?? '',
+    startDate: parseNormalizedDateTime(json['startDate']),
+    endDate: parseNormalizedDateTime(json['endDate']),
+    active: json['active'] == true,
+    closed: json['closed'] == true,
+    archived: json['archived'] == true,
+    featured: json['featured'] == true,
+    liquidity: _double(json['liquidity']),
+    volume: _double(json['volume']),
+    markets: _markets(json['markets']),
+    tags: _tags(json['tags']),
+    raw: Map.unmodifiable(json),
+  );
 
   final String id;
   final String ticker;
@@ -263,15 +263,15 @@ final class SearchResponse {
   });
 
   factory SearchResponse.fromJson(Map<String, dynamic> json) => SearchResponse(
-        events: _events(json['events']),
-        tags: _searchTags(json['tags']),
-        profiles: _profiles(json['profiles']),
-        pagination: json['pagination'] is Map
-            ? Pagination.fromJson(
-                (json['pagination'] as Map).cast<String, dynamic>(),
-              )
-            : const Pagination(hasMore: false, totalResults: 0),
-      );
+    events: _events(json['events']),
+    tags: _searchTags(json['tags']),
+    profiles: _profiles(json['profiles']),
+    pagination: json['pagination'] is Map
+        ? Pagination.fromJson(
+            (json['pagination'] as Map).cast<String, dynamic>(),
+          )
+        : const Pagination(hasMore: false, totalResults: 0),
+  );
 
   final List<Event> events;
   final List<SearchTag> tags;

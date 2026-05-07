@@ -12,19 +12,18 @@ import 'numeric_string.dart';
 final class OrderBookLevel {
   const OrderBookLevel({required this.price, required this.size});
 
-  factory OrderBookLevel.fromJson(Map<String, dynamic> json) =>
-      OrderBookLevel(
-        price: parseNumericString(json['price']),
-        size: parseNumericString(json['size']),
-      );
+  factory OrderBookLevel.fromJson(Map<String, dynamic> json) => OrderBookLevel(
+    price: parseNumericString(json['price']),
+    size: parseNumericString(json['size']),
+  );
 
   final String price;
   final String size;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'price': price,
-        'size': size,
-      };
+    'price': price,
+    'size': size,
+  };
 
   @override
   bool operator ==(Object other) =>
@@ -46,13 +45,13 @@ final class OrderBook {
   });
 
   factory OrderBook.fromJson(Map<String, dynamic> json) => OrderBook(
-        market: json['market']?.toString() ?? '',
-        assetId: json['asset_id']?.toString() ?? '',
-        timestamp: json['timestamp']?.toString() ?? '',
-        hash: json['hash']?.toString() ?? '',
-        bids: _levels(json['bids']),
-        asks: _levels(json['asks']),
-      );
+    market: json['market']?.toString() ?? '',
+    assetId: json['asset_id']?.toString() ?? '',
+    timestamp: json['timestamp']?.toString() ?? '',
+    hash: json['hash']?.toString() ?? '',
+    bids: _levels(json['bids']),
+    asks: _levels(json['asks']),
+  );
 
   final String market;
   final String assetId;
@@ -62,13 +61,13 @@ final class OrderBook {
   final List<OrderBookLevel> asks;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'market': market,
-        'asset_id': assetId,
-        'timestamp': timestamp,
-        'hash': hash,
-        'bids': bids.map((l) => l.toJson()).toList(),
-        'asks': asks.map((l) => l.toJson()).toList(),
-      };
+    'market': market,
+    'asset_id': assetId,
+    'timestamp': timestamp,
+    'hash': hash,
+    'bids': bids.map((l) => l.toJson()).toList(),
+    'asks': asks.map((l) => l.toJson()).toList(),
+  };
 }
 
 List<OrderBookLevel> _levels(Object? raw) {
@@ -88,20 +87,20 @@ final class TickSize {
   });
 
   factory TickSize.fromJson(Map<String, dynamic> json) => TickSize(
-        minimumTickSize: json['minimum_tick_size']?.toString() ?? '',
-        minimumOrderSize: json['minimum_order_size']?.toString() ?? '',
-        tickSize: json['tick_size']?.toString() ?? '',
-      );
+    minimumTickSize: json['minimum_tick_size']?.toString() ?? '',
+    minimumOrderSize: json['minimum_order_size']?.toString() ?? '',
+    tickSize: json['tick_size']?.toString() ?? '',
+  );
 
   final String minimumTickSize;
   final String minimumOrderSize;
   final String tickSize;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'minimum_tick_size': minimumTickSize,
-        'minimum_order_size': minimumOrderSize,
-        'tick_size': tickSize,
-      };
+    'minimum_tick_size': minimumTickSize,
+    'minimum_order_size': minimumOrderSize,
+    'tick_size': tickSize,
+  };
 }
 
 @immutable
@@ -114,11 +113,11 @@ final class Token {
   });
 
   factory Token.fromJson(Map<String, dynamic> json) => Token(
-        tokenId: json['token_id']?.toString() ?? '',
-        outcome: json['outcome']?.toString() ?? '',
-        price: parseNumericString(json['price']),
-        winner: json['winner'] == true,
-      );
+    tokenId: json['token_id']?.toString() ?? '',
+    outcome: json['outcome']?.toString() ?? '',
+    price: parseNumericString(json['price']),
+    winner: json['winner'] == true,
+  );
 
   final String tokenId;
   final String outcome;
@@ -126,11 +125,11 @@ final class Token {
   final bool winner;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'token_id': tokenId,
-        'outcome': outcome,
-        'price': price,
-        'winner': winner,
-      };
+    'token_id': tokenId,
+    'outcome': outcome,
+    'price': price,
+    'winner': winner,
+  };
 }
 
 /// CLOB market metadata. Subset of `polytypes.CLOBMarket` for v0.1.
@@ -154,9 +153,9 @@ final class ClobMarket {
     final rawTokens = json['tokens'];
     final tokens = (rawTokens is List)
         ? rawTokens
-            .whereType<Map<dynamic, dynamic>>()
-            .map((m) => Token.fromJson(m.cast<String, dynamic>()))
-            .toList(growable: false)
+              .whereType<Map<dynamic, dynamic>>()
+              .map((m) => Token.fromJson(m.cast<String, dynamic>()))
+              .toList(growable: false)
         : const <Token>[];
     return ClobMarket(
       conditionId: json['condition_id']?.toString() ?? '',
@@ -199,9 +198,9 @@ final class ClobPaginatedMarkets {
     final raw = json['data'];
     final data = (raw is List)
         ? raw
-            .whereType<Map<dynamic, dynamic>>()
-            .map((m) => ClobMarket.fromJson(m.cast<String, dynamic>()))
-            .toList(growable: false)
+              .whereType<Map<dynamic, dynamic>>()
+              .map((m) => ClobMarket.fromJson(m.cast<String, dynamic>()))
+              .toList(growable: false)
         : const <ClobMarket>[];
     return ClobPaginatedMarkets(
       limit: _int(json['limit']),
@@ -232,9 +231,9 @@ final class PriceResponse {
   const PriceResponse({required this.price, required this.spread});
 
   factory PriceResponse.fromJson(Map<String, dynamic> json) => PriceResponse(
-        price: parseNumericString(json['price']),
-        spread: parseNumericString(json['spread']),
-      );
+    price: parseNumericString(json['price']),
+    spread: parseNumericString(json['spread']),
+  );
 
   final String price;
   final String spread;
@@ -245,9 +244,9 @@ final class ServerTime {
   const ServerTime({required this.timestamp, required this.iso});
 
   factory ServerTime.fromJson(Map<String, dynamic> json) => ServerTime(
-        timestamp: json['timestamp']?.toString() ?? '',
-        iso: json['iso']?.toString() ?? '',
-      );
+    timestamp: json['timestamp']?.toString() ?? '',
+    iso: json['iso']?.toString() ?? '',
+  );
 
   final String timestamp;
   final String iso;
@@ -263,11 +262,11 @@ final class PricePoint {
   });
 
   factory PricePoint.fromJson(Map<String, dynamic> json) => PricePoint(
-        timestamp: json['t']?.toString() ?? '',
-        price: parseNumericString(json['p']),
-        volume: parseNumericString(json['v']),
-        interval: json['interval']?.toString() ?? '',
-      );
+    timestamp: json['t']?.toString() ?? '',
+    price: parseNumericString(json['p']),
+    volume: parseNumericString(json['v']),
+    interval: json['interval']?.toString() ?? '',
+  );
 
   final String timestamp;
   final String price;
@@ -283,9 +282,9 @@ final class PriceHistory {
     final raw = json['history'];
     final out = (raw is List)
         ? raw
-            .whereType<Map<dynamic, dynamic>>()
-            .map((m) => PricePoint.fromJson(m.cast<String, dynamic>()))
-            .toList(growable: false)
+              .whereType<Map<dynamic, dynamic>>()
+              .map((m) => PricePoint.fromJson(m.cast<String, dynamic>()))
+              .toList(growable: false)
         : const <PricePoint>[];
     return PriceHistory(history: out);
   }

@@ -21,10 +21,11 @@ void main() {
   });
 
   test('list with embedded JSON-array strings flattens', () {
-    expect(
-      parseStringOrArray(<dynamic>['["Yes","No"]', 'Maybe']),
-      ['Yes', 'No', 'Maybe'],
-    );
+    expect(parseStringOrArray(<dynamic>['["Yes","No"]', 'Maybe']), [
+      'Yes',
+      'No',
+      'Maybe',
+    ]);
   });
 
   test('2-D list flattens', () {

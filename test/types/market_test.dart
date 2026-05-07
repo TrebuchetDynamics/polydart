@@ -98,10 +98,7 @@ void main() {
           },
         ],
         'profiles': <Object>[],
-        'pagination': <String, dynamic>{
-          'hasMore': true,
-          'totalResults': 99,
-        },
+        'pagination': <String, dynamic>{'hasMore': true, 'totalResults': 99},
       });
       expect(r.events.first.ticker, 'BTC');
       expect(r.tags.first.eventCount, 42);

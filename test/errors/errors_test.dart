@@ -11,10 +11,7 @@ void main() {
 
     test('equality by value', () {
       expect(const ErrorCode('NET-001'), ErrorCode.timeout);
-      expect(
-        ErrorCode.timeout.hashCode,
-        const ErrorCode('NET-001').hashCode,
-      );
+      expect(ErrorCode.timeout.hashCode, const ErrorCode('NET-001').hashCode);
     });
 
     test('toString returns code value', () {

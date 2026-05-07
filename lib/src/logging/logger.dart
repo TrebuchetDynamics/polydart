@@ -52,14 +52,13 @@ extension LoggerShortcuts on Logger {
     Map<String, Object?>? fields,
     Object? error,
     StackTrace? stackTrace,
-  }) =>
-      log(
-        LogLevel.error,
-        m,
-        fields: fields,
-        error: error,
-        stackTrace: stackTrace,
-      );
+  }) => log(
+    LogLevel.error,
+    m,
+    fields: fields,
+    error: error,
+    stackTrace: stackTrace,
+  );
 }
 
 @immutable

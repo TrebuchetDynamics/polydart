@@ -57,8 +57,7 @@ String? encodeNormalizedDateTime(DateTime? dt) {
 
 bool _isDigit(int code) => code >= 0x30 && code <= 0x39;
 
-final RegExp _longDateRegex =
-    RegExp(r'^([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})$');
+final RegExp _longDateRegex = RegExp(r'^([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})$');
 
 const Map<String, int> _monthNameToInt = {
   'january': 1,
