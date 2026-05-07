@@ -4,10 +4,12 @@
 /// `docs/PLAN.md`.
 library;
 
+export 'src/config/config.dart';
 export 'src/errors/errors.dart';
 export 'src/gamma/gamma_client.dart' show GammaClient;
 export 'src/gamma/gamma_params.dart' show GetMarketsParams, SearchParams;
 export 'src/logging/logger.dart';
+export 'src/modes/modes.dart';
 export 'src/transport/circuit_breaker.dart'
     show CircuitBreaker, CircuitBreakerConfig, CircuitState;
 export 'src/transport/http_transport.dart' show HttpTransport;
