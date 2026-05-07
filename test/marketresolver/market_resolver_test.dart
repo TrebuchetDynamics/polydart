@@ -88,20 +88,23 @@ void main() {
   group('MarketResolver', () {
     test('resolveBySlug populates the result', () async {
       final mock = MockClient((req) async {
+        // marketBySlug calls /markets?slug=… and expects a JSON list.
         return http.Response(
-          jsonEncode(<String, dynamic>{
-            'id': '1',
-            'question': 'BTC > 100k?',
-            'conditionId': '0xc',
-            'slug': 'btc-100k',
-            'outcomes': '["Yes","No"]',
-            'clobTokenIds': '["t1","t2"]',
-            'active': true,
-            'closed': false,
-            'archived': false,
-            'acceptingOrders': true,
-            'enableOrderBook': true,
-          }),
+          jsonEncode([
+            <String, dynamic>{
+              'id': '1',
+              'question': 'BTC > 100k?',
+              'conditionId': '0xc',
+              'slug': 'btc-100k',
+              'outcomes': '["Yes","No"]',
+              'clobTokenIds': '["t1","t2"]',
+              'active': true,
+              'closed': false,
+              'archived': false,
+              'acceptingOrders': true,
+              'enableOrderBook': true,
+            },
+          ]),
           200,
         );
       });
