@@ -4,7 +4,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:polydart/src/errors/errors.dart';
+import 'package:polydart/src/transport/circuit_breaker.dart';
 import 'package:polydart/src/transport/http_transport.dart';
+import 'package:polydart/src/transport/rate_limit.dart';
 import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
 
@@ -186,6 +188,55 @@ void main() {
       expect(captured!['User-Agent'], 'polydart/0.1');
       expect(captured!['Accept'], 'application/json');
       expect(captured!['X-Custom'], 'yes');
+    });
+
+    test('circuit breaker short-circuits once tripped', () async {
+      final cb = CircuitBreaker(
+        config: const CircuitBreakerConfig(maxFailures: 1),
+      );
+      final transport = HttpTransport(
+        config: config,
+        circuitBreaker: cb,
+        inner: MockClient((req) async => http.Response('boom', 503)),
+      );
+      // First call surfaces the upstream 503 (and trips the breaker).
+      await expectLater(
+        transport.getJson('/x'),
+        throwsA(
+          isA<TransportException>().having(
+            (e) => e.httpStatus,
+            'httpStatus',
+            503,
+          ),
+        ),
+      );
+      expect(cb.state, CircuitState.open);
+      // Second call is short-circuited with circuitOpen.
+      await expectLater(
+        transport.getJson('/x'),
+        throwsA(
+          isA<TransportException>().having(
+            (e) => e.code,
+            'code',
+            ErrorCode.circuitOpen,
+          ),
+        ),
+      );
+    });
+
+    test('rate limiter gates outbound calls', () async {
+      var clock = DateTime(2026, 1, 1);
+      final rl = RateLimiter(requestsPerSecond: 1000, now: () => clock);
+      // pre-drain
+      while (rl.tryAcquire()) {}
+      final transport = HttpTransport(
+        config: config,
+        rateLimiter: rl,
+        inner: MockClient((req) async => http.Response('{"ok": true}', 200)),
+      );
+      // Advance the clock to refill before each call.
+      clock = clock.add(const Duration(seconds: 1));
+      await transport.getJson('/x');
     });
 
     test('POST sets content-type and serializes body', () async {

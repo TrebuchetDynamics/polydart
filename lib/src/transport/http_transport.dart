@@ -12,17 +12,28 @@ import 'package:http/http.dart' as http;
 
 import '../errors/errors.dart';
 import '../logging/logger.dart';
+import 'circuit_breaker.dart';
+import 'rate_limit.dart';
 import 'transport_config.dart';
 
 /// HTTP transport. Inject an [http.Client] for testing.
 final class HttpTransport {
-  HttpTransport({required this.config, http.Client? inner, Logger? logger})
-    : _inner = inner ?? http.Client(),
-      _logger = logger ?? Logger.silent;
+  HttpTransport({
+    required this.config,
+    http.Client? inner,
+    Logger? logger,
+    RateLimiter? rateLimiter,
+    CircuitBreaker? circuitBreaker,
+  }) : _inner = inner ?? http.Client(),
+       _logger = logger ?? Logger.silent,
+       _rateLimiter = rateLimiter,
+       _circuitBreaker = circuitBreaker;
 
   final TransportConfig config;
   final http.Client _inner;
   final Logger _logger;
+  final RateLimiter? _rateLimiter;
+  final CircuitBreaker? _circuitBreaker;
 
   /// Closes the underlying client.
   void close() => _inner.close();
@@ -83,6 +94,34 @@ final class HttpTransport {
     Map<String, dynamic>? query,
     Map<String, String>? headers,
     bool retry = true,
+  }) async {
+    _circuitBreaker?.beforeRequest();
+    await _rateLimiter?.acquire();
+
+    try {
+      final resp = await _doInner(
+        method,
+        path,
+        body,
+        query,
+        headers,
+        retry: retry,
+      );
+      _circuitBreaker?.recordResult(null);
+      return resp;
+    } catch (e) {
+      _circuitBreaker?.recordResult(e);
+      rethrow;
+    }
+  }
+
+  Future<http.Response> _doInner(
+    String method,
+    String path,
+    Object? body,
+    Map<String, dynamic>? query,
+    Map<String, String>? headers, {
+    required bool retry,
   }) async {
     final url = _buildUrl(path, query);
     final maxAttempts = (retry && method == 'GET' ? config.retryMax : 0) + 1;

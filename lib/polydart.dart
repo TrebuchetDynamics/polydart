@@ -8,7 +8,10 @@ export 'src/errors/errors.dart';
 export 'src/gamma/gamma_client.dart' show GammaClient;
 export 'src/gamma/gamma_params.dart' show GetMarketsParams, SearchParams;
 export 'src/logging/logger.dart';
+export 'src/transport/circuit_breaker.dart'
+    show CircuitBreaker, CircuitBreakerConfig, CircuitState;
 export 'src/transport/http_transport.dart' show HttpTransport;
+export 'src/transport/rate_limit.dart' show RateLimiter;
 export 'src/transport/redact.dart';
 export 'src/transport/transport_config.dart' show TransportConfig;
 export 'src/types/types.dart';
