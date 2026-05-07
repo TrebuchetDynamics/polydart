@@ -4,6 +4,8 @@
 /// `docs/PLAN.md`.
 library;
 
+export 'src/clob/clob_client.dart' show ClobClient;
+export 'src/clob/clob_params.dart' show BookParams, PriceHistoryParams;
 export 'src/config/config.dart';
 export 'src/errors/errors.dart';
 export 'src/gamma/gamma_client.dart' show GammaClient;
@@ -18,6 +20,7 @@ export 'src/transport/redact.dart';
 export 'src/transport/transport_config.dart' show TransportConfig;
 export 'src/types/types.dart';
 
+import 'src/clob/clob_client.dart';
 import 'src/gamma/gamma_client.dart';
 import 'src/transport/http_transport.dart';
 import 'src/transport/transport_config.dart';
@@ -26,22 +29,34 @@ const String polydartVersion = '0.1.0-alpha.1';
 
 /// Top-level read-only polydart client.
 ///
-/// Phase 1 surfaces the Gamma client only. CLOB read endpoints, then write
-/// flows (paper, live), arrive in subsequent phases per `docs/PLAN.md`.
+/// Phase 1 surfaces the Gamma + CLOB read clients. Authenticated flows
+/// (paper, live) arrive in subsequent phases per `docs/PLAN.md`.
 final class Polydart {
-  Polydart._(this.gamma);
+  Polydart._(this.gamma, this.clob);
 
-  /// A read-only client. No wallet, no auth, no live writes.
-  factory Polydart.readOnly({TransportConfig? gammaTransport}) {
-    final transport = gammaTransport == null
+  /// Read-only client. No wallet, no auth, no live writes.
+  factory Polydart.readOnly({
+    TransportConfig? gammaTransport,
+    TransportConfig? clobTransport,
+  }) {
+    final gt = gammaTransport == null
         ? null
         : HttpTransport(config: gammaTransport);
-    return Polydart._(GammaClient(transport: transport));
+    final ct = clobTransport == null
+        ? null
+        : HttpTransport(config: clobTransport);
+    return Polydart._(GammaClient(transport: gt), ClobClient(transport: ct));
   }
 
   /// Gamma API surface (search, markets, …).
   final GammaClient gamma;
 
+  /// CLOB API surface (book, price, midpoint, spread, …).
+  final ClobClient clob;
+
   /// Closes underlying transports. Idempotent.
-  void close() => gamma.close();
+  void close() {
+    gamma.close();
+    clob.close();
+  }
 }

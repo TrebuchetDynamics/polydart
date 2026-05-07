@@ -71,6 +71,16 @@ final class HttpTransport {
     return _decodeMap(resp);
   }
 
+  /// Performs a POST request and decodes the JSON response as a list.
+  Future<List<dynamic>> postJsonList(
+    String path,
+    Object? body, {
+    Map<String, String>? headers,
+  }) async {
+    final resp = await _do('POST', path, body: body, headers: headers);
+    return _decodeList(resp);
+  }
+
   /// Performs a DELETE request. Returns the parsed JSON map if any.
   Future<Map<String, dynamic>> delete(
     String path, {
