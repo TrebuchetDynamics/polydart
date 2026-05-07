@@ -4,6 +4,7 @@
 /// `docs/PLAN.md`.
 library;
 
+export 'src/bookreader/bookreader.dart' show BookReader;
 export 'src/clob/clob_client.dart' show ClobClient;
 export 'src/clob/clob_params.dart' show BookParams, PriceHistoryParams;
 export 'src/config/config.dart';
@@ -12,6 +13,8 @@ export 'src/gamma/gamma_client.dart' show GammaClient;
 export 'src/gamma/gamma_params.dart' show GetMarketsParams, SearchParams;
 export 'src/logging/logger.dart';
 export 'src/modes/modes.dart';
+export 'src/pagination/pagination.dart'
+    show CursorPage, CursorPager, OffsetPager;
 export 'src/transport/circuit_breaker.dart'
     show CircuitBreaker, CircuitBreakerConfig, CircuitState;
 export 'src/transport/http_transport.dart' show HttpTransport;
