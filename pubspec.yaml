@@ -1,0 +1,24 @@
+name: polydart
+description: Dart-native Polymarket SDK — peer implementation to polygolem.
+version: 0.1.0-alpha.1
+homepage: https://github.com/TrebuchetDynamics/polydart
+repository: https://github.com/TrebuchetDynamics/polydart
+issue_tracker: https://github.com/TrebuchetDynamics/polydart/issues
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+
+dependencies:
+  collection: ^1.18.0
+  http: ^1.2.0
+  meta: ^1.12.0
+  pointycastle: ^3.7.0
+  web3dart: ^2.7.0
+  web_socket_channel: ^2.4.0
+
+dev_dependencies:
+  build_runner: ^2.4.0
+  json_serializable: ^6.7.0
+  lints: ^4.0.0
+  mockito: ^5.4.0
+  test: ^1.25.0

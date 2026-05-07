@@ -1,0 +1,27 @@
+# Dart
+.dart_tool/
+.packages
+build/
+pubspec.lock
+
+# Generated
+*.g.dart
+*.freezed.dart
+!lib/**/generated/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Local reference clones (not part of polydart sources)
+.reference/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
