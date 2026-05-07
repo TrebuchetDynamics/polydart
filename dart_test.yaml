@@ -1,0 +1,3 @@
+tags:
+  network:
+    skip: "Live Polymarket API; opt in with --tags network."

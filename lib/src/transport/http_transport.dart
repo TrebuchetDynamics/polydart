@@ -31,9 +31,12 @@ final class HttpTransport {
   void close() => _inner.close();
 
   /// Performs a GET request and decodes the JSON response as a map.
+  ///
+  /// `query` values may be `String` or `Iterable<String>`. Iterable values
+  /// emit one query-string pair per element (e.g. `slug=a&slug=b`).
   Future<Map<String, dynamic>> getJson(
     String path, {
-    Map<String, String>? query,
+    Map<String, dynamic>? query,
     Map<String, String>? headers,
   }) async {
     final resp = await _do('GET', path, query: query, headers: headers);
@@ -43,7 +46,7 @@ final class HttpTransport {
   /// Performs a GET request and decodes the JSON response as a list.
   Future<List<dynamic>> getJsonList(
     String path, {
-    Map<String, String>? query,
+    Map<String, dynamic>? query,
     Map<String, String>? headers,
   }) async {
     final resp = await _do('GET', path, query: query, headers: headers);
@@ -71,7 +74,7 @@ final class HttpTransport {
   }
 
   /// Fetches raw bytes without retry or JSON decoding.
-  Future<List<int>> getBytes(String path, {Map<String, String>? query}) async {
+  Future<List<int>> getBytes(String path, {Map<String, dynamic>? query}) async {
     final resp = await _do('GET', path, query: query, retry: false);
     return resp.bodyBytes;
   }
@@ -80,7 +83,7 @@ final class HttpTransport {
     String method,
     String path, {
     Object? body,
-    Map<String, String>? query,
+    Map<String, dynamic>? query,
     Map<String, String>? headers,
     bool retry = true,
   }) async {
@@ -185,22 +188,29 @@ final class HttpTransport {
     return http.Response.fromStream(streamed);
   }
 
-  String _buildUrl(String path, Map<String, String>? query) {
+  String _buildUrl(String path, Map<String, dynamic>? query) {
     final base = config.normalisedBaseUrl;
     final joined = path.startsWith('/') ? '$base$path' : '$base/$path';
     if (query == null || query.isEmpty) return joined;
-    final cleaned = <String, String>{};
+
+    final cleaned = <String, dynamic>{};
     for (final e in query.entries) {
-      if (e.value.isEmpty) continue;
-      cleaned[e.key] = e.value;
+      final v = e.value;
+      if (v == null) continue;
+      if (v is Iterable) {
+        final list = v
+            .where((x) => x != null && x.toString().isNotEmpty)
+            .map((x) => x.toString())
+            .toList(growable: false);
+        if (list.isNotEmpty) cleaned[e.key] = list;
+      } else {
+        final s = v.toString();
+        if (s.isNotEmpty) cleaned[e.key] = s;
+      }
     }
     if (cleaned.isEmpty) return joined;
-    final qs = cleaned.entries
-        .map((e) =>
-            '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}')
-        .join('&');
-    final separator = joined.contains('?') ? '&' : '?';
-    return '$joined$separator$qs';
+
+    return Uri.parse(joined).replace(queryParameters: cleaned).toString();
   }
 
   bool _isRetryable(TransportException e, String method) {

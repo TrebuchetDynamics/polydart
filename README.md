@@ -8,6 +8,27 @@ Dart-native Polymarket SDK — peer implementation to [polygolem](https://github
 
 A spec-for-spec mirror of polygolem in Dart. Brings the full Polymarket protocol stack (CLOB, Gamma, Data API, Builder relayer, deposit-wallet lifecycle, EIP-712 / POLY_1271 / ERC-7739 signing, paper mode, risk gates) to Dart and Flutter.
 
+## Quick start (read-only)
+
+```dart
+import 'package:polydart/polydart.dart';
+
+Future<void> main() async {
+  final client = Polydart.readOnly();
+  final result = await client.gamma.search(
+    const SearchParams(query: 'btc 5m', limitPerType: 5),
+  );
+  print('${result.events.length} events');
+  client.close();
+}
+```
+
+Run the bundled example:
+
+```sh
+dart run example/read_only.dart
+```
+
 ## Documents
 
 - `docs/PRD.md` — product requirements
