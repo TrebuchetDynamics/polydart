@@ -12,6 +12,10 @@ export 'src/errors/errors.dart';
 export 'src/gamma/gamma_client.dart' show GammaClient;
 export 'src/gamma/gamma_params.dart' show GetMarketsParams, SearchParams;
 export 'src/logging/logger.dart';
+export 'src/marketdiscovery/market_discovery.dart'
+    show EnrichedMarket, MarketDiscovery;
+export 'src/marketresolver/market_resolver.dart'
+    show MarketResolver, ResolvedMarket, parseClobTokenIds;
 export 'src/modes/modes.dart';
 export 'src/pagination/pagination.dart'
     show CursorPage, CursorPager, OffsetPager;
