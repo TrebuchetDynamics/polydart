@@ -38,7 +38,7 @@ Polydart MAJOR.MINOR mirrors polygolem. Patch versions diverge for Dart-specific
 | `internal/transport` | `lib/src/transport` | 1 | HTTP client w/ retry + rate limit + circuit breaker. |
 | `internal/config` | `lib/src/config` | 1 | Env binding, validation, redaction. |
 | `internal/errors` | `lib/src/errors` | 1 | Sealed error hierarchy. |
-| `internal/output` | `lib/src/output` | 1 | Structured logging façade. |
+| `internal/output` | `lib/src/logging` | 1 | Polygolem `output` is CLI-only formatting; SDK exposes a `Logger` instead. |
 | `internal/gamma` | `lib/src/gamma` | 1 | Read-only market discovery. |
 | `internal/clob` (read) | `lib/src/clob` (read paths) | 1 | Book/trades/prices/spread. |
 | `pkg/bookreader` | `lib/src/bookreader` | 1 | Order book aggregation helper. |
@@ -72,7 +72,7 @@ Goal: a consumer can construct `Polydart.readOnly()` and read markets, books, pr
 ### 3.1 Tasks (in order)
 
 1. **`lib/src/errors/`** — `PolydartException` sealed root + `TransportError`, `ApiError`, `ValidationError`. Mirrors `internal/errors` sentinel set.
-2. **`lib/src/output/`** — `Logger` interface + `NullLogger` default + `ConsoleLogger`. No `print` calls anywhere else in src.
+2. **`lib/src/logging/`** — `Logger` interface + `Logger.silent` default + `Logger.console`. No `print` calls anywhere else in src.
 3. **`lib/src/types/`** — Port `internal/polytypes/*.go` records:
    - `clob.dart` — `Order`, `OrderBook`, `Trade`, `Price`, `Spread`, `BookLevel`.
    - `market.dart` — `GammaMarket`, `Event`, `Tag`, `Series`.
