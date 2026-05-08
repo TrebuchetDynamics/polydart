@@ -20,6 +20,14 @@ export 'src/auth/eip712.dart'
         eip712HashStruct,
         eip712TypeHash,
         hashTypedData;
+export 'src/auth/l2.dart'
+    show
+        ApiKey,
+        BuilderConfig,
+        buildBuilderHeaders,
+        buildL2Headers,
+        compactJson,
+        signHmac;
 export 'src/auth/eth_hex.dart'
     show
         bytesToHex,
