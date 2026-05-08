@@ -214,6 +214,110 @@ acquiring the cookie.
 3. Are CLOB builder-fee keys revocable per-order, or only globally? Affects
    error-recovery design.
 
+## Addendum — `/login/internal` characterized (2026-05-08)
+
+The original "browser-mediated wallet challenge" framing for `/login/internal`
+was a misdiagnosis. A second static-analysis pass over the 49 MB Next.js
+bundle (366 chunks from `https://polymarket.com/_next/static/chunks/`,
+build `TfctsWXpff2fKS`) found that `/login/internal` is **not** the
+user-login flow at all:
+
+- It's an SSR bootstrap function inside the bundled `@polymarket/relayer-client`
+  library — class `F.getPolymarketCookies()` at `06yo__3skxzq9.js` byte 1215641
+  (10 duplicate copies in sibling chunks).
+- It runs **server-side only** (`!isBrowser && !RELAYER_API_KEY` guard).
+- Auth is a static **bearer token** read from SDK config; the host comes
+  from `config.authUrl`, never hardcoded.
+- It never executes in the browser.
+
+### Verdict: SIWE-REPLICABLE
+
+The actual flow that mints the Polymarket session cookie in the browser is
+canonical EIP-4361 SIWE against `gamma-api.polymarket.com`. Six steps,
+all reproducible from a Go or Dart HTTP client + EOA signer:
+
+1. `GET https://gamma-api.polymarket.com/nonce` (`withCredentials: true`)
+   → `{ nonce: "..." }`
+2. Build the SIWE message via viem `createSiweMessage` with:
+   - `domain: "polymarket.com"`
+   - `statement: "Welcome to Polymarket! Sign to connect."`
+   - `uri: window.location.origin`
+   - `version: "1"`
+   - `chainId, nonce, issuedAt`
+   - `expirationTime: now + 7d`
+   (Found at `06yo__3skxzq9.js` bytes 56500–58300.)
+3. `personal_sign` the message with the EOA (wagmi `signMessage`,
+   bundle byte 59450).
+4. Construct the bearer token:
+   `token = base64( JSON.stringify(siweFields) + ":::" + signature )`
+5. `GET https://gamma-api.polymarket.com/login`
+   - `Authorization: Bearer <token>`
+   - `withCredentials: true`
+   - Server responds `Set-Cookie: <polymarket session>` and body
+     `{ type, address }`.
+6. Subsequent `withCredentials: true` calls (including
+   `POST relayer-v2.polymarket.com/relayer/api/auth` with body `{}`)
+   ride that cookie and mint the Relayer API Key.
+
+Magic-wallet users skip the personal_sign and ship a Magic DID-token
+instead — that path remains browser-bound and out of scope.
+
+### Anti-bot scan
+
+Bundle-wide grep across all 49 MB for: `csrfToken`, `x-csrf`, `X-CSRF`,
+`captcha`, `recaptcha`, `turnstile`, `hcaptcha`, `datadome`, `kasada`,
+`cf_clearance`, `cf-turnstile`, `fingerprint`, `deviceId`, `x-device`,
+`akamai`, `X-Magic`, `magic-id-token` → **zero hits**. The transport is
+plain `axios.create({ withCredentials: true })`; no request interceptors
+inject anti-bot headers.
+
+### Caveats
+
+- **CDN/WAF**: `gamma-api.polymarket.com` sits behind a CDN that may
+  TLS-fingerprint or UA-rate-limit non-browser clients. Not visible from
+  static JS analysis. We won't know until we try.
+- **Magic-signed-up accounts** stay browser-bound (the SIWE step is
+  replaced by a Magic-issued DID token from the Magic iframe).
+- **Cookie persistence** matters: the Polymarket session cookie has a
+  finite lifetime, so the headless flow must either re-run SIWE on
+  expiry or persist the cookie alongside the API keys.
+
+### Implication for headless onboarding
+
+The full pipeline is reachable headlessly:
+
+```
+EOA private key
+  → /auth/api-key (L1 ClobAuth)            → CLOB L2 creds
+  → /auth/builder-api-key (L2 HMAC)         → CLOB Builder Fee Key
+  → gamma-api/nonce                         → SIWE nonce
+  → personal_sign + base64 token            → bearer
+  → gamma-api/login                         → polymarket session cookie
+  → relayer-v2/relayer/api/auth (cookie)    → Relayer API Key
+  → relayer-v2/submit (Relayer API Key)     → deposit-wallet deploy + approvals
+  → /order (sigtype 3)                      → live trade
+```
+
+Zero browser interactions. The work to wire it is bounded:
+
+- Polygolem: SIWE message builder + viem-equivalent EIP-4361 spec, base64
+  bearer token, transport that holds a cookie jar across `gamma-api/nonce`,
+  `gamma-api/login`, and `relayer-v2/relayer/api/auth`.
+- Polydart: same shape, with `package:dio` or hand-rolled cookie handling
+  (the existing `HttpTransport` is stateless — would either need a
+  cookie-jar layer or a stateful sub-client).
+
+### Anchored evidence
+
+- Report: `/tmp/login-internal-analysis.md`
+- Bundle cache: `/tmp/pm-bundles/chunks2/` (366 files, 49 MB)
+- Key chunk: `/tmp/pm-bundles/06yo__3skxzq9.js` (1.6 MB) — relayer-client
+  SDK, AuthClient, SIWE builder, RestClient transport, `useSignIn`
+  mutation
+- Settings page chunk: `/tmp/pm-bundles/07oquscvwratq.js` (270 KB) —
+  confirms the relayer-key mint is just
+  `axios.post('/relayer/api/auth', {}, { withCredentials: true })`
+
 ## Reproducibility
 
 To re-run the investigation:

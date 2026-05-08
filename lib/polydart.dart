@@ -59,6 +59,17 @@ export 'src/auth/eth_hex.dart'
         leftPadBytes,
         normalizeAddress,
         uint256BigEndian;
+export 'src/auth/siwe.dart'
+    show
+        SIWEMessage,
+        buildPolymarketSIWE,
+        buildSIWEBearerToken,
+        polymarketSIWEDomain,
+        polymarketSIWEStatement,
+        polymarketSIWEURI,
+        siweVersion,
+        toEIP55Checksum;
+export 'src/auth/siwe_login.dart' show SIWESession;
 export 'src/auth/wallet_signer.dart' show WalletSigner;
 export 'src/bookreader/bookreader.dart' show BookReader;
 export 'src/clob/clob_analytics_types.dart'
@@ -174,11 +185,15 @@ export 'src/wallet/deposit_wallet_signing.dart'
         walletBatchCallTypeString,
         walletBatchTypeHash,
         walletBatchTypeString;
+export 'src/wallet/deposit_wallet_readiness.dart'
+    show
+        DepositWalletReadiness,
+        DepositWalletReadinessService,
+        DepositWalletReadinessStatus;
 export 'src/stream/dedup.dart' show Deduplicator, splitArray;
 export 'src/stream/market_client.dart'
     show MarketClient, WebSocketChannelFactory;
-export 'src/stream/stream_config.dart'
-    show StreamConfig, defaultStreamUrl;
+export 'src/stream/stream_config.dart' show StreamConfig, defaultStreamUrl;
 export 'src/stream/stream_messages.dart'
     show
         BookMessage,
@@ -188,6 +203,8 @@ export 'src/stream/stream_messages.dart'
         PriceLevel;
 export 'src/relayer/relayer_client.dart'
     show RelayerClient, defaultRelayerBaseUrl, depositWalletFactoryAddr;
+export 'src/relayer/v2_auth.dart'
+    show V2APIKey, defaultRelayerV2BaseUrl, mintV2APIKey;
 export 'src/relayer/relayer_types.dart'
     show
         DeployedResponse,

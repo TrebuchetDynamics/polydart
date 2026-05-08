@@ -42,9 +42,13 @@ Start with the product-facing readiness API, while preserving low-level protocol
 final readiness = await DepositWalletReadinessService(...).check(eoaAddress);
 ```
 
-Expected machine-readable states:
+Initial machine-readable states:
 
 - `needsDeploy`
+- `needsApprovalCheck`
+
+Future tests should add these states only when the service can verify them:
+
 - `needsApproval`
 - `needsFunding`
 - `ready`
@@ -55,7 +59,12 @@ The readiness object should include:
 - `ownerEoa`
 - `depositWallet`
 - deployed state
-- missing approval set
+- approval-check provenance
+- required approval set
+
+Future tests should add:
+
+- missing approval set, once allowance checks can prove it
 - deposit-wallet pUSD balance
 - EOA pUSD balance as available-to-fund only
 - CLOB balance/allowance using `signature_type=3`
