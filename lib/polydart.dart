@@ -63,6 +63,8 @@ export 'src/auth/wallet_signer.dart' show WalletSigner;
 export 'src/bookreader/bookreader.dart' show BookReader;
 export 'src/clob/clob_client.dart' show ClobClient;
 export 'src/clob/clob_params.dart' show BookParams, PriceHistoryParams;
+export 'src/clob/clob_writes.dart'
+    show CancelResponse, ClobWrites, CreateOrderRequest;
 export 'src/config/config.dart';
 export 'src/errors/errors.dart';
 export 'src/gamma/gamma_client.dart' show GammaClient;
@@ -242,7 +244,11 @@ final class Polydart {
           ),
         );
     final gamma = GammaClient(transport: gt);
-    final clob = ClobClient(transport: ct);
+    final clob = ClobClient(
+      transport: ct,
+      mode: cfg.mode,
+      liveTradingEnabled: cfg.liveTradingEnabled,
+    );
     return Polydart._(
       config: cfg,
       eoaAddress: eoaAddress,

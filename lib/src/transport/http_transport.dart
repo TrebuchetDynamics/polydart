@@ -82,11 +82,15 @@ final class HttpTransport {
   }
 
   /// Performs a DELETE request. Returns the parsed JSON map if any.
+  ///
+  /// Optionally sends a JSON [body]. Polymarket's CLOB cancel-by-id
+  /// endpoint expects a JSON object body on DELETE; cancel-all sends none.
   Future<Map<String, dynamic>> delete(
     String path, {
+    Object? body,
     Map<String, String>? headers,
   }) async {
-    final resp = await _do('DELETE', path, headers: headers);
+    final resp = await _do('DELETE', path, body: body, headers: headers);
     if (resp.body.isEmpty) return const <String, dynamic>{};
     return _decodeMap(resp);
   }

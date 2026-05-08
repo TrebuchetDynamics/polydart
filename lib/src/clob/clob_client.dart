@@ -1,27 +1,46 @@
-/// Read-only CLOB API client.
+/// CLOB API client.
 ///
-/// Mirrors the read-side of `internal/clob`. Phase 1 ships every endpoint
-/// that does not require an L1/L2 signature: server time, markets, books,
-/// prices, midpoints, spreads, tick sizes, last-trade prices, and price
-/// history. Authenticated endpoints (balance-allowance, API keys,
-/// rewards, order create / cancel) land in Phase 2.
+/// Mirrors `internal/clob`. Read paths (book / price / spread / …) are
+/// always available; write paths (createOrder / cancelOrder / cancelAll /
+/// cancelOrders) live behind [writes] and are gated by [PolydartMode.live].
 library;
 
+import '../modes/modes.dart';
 import '../transport/http_transport.dart';
 import '../transport/transport_config.dart';
 import '../types/clob.dart';
 import 'clob_params.dart';
+import 'clob_writes.dart';
 
 final class ClobClient {
-  ClobClient({HttpTransport? transport})
-    : _transport =
-          transport ??
-          HttpTransport(config: const TransportConfig(baseUrl: defaultBaseUrl));
+  ClobClient({
+    HttpTransport? transport,
+    PolydartMode mode = PolydartMode.readOnly,
+    bool liveTradingEnabled = false,
+    DateTime Function()? clock,
+  }) : _transport =
+           transport ??
+           HttpTransport(
+             config: const TransportConfig(baseUrl: defaultBaseUrl),
+           ) {
+    _writes = ClobWrites(
+      transport: _transport,
+      mode: mode,
+      liveTradingEnabled: liveTradingEnabled,
+      clock: clock,
+    );
+  }
 
   /// Public Polymarket CLOB base URL.
   static const String defaultBaseUrl = 'https://clob.polymarket.com';
 
   final HttpTransport _transport;
+  late final ClobWrites _writes;
+
+  /// Live-mode write surface. Every method throws [SafetyException] when
+  /// the parent [Polydart] client is not in [PolydartMode.live] with the
+  /// `liveTradingEnabled` flag on.
+  ClobWrites get writes => _writes;
 
   /// Closes the underlying transport.
   void close() => _transport.close();
