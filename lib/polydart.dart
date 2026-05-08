@@ -72,6 +72,21 @@ export 'src/orders/amounts.dart'
         usdcDecimals,
         validatePriceAgainstTick;
 export 'src/orders/order_builder.dart' show OrderBuilder;
+export 'src/orders/order_signing.dart'
+    show
+        OrderV2Draft,
+        bytes32Zero,
+        buildOrderV2TypedData,
+        clobExchangeAddressV2,
+        hashOrderV2,
+        negRiskExchangeAddressV2,
+        orderV2ContentsType,
+        orderV2DomainSeparator,
+        orderV2Fields,
+        orderV2StructHash,
+        polymarketChainId,
+        polymarketCtfV2DomainName,
+        polymarketCtfV2DomainVersion;
 export 'src/orders/order_intent.dart'
     show LifecycleState, OrderIntent, OrderResponse, SignedOrder;
 export 'src/pagination/pagination.dart'
