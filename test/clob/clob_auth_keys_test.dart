@@ -4,8 +4,10 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:polydart/src/auth/l2.dart';
 import 'package:polydart/src/auth/wallet_signer.dart';
 import 'package:polydart/src/clob/clob_client.dart';
+import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/transport/http_transport.dart';
 import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
@@ -174,6 +176,118 @@ void main() {
       );
       expect(calls, 1);
       expect(key.key, 'eeee4444-5555-6666-7777-88889999aaaa');
+    });
+  });
+
+  group('createBuilderFeeKey', () {
+    const apiKey = ApiKey(
+      key: 'l2-key-uuid',
+      secret: 'BASE64SECRETXX',
+      passphrase: 'l2-pass',
+    );
+
+    test('POSTs /auth/builder-api-key with L2 headers and parses {key,...}',
+        () async {
+      String? capturedPath;
+      String? capturedMethod;
+      Map<String, String>? capturedHeaders;
+
+      final client = _client((req) async {
+        capturedPath = req.url.path;
+        capturedMethod = req.method;
+        capturedHeaders = req.headers;
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'key': 'fee-key-uuid',
+            'secret': 'BASE64SECRETYY',
+            'passphrase': 'fee-pass',
+          }),
+          200,
+        );
+      });
+
+      final feeKey = await client.createBuilderFeeKey(apiKey: apiKey);
+
+      expect(capturedMethod, 'POST');
+      expect(capturedPath, '/auth/builder-api-key');
+      expect(capturedHeaders!['POLY_API_KEY'], 'l2-key-uuid');
+      expect(capturedHeaders!['POLY_PASSPHRASE'], 'l2-pass');
+      expect(capturedHeaders!['POLY_TIMESTAMP'], isNotNull);
+      expect(capturedHeaders!['POLY_SIGNATURE'], isNotNull);
+
+      expect(feeKey.key, 'fee-key-uuid');
+      expect(feeKey.secret, 'BASE64SECRETYY');
+      expect(feeKey.passphrase, 'fee-pass');
+    });
+  });
+
+  group('listBuilderFeeKeys', () {
+    const apiKey = ApiKey(
+      key: 'l2-key-uuid',
+      secret: 'BASE64SECRETXX',
+      passphrase: 'l2-pass',
+    );
+
+    test('GETs /auth/builder-api-keys and decodes records', () async {
+      String? capturedPath;
+      String? capturedMethod;
+      final client = _client((req) async {
+        capturedPath = req.url.path;
+        capturedMethod = req.method;
+        return http.Response(
+          jsonEncode(<Map<String, dynamic>>[
+            {'key': 'fee-1', 'created_at': '2026-05-08T00:00:00Z'},
+            {'key': 'fee-2'},
+          ]),
+          200,
+        );
+      });
+
+      final rows = await client.listBuilderFeeKeys(apiKey: apiKey);
+
+      expect(capturedMethod, 'GET');
+      expect(capturedPath, '/auth/builder-api-keys');
+      expect(rows, hasLength(2));
+      expect(rows[0].key, 'fee-1');
+      expect(rows[0].createdAt, '2026-05-08T00:00:00Z');
+      expect(rows[1].key, 'fee-2');
+    });
+  });
+
+  group('revokeBuilderFeeKey', () {
+    const apiKey = ApiKey(
+      key: 'l2-key-uuid',
+      secret: 'BASE64SECRETXX',
+      passphrase: 'l2-pass',
+    );
+
+    test('DELETEs /auth/builder-api-key/<key>', () async {
+      String? capturedPath;
+      String? capturedMethod;
+      final client = _client((req) async {
+        capturedPath = req.url.path;
+        capturedMethod = req.method;
+        return http.Response('{}', 200);
+      });
+
+      await client.revokeBuilderFeeKey(apiKey: apiKey, builderKey: 'fee-1');
+
+      expect(capturedMethod, 'DELETE');
+      expect(capturedPath, '/auth/builder-api-key/fee-1');
+    });
+
+    test('rejects empty builderKey without hitting the network', () async {
+      var hit = false;
+      final client = _client((req) async {
+        hit = true;
+        return http.Response('{}', 200);
+      });
+
+      expect(
+        () => client.revokeBuilderFeeKey(apiKey: apiKey, builderKey: '   '),
+        throwsA(isA<ValidationException>()),
+      );
+      expect(hit, isFalse);
     });
   });
 }

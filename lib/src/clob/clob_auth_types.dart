@@ -168,6 +168,32 @@ final class BalanceAllowanceParams {
   }
 }
 
+/// One row from `GET /auth/builder-api-keys`. Loosely typed upstream — every
+/// field except `key` is best-effort.
+@immutable
+final class BuilderFeeKeyRecord {
+  const BuilderFeeKeyRecord({
+    required this.key,
+    this.secret = '',
+    this.passphrase = '',
+    this.createdAt = '',
+  });
+
+  factory BuilderFeeKeyRecord.fromJson(Map<String, dynamic> json) {
+    return BuilderFeeKeyRecord(
+      key: (json['key'] ?? '').toString(),
+      secret: (json['secret'] ?? '').toString(),
+      passphrase: (json['passphrase'] ?? '').toString(),
+      createdAt: (json['created_at'] ?? json['createdAt'] ?? '').toString(),
+    );
+  }
+
+  final String key;
+  final String secret;
+  final String passphrase;
+  final String createdAt;
+}
+
 /// Authenticated CLOB collateral or token balance + allowances.
 @immutable
 final class BalanceAllowanceResponse {

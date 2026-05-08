@@ -409,6 +409,70 @@ final class ClobClient {
     return _parseApiKey(body);
   }
 
+  /// Mints a CLOB builder-fee key via `POST /auth/builder-api-key`.
+  ///
+  /// The returned triple is the fee-attribution key — attach its [ApiKey.key]
+  /// to the `builder` bytes32 field of V2 orders to claim integrator fees.
+  ///
+  /// Distinct from the L2 trading triple minted by [createApiKey] / [deriveApiKey].
+  /// Caller must already hold an L2 [apiKey] (the request is L2-HMAC signed
+  /// with it). Fully headless — no cookie, no browser.
+  ///
+  /// See `polygolem/docs/HEADLESS-BUILDER-KEYS-INVESTIGATION.md`.
+  Future<ApiKey> createBuilderFeeKey({required ApiKey apiKey}) async {
+    final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final headers = buildL2Headers(
+      apiKey: apiKey,
+      timestamp: ts,
+      method: 'POST',
+      path: '/auth/builder-api-key',
+    );
+    final body = await _transport.postJson(
+      '/auth/builder-api-key',
+      const <String, dynamic>{},
+      headers: headers,
+    );
+    return _parseApiKey(body);
+  }
+
+  /// Lists every builder-fee key minted for the authenticated wallet via
+  /// `GET /auth/builder-api-keys`.
+  Future<List<BuilderFeeKeyRecord>> listBuilderFeeKeys({
+    required ApiKey apiKey,
+  }) async {
+    final list = await _l2GetList(
+      path: '/auth/builder-api-keys',
+      apiKey: apiKey,
+    );
+    return list
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => BuilderFeeKeyRecord.fromJson(Map<String, dynamic>.from(m)))
+        .toList(growable: false);
+  }
+
+  /// Revokes a builder-fee key via `DELETE /auth/builder-api-key/{key}`.
+  Future<void> revokeBuilderFeeKey({
+    required ApiKey apiKey,
+    required String builderKey,
+  }) async {
+    if (builderKey.trim().isEmpty) {
+      throw const ValidationException(
+        code: ErrorCode.missingField,
+        message: 'builderKey is required',
+        field: 'builderKey',
+      );
+    }
+    final path = '/auth/builder-api-key/${Uri.encodeComponent(builderKey)}';
+    final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final headers = buildL2Headers(
+      apiKey: apiKey,
+      timestamp: ts,
+      method: 'DELETE',
+      path: path,
+    );
+    await _transport.delete(path, headers: headers);
+  }
+
   /// Returns every open order owned by the API-key wallet.
   ///
   /// Mirrors `internal/clob/orders.go::ListOrders`. Caller must supply a
@@ -553,7 +617,9 @@ final class ClobClient {
       return '';
     }
 
-    final key = pick(<String>['apiKey', 'api_key']);
+    // /auth/api-key returns "apiKey"/"api_key"; /auth/builder-api-key
+    // returns the bare "key" field. Accept all variants.
+    final key = pick(<String>['apiKey', 'api_key', 'key']);
     final secret = pick(<String>['secret']);
     final passphrase = pick(<String>['passphrase', 'passPhrase', 'pass_phrase']);
     final apiKey = ApiKey(key: key, secret: secret, passphrase: passphrase);

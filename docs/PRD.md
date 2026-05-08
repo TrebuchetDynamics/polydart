@@ -104,16 +104,16 @@ polydart/
 - WALLET-CREATE (deploy)
 - WALLET batch (approve + fund)
 - Nonce polling
-- Builder attribution headers
+- Relayer authentication headers
 
-**Note:** Builder credentials live in a minimal server proxy, not in the app.
+**Owner-alpha note:** relayer credentials are injected into `polydart` by the consumer. Arenaton Flutter stores per-EOA credentials in app secure storage. A minimal server proxy remains an optional public-product hardening layer, not a requirement for the first owner-alpha readiness slice.
 
 ### 4.5 `wallet` — Deposit Wallet Lifecycle
 
 **Mirrors:** `internal/wallet`
 
 - `derive(eoaAddress)` → predict CREATE2 address
-- `deploy()` → server proxy calls relayer
+- `deploy()` → relayer client uses injected relayer credentials
 - `status()` → on-chain check
 - `batch(calls)` → EIP-712 sign via Reown → submit
 
@@ -147,7 +147,7 @@ final order = await client.orders
 | Threat | Mitigation |
 |--------|-----------|
 | Private key exposure | **Eliminated** — keys never leave MetaMask |
-| Builder credential leak | **Minimized** — creds in server proxy only |
+| Relayer credential leak | **Minimized** — no shared embedded creds; owner-alpha storage is per EOA in app secure storage; optional proxy later |
 | Man-in-the-middle | HTTPS + certificate pinning |
 | Malicious signing requests | User sees full transaction in MetaMask |
 | App compromise | Damage limited to current session orders |
@@ -161,23 +161,18 @@ User MetaMask (holds private key)
     │
 Flutter App (Polydart)
     │
-    │ HTTP / WebSocket
+    │ HTTP / WebSocket / relayer client
     ↓
 Polymarket APIs (CLOB, Gamma, Relayer)
-    ↑
-    │ (for deploy/batch only)
-Tiny Server Proxy (builder creds)
-    ↓
-Builder Relayer
 ```
 
-### 5.3 Server Proxy (Minimal)
+### 5.3 Optional Server Proxy
 
-~50 lines of Go or Dart. Only handles:
+For public product hardening, a tiny server proxy may later handle:
 - `POST /relay/deploy` — forwards with builder headers
 - `POST /relay/batch` — forwards with builder headers
 
-Everything else is client-direct.
+For owner alpha, this is not required. Flutter can inject app-local relayer credentials directly into `polydart`.
 
 ---
 
@@ -228,11 +223,11 @@ await client.clob.submit(order); // prompts MetaMask
 
 **Mirrors:** `internal/modes`
 
-| Mode | Private Key | Server Proxy | Authenticated APIs |
+| Mode | Private Key | Relayer Config | Authenticated APIs |
 |------|------------|--------------|-------------------|
 | **Read-only** | Not needed | Not needed | Blocked |
 | **Paper** | EOA address only | Not needed | Blocked (local sim) |
-| **Live** | Reown provider | Required for deploy/batch | Full access |
+| **Live** | Reown provider | Injected app-local credentials or optional proxy | Full access |
 
 **Gates:**
 - Live mode requires `preflight` checks (balance, allowance, nonce)
@@ -319,7 +314,7 @@ dev_dependencies:
 | `web3dart` lacks EIP-712 support | Medium | High | Contribute PR or fork; fallback to manual RLP encoding |
 | Mobile signing latency (Reown) | High | Medium | Pre-build orders, queue for batch sign |
 | Polymarket API drift | Medium | High | Automated contract tests against live API weekly |
-| Builder credential leak | Low | Critical | Server proxy only; rotate monthly; rate limit |
+| Relayer credential leak | Low | Critical | Per-EOA secure storage in app; never embed shared creds; redact logs; optional proxy later |
 | CREATE2 derivation mismatch | Low | Critical | Cross-validate every address against polygolem Go impl |
 
 ---
@@ -329,8 +324,8 @@ dev_dependencies:
 - [ ] All polygolem `pkg/` APIs have polydart equivalents
 - [ ] All polygolem `internal/` modules have Dart mirrors
 - [ ] Shared test vectors pass in both repos
-- [ ] Example app (Arenaton demo) runs with zero server for read-only
-- [ ] Server proxy < 100 LOC for deploy/batch
+- [ ] Example app (Arenaton demo) runs with zero server for read-only and local readiness checks when relayer credentials are injected
+- [ ] Optional server proxy remains < 100 LOC if introduced for deploy/batch
 - [ ] CI passes: Dart analysis, tests, integration tests
 - [ ] pub.dev package published
 
@@ -339,7 +334,7 @@ dev_dependencies:
 ## 13. Open Questions
 
 1. **Reown vs WalletConnect v3:** Which library is more stable for production?
-2. **Server proxy language:** Go (polygolem reuse) or Dart (single stack)?
+2. **Optional server proxy:** defer until public-product hardening, or add immediately for relayer credential isolation?
 3. **Paper state storage:** `shared_preferences` vs `hive` vs `drift`?
 4. **Flutter minimum version:** 3.16+ or 3.19+?
 5. **Null safety:** Dart 3 strict mode — any legacy concerns?

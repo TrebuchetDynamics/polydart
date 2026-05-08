@@ -1,0 +1,226 @@
+# Headless Builder Keys — Investigation Report
+
+> **Status:** Code-only investigation, 2026-05-08. No production write traffic.
+> **Sources:** `/tmp/headless-builder-keys-survey.md` (Polymarket SDK survey),
+> `/tmp/polymarket-frontend-analysis.md` (polymarket.com bundle static
+> analysis).
+
+## TL;DR
+
+Polymarket's settings page has **two distinct "Create" buttons** for what
+gets colloquially called "Builder API Keys", and they call two different
+endpoints with two different auth models:
+
+| Button | Endpoint | Auth | Headless? | Gates |
+| --- | --- | --- | --- | --- |
+| **CLOB Builder Fee Key** | `POST clob.polymarket.com/auth/builder-api-key` | L2 HMAC (POLY_*) | ✅ yes | On-order builder fee attribution |
+| **Relayer API Key** | `POST relayer-v2.polymarket.com/relayer/api/auth` | Polymarket session cookie | ❌ no — see § Cookie gate | `relayer-v2/submit` (deposit-wallet deploy, V2 approvals) |
+
+The polygolem `builder auto` flow currently does neither — it only mints
+**CLOB L2 creds** via `/auth/api-key` (L1 ClobAuth signature). That's why a
+profiled, builder-registered EOA still 401s on `relayer-v2/submit`: it has
+the L2 creds but neither flavor of "builder key".
+
+**Practical takeaway:** half the gate is dissolvable today with a 30-line
+addition to polydart and polygolem. The other half (the relayer-v2 cookie)
+is genuine and needs one more sub-investigation before we can call it
+fully headless.
+
+## What the original confusion was
+
+The polygolem doc `BUILDER-AUTO.md` lumped both creds under a single
+"Builder API Keys" label and reported that `relayer-v2/submit` 401'd on
+auto-minted creds for a profiled EOA, concluding the gate was browser-only.
+That's still true *for the relayer flavor* — but the doc missed that the
+CLOB-side builder-fee key is **also** called "Builder API Keys" in the UI
+and **is** mintable headlessly.
+
+Empirical evidence aligns:
+
+- The user's profiled EOA (`0x33e4aD…Fa76C`) has a builder code registered
+  but the settings page reports "Builder Keys: No builder API keys yet."
+  That label refers to the **Relayer API Key** row in the UI, not the CLOB
+  builder-fee key. The Relayer key is what `submit` validates against.
+- Throwaway EOAs and the profiled EOA both 401 on `submit` for the same
+  reason: no Relayer API Key minted, regardless of CLOB-side state.
+
+## CLOB Builder Fee Key — `/auth/builder-api-key`
+
+### Wire format
+
+```http
+POST https://clob.polymarket.com/auth/builder-api-key
+POLY_ADDRESS:    <EOA hex>
+POLY_TIMESTAMP:  <unix seconds, decimal>
+POLY_API_KEY:    <UUID from /auth/api-key>
+POLY_PASSPHRASE: <passphrase from /auth/api-key>
+POLY_SIGNATURE:  <HMAC-SHA256 over `${ts}${method}${path}${body?}`>
+Content-Type:    application/json
+
+(empty body)
+```
+
+Response:
+
+```json
+{ "key": "<uuid-shape>", "secret": "<base64>", "passphrase": "<random>" }
+```
+
+### What it gates
+
+On-order **builder fee attribution** — the `builder` bytes32 field on V2
+orders. This is the protocol-level mechanism that lets a third-party app
+(an "integrator") earn a share of CLOB fees on orders routed through it.
+
+### Confirming sources
+
+- `Polymarket/py-clob-client-v2` @ `394ecc1` — `py_clob_client_v2/client.py:1028-1041`
+- `Polymarket/clob-client-v2` (TS) @ `9dcc32e` — `src/client.ts:1496-1549`
+- `Polymarket/clob-client` (TS v1) @ `f89dea7` — `src/client.ts:1415-1456`
+- `Polymarket/rs-clob-client-v2` @ `8ba5008` — `src/clob/client.rs:2486-2530`
+- Frontend bundle `06yo__3skxzq9.js` @ ~line 58670: `eE="/auth/builder-api-key"`,
+  `eG="POST"`. Settings UI calls `clobClient.createBuilderApiKey()` from the
+  bundled `@polymarket/clob-client-v2`.
+
+### Polydart wiring sketch
+
+`lib/src/clob/clob_client.dart` already has `createApiKey` (uses L1 headers)
+and `_l2GetList` / `_l2PostJson` style helpers (use L2 headers). The new
+method follows the L2 pattern exactly:
+
+```dart
+/// Mints a CLOB builder-fee API key via `POST /auth/builder-api-key`.
+///
+/// Caller must already have an L2 [ApiKey] minted via [createOrDeriveApiKey].
+/// The returned triple is the builder-fee key — attach its `key` to the
+/// `builder` bytes32 field of V2 orders to claim integrator fees.
+///
+/// Headless. Same HMAC auth as every other L2 endpoint.
+Future<ApiKey> createBuilderApiKey({required ApiKey apiKey}) async {
+  final ts = (DateTime.now().millisecondsSinceEpoch ~/ 1000);
+  final headers = buildL2Headers(
+    apiKey: apiKey,
+    timestamp: ts,
+    method: 'POST',
+    path: '/auth/builder-api-key',
+    body: null,
+  );
+  final body = await _transport.postJson(
+    '/auth/builder-api-key',
+    const <String, dynamic>{},
+    headers: headers,
+  );
+  return _parseApiKey(body);
+}
+```
+
+Plus companion methods if we want full parity with the official SDKs:
+`getBuilderApiKeys()` (`GET /auth/builder-api-keys`), `revokeBuilderApiKey({String key})`
+(`DELETE /auth/builder-api-key/{key}`). The frontend bundle has all three
+paths visible.
+
+Polygolem mirror: `internal/clob/client.go` already exposes
+`CreateOrDeriveAPIKey`. Adding `CreateBuilderAPIKey(ctx, privateKey, apiKey)`
+is the equivalent ~30-line addition.
+
+## Relayer API Key — `/relayer/api/auth`
+
+### Wire format
+
+```http
+POST https://relayer-v2.polymarket.com/relayer/api/auth
+Cookie: <Polymarket session cookie>
+Accept: application/json
+Content-Type: application/json
+
+{}
+```
+
+The frontend uses a direct `axios.post(url, {}, { withCredentials: true })`
+— **no signature, no Authorization header, no payload**. The server
+identifies the wallet purely from the session cookie.
+
+### Cookie gate — `/login/internal`
+
+The session cookie is acquired from `/login/internal`, characterized by
+the frontend agent as a "browser-mediated wallet challenge." We have **not**
+yet characterized exactly what that challenge looks like:
+
+- Is it a SIWE-style nonce-and-sign flow that any HTTP client + EOA signer
+  can replicate? (If yes — fully headless onboarding is achievable.)
+- Or is it a multi-step flow with CSRF tokens, browser TLS fingerprinting,
+  reCAPTCHA, or other anti-automation? (If yes — this is a genuine gate
+  and we accept it.)
+
+This is the **single open question** that determines whether headless
+onboarding is fully feasible. Characterizing `/login/internal` is the
+recommended next step.
+
+### What it gates
+
+`relayer-v2/submit` — used by:
+- `WALLET-CREATE` (deposit-wallet deploy)
+- `WALLET` batch (V2 spender approvals)
+- Any other relayer-paid transaction we'd issue on the user's behalf.
+
+The relayer client already in `polygolem/internal/relayer` and the
+`lib/src/relayer/relayer_client.dart` in polydart can both **use** an
+existing Relayer API Key triple, but cannot **mint** one without first
+acquiring the cookie.
+
+## Recommendations
+
+### Short-term (do now)
+
+1. **Wire `/auth/builder-api-key` in polydart** — `lib/src/clob/clob_client.dart`
+   gains `createBuilderApiKey`, `getBuilderApiKeys`, `revokeBuilderApiKey`.
+   Tests against a `MockClient` that asserts L2 headers and the empty body.
+2. **Mirror in polygolem** — `internal/clob/client.go` adds the same three
+   methods plus a `polygolem clob create-builder-api-key` CLI subcommand.
+3. **Update `BUILDER-AUTO.md`** — split the "Builder API Keys" label into
+   the two distinct creds. Document that `builder auto` mints L2 creds and
+   that `clob create-builder-api-key` is an optional follow-up for fee
+   attribution.
+4. **Persist** — extend the env-file format to support `POLY_BUILDER_*`
+   and `POLY_RELAYER_*` separately. Polydart's `BuilderConfig` already
+   has the right shape; just rename / clarify field semantics.
+
+### Medium-term (sub-investigation)
+
+5. **Characterize `/login/internal`.** One more focused pass at the
+   frontend bundle, looking specifically for the wallet challenge handler.
+   Output: endpoint sequence, payload shapes, signature scheme, CSRF or
+   other anti-automation. Decision: implement headlessly, or accept the
+   browser step and document it cleanly.
+
+### Out of scope for this investigation
+
+- Live HTTP probing of `/login/internal` or `/relayer/api/auth`. Those
+  require either a session cookie or a planned write attempt — both
+  ruled out by the "code-only, no production calls" constraint.
+- Changing how the existing `relayer-v2/submit` client works. It will
+  start working as soon as we hand it a Relayer API Key triple — the
+  question is just where the triple comes from.
+
+## Open questions
+
+1. Does `/login/internal` reduce to a SIWE-style challenge, or is it
+   browser-fingerprinted? — see Recommendation 5.
+2. Once we mint a CLOB builder-fee key, do existing V2 orders gain fee
+   attribution automatically, or do we need to set the `builder` bytes32
+   field explicitly per order? Polydart's `signedOrderPayload.builder`
+   currently writes `bytes32Zero` — we need to swap that for the
+   builder key when one is present.
+3. Are CLOB builder-fee keys revocable per-order, or only globally? Affects
+   error-recovery design.
+
+## Reproducibility
+
+To re-run the investigation:
+
+- Survey: `/tmp/headless-builder-keys-survey.md` (full per-repo writeup
+  with file:line citations).
+- Frontend: `/tmp/polymarket-frontend-analysis.md` (full bundle trace
+  with chunk hashes).
+- This synthesis: `polydart/docs/HEADLESS-BUILDER-KEYS-INVESTIGATION.md`
+  (you are here).

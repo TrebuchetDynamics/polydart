@@ -75,6 +75,7 @@ export 'src/clob/clob_auth_types.dart'
     show
         BalanceAllowanceParams,
         BalanceAllowanceResponse,
+        BuilderFeeKeyRecord,
         OrderRecord,
         TradeRecord;
 export 'src/clob/clob_client.dart' show ClobClient;

@@ -53,11 +53,20 @@ order submission.
 
 - `docs/PRD.md` — product requirements
 - `docs/PLAN.md` — implementation plan
+- `docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md` — next live-readiness TDD slice
 - `CHANGELOG.md` — release log
 
 ## Mirror commitment
 
 Polygolem is the reference. Every protocol module, signing scheme, and API client in polygolem has a Dart twin here. Versions track in lockstep.
+
+Before any protocol-package work, refresh the local reference:
+
+```sh
+git -C .reference/polygolem pull --ff-only
+```
+
+Then port from that fresh `polygolem` commit into Dart and update parity tests/fixtures with the commit hash used. Do not develop live CLOB, deposit-wallet, relayer, or signing behavior from memory or stale docs.
 
 ## License
 
