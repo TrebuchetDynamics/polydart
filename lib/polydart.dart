@@ -112,6 +112,21 @@ export 'src/transport/rate_limit.dart' show RateLimiter;
 export 'src/transport/redact.dart';
 export 'src/transport/transport_config.dart' show TransportConfig;
 export 'src/types/types.dart';
+export 'src/wallet/deposit_wallet_signing.dart'
+    show
+        WalletBatchCall,
+        buildWalletBatchTypedData,
+        defaultBatchDeadline,
+        depositWalletDomainName,
+        depositWalletDomainVersion,
+        hashWalletBatchCall,
+        hashWalletBatchStruct,
+        hashWalletBatchTypedData,
+        signWalletBatch,
+        walletBatchCallTypeHash,
+        walletBatchCallTypeString,
+        walletBatchTypeHash,
+        walletBatchTypeString;
 
 import 'src/clob/clob_client.dart';
 import 'src/config/config.dart';
