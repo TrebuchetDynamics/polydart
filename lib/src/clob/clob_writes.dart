@@ -193,6 +193,40 @@ final class ClobWrites {
     return CancelResponse.fromJson(resp);
   }
 
+  /// Cancels every open order matching a market or asset filter. At least
+  /// one of [market] or [assetId] must be supplied. Mirrors
+  /// `internal/clob/orders.go::CancelMarket`.
+  Future<CancelResponse> cancelMarket({
+    required ApiKey apiKey,
+    String market = '',
+    String assetId = '',
+  }) async {
+    final m = market.trim();
+    final a = assetId.trim();
+    if (m.isEmpty && a.isEmpty) {
+      throw const ValidationException(
+        code: ErrorCode.missingField,
+        message: 'market or assetId filter is required',
+      );
+    }
+    requireLive(_mode, liveTradingEnabled: _liveTradingEnabled);
+    final body = <String, String>{};
+    if (m.isNotEmpty) body['market'] = m;
+    if (a.isNotEmpty) body['asset_id'] = a;
+    final headers = _l2Headers(
+      method: 'DELETE',
+      path: '/cancel-market-orders',
+      body: body,
+      apiKey: apiKey,
+    );
+    final resp = await _transport.delete(
+      '/cancel-market-orders',
+      body: body,
+      headers: headers,
+    );
+    return CancelResponse.fromJson(resp);
+  }
+
   Map<String, String> _l2Headers({
     required String method,
     required String path,

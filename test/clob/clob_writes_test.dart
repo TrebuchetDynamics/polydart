@@ -258,6 +258,47 @@ void main() {
     });
   });
 
+  group('cancelMarket', () {
+    test('DELETEs /cancel-market-orders with market+asset_id body', () async {
+      http.BaseRequest? captured;
+      String? capturedBody;
+      final c = _liveClient((req) async {
+        captured = req;
+        if (req is http.Request) capturedBody = req.body;
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'canceled': <String>['O-9'],
+            'not_canceled': <String, dynamic>{},
+          }),
+          200,
+        );
+      });
+
+      final resp = await c.writes.cancelMarket(
+        apiKey: _apiKey,
+        market: '0xMarket',
+        assetId: 'token-1',
+      );
+
+      expect(captured!.method, 'DELETE');
+      expect(captured!.url.path, '/cancel-market-orders');
+      expect(captured!.headers['POLY_SIGNATURE'], isNotNull);
+      final decoded =
+          jsonDecode(capturedBody ?? '{}') as Map<String, dynamic>;
+      expect(decoded['market'], '0xMarket');
+      expect(decoded['asset_id'], 'token-1');
+      expect(resp.canceled, ['O-9']);
+    });
+
+    test('throws ValidationException when both filters are empty', () async {
+      final c = _liveClient((_) async => http.Response('{}', 200));
+      expect(
+        () => c.writes.cancelMarket(apiKey: _apiKey),
+        throwsA(isA<ValidationException>()),
+      );
+    });
+  });
+
   group('CancelResponse decoding', () {
     test('accepts notCanceled camelCase variant', () {
       final r = CancelResponse.fromJson(<String, dynamic>{
