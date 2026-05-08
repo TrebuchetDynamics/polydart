@@ -173,14 +173,11 @@ Uint8List _encodeAtomic(
       final bytes = hexToBytes(clean);
       return leftPadBytes(bytes, length: 32);
     case 'uint256':
-      if (value is BigInt) return uint256BigEndian(value);
-      if (value is int) return uint256BigEndian(BigInt.from(value));
-      if (value is String) {
-        final parsed = BigInt.tryParse(value);
-        if (parsed == null) throw _badType(type, value, fieldName);
-        return uint256BigEndian(parsed);
-      }
-      throw _badType(type, value, fieldName);
+      return _encodeUint(value, fieldName: fieldName, label: type);
+  }
+  // Generic uintN (uint8, uint16, …, uint256) — all encode as 32-byte BE.
+  if (_uintRegex.hasMatch(type)) {
+    return _encodeUint(value, fieldName: fieldName, label: type);
   }
   // Encode bool as uint256(0|1) for forward compatibility.
   if (type == 'bool') {
@@ -200,3 +197,20 @@ ValidationException _badType(String type, Object value, String field) =>
       message: 'cannot encode $value as $type',
       field: field,
     );
+
+Uint8List _encodeUint(
+  Object value, {
+  required String fieldName,
+  required String label,
+}) {
+  if (value is BigInt) return uint256BigEndian(value);
+  if (value is int) return uint256BigEndian(BigInt.from(value));
+  if (value is String) {
+    final parsed = BigInt.tryParse(value);
+    if (parsed == null) throw _badType(label, value, fieldName);
+    return uint256BigEndian(parsed);
+  }
+  throw _badType(label, value, fieldName);
+}
+
+final RegExp _uintRegex = RegExp(r'^uint\d+$');
