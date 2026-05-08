@@ -28,6 +28,18 @@ export 'src/auth/eip712.dart'
         eip712HashStruct,
         eip712TypeHash,
         hashTypedData;
+export 'src/auth/erc7739.dart'
+    show
+        assemblePoly1271WrappedSignature,
+        buildPoly1271TypedDataEnvelope,
+        computePoly1271FinalHash,
+        poly1271DigestFromEnvelope,
+        poly1271StructHash,
+        poly1271TypedDataSignTypeHash,
+        polyDepositWalletDomainName,
+        polyDepositWalletDomainVersion,
+        typedDataSignPrefix,
+        wrapPoly1271Signature;
 export 'src/auth/l2.dart'
     show
         ApiKey,

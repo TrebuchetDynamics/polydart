@@ -69,7 +69,8 @@ enum OrderType {
 enum SignatureType {
   eoa('EOA', 0),
   proxy('PROXY', 1),
-  gnosisSafe('SAFE', 2);
+  gnosisSafe('SAFE', 2),
+  poly1271('POLY_1271', 3);
 
   const SignatureType(this.label, this.code);
   final String label;
@@ -84,6 +85,8 @@ enum SignatureType {
           return proxy;
         case 2:
           return gnosisSafe;
+        case 3:
+          return poly1271;
       }
     }
     final s = raw.toString().toUpperCase().trim();
@@ -98,6 +101,10 @@ enum SignatureType {
       case 'GNOSISSAFE':
       case '2':
         return gnosisSafe;
+      case 'POLY_1271':
+      case 'POLY1271':
+      case '3':
+        return poly1271;
     }
     throw ValidationException(
       code: ErrorCode.invalidValue,
