@@ -127,6 +127,23 @@ export 'src/wallet/deposit_wallet_signing.dart'
         walletBatchCallTypeString,
         walletBatchTypeHash,
         walletBatchTypeString;
+export 'src/relayer/relayer_client.dart'
+    show RelayerClient, defaultRelayerBaseUrl, depositWalletFactoryAddr;
+export 'src/relayer/relayer_types.dart'
+    show
+        DeployedResponse,
+        DepositWalletCall,
+        NonceResponse,
+        RelayerTransaction,
+        RelayerTransactionState;
+export 'src/relayer/approvals.dart'
+    show
+        buildApprovalCalls,
+        ctfAddress,
+        ctfExchangeV2,
+        negRiskAdapterV2,
+        negRiskExchangeV2,
+        pusdAddress;
 
 import 'src/clob/clob_client.dart';
 import 'src/config/config.dart';
