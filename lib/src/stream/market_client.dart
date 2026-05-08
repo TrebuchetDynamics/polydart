@@ -10,16 +10,18 @@ library;
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+import '_socket_dispatch.dart' as platform;
 import 'dedup.dart' show splitArray;
 import 'stream_config.dart';
 import 'stream_messages.dart';
 
 /// Factory used to open a [WebSocketChannel] for a given URI. Tests inject a
-/// fake; the default opens an `IOWebSocketChannel` with the configured ping
-/// interval.
+/// fake; the default opens a platform-appropriate channel
+/// (`IOWebSocketChannel` on dart:io, `HtmlWebSocketChannel` on dart:html)
+/// with the configured ping interval. On the dart:html (Flutter Web) path
+/// `pingInterval` is informational — the browser owns WS keepalive.
 typedef WebSocketChannelFactory = WebSocketChannel Function(Uri url);
 
 /// Streams Polymarket CLOB market events for a set of asset IDs.
@@ -30,10 +32,8 @@ final class MarketClient {
   }) : _config = config,
        _channelFactory =
            channelFactory ??
-           ((Uri url) => IOWebSocketChannel.connect(
-             url,
-             pingInterval: config.pingInterval,
-           ));
+           ((Uri url) =>
+               platform.defaultOpenChannel(url, config.pingInterval));
 
   final StreamConfig _config;
   final WebSocketChannelFactory _channelFactory;
