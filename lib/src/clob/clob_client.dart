@@ -5,6 +5,10 @@
 /// cancelOrders) live behind [writes] and are gated by [PolydartMode.live].
 library;
 
+import '../auth/clob_auth.dart';
+import '../auth/l2.dart';
+import '../auth/wallet_signer.dart';
+import '../errors/errors.dart';
 import '../modes/modes.dart';
 import '../transport/http_transport.dart';
 import '../transport/transport_config.dart';
@@ -146,5 +150,73 @@ final class ClobClient {
       query: params.toQuery(),
     );
     return PriceHistory.fromJson(body);
+  }
+
+  /// Headless onboarding: creates the L2 API-key triple by signing the
+  /// canonical ClobAuth EIP-712 payload with [signer] and posting it to
+  /// `/auth/api-key`. Falls back to the deterministic
+  /// `/auth/derive-api-key` when an account already exists.
+  ///
+  /// Mirrors `internal/clob/client.go` `CreateOrDeriveAPIKey`. The
+  /// endpoint lazy-creates account, builder profile, and bytes32 builder
+  /// code on first contact — see `polygolem/docs/BUILDER-AUTO.md` for the
+  /// empirical flow.
+  Future<ApiKey> createOrDeriveApiKey({
+    required WalletSigner signer,
+    int? nowSeconds,
+  }) async {
+    try {
+      return await createApiKey(signer: signer, nowSeconds: nowSeconds);
+    } on TransportException {
+      return deriveApiKey(signer: signer, nowSeconds: nowSeconds);
+    }
+  }
+
+  /// Mints a new API-key triple via `POST /auth/api-key`.
+  Future<ApiKey> createApiKey({
+    required WalletSigner signer,
+    int? nowSeconds,
+  }) async {
+    final ts = nowSeconds ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000);
+    final headers = await buildL1Headers(signer: signer, timestamp: ts);
+    final body = await _transport.postJson(
+      '/auth/api-key',
+      const <String, dynamic>{},
+      headers: headers,
+    );
+    return _parseApiKey(body);
+  }
+
+  /// Returns the deterministic API-key triple via `GET /auth/derive-api-key`.
+  Future<ApiKey> deriveApiKey({
+    required WalletSigner signer,
+    int? nowSeconds,
+  }) async {
+    final ts = nowSeconds ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000);
+    final headers = await buildL1Headers(signer: signer, timestamp: ts);
+    final body = await _transport.getJson(
+      '/auth/derive-api-key',
+      headers: headers,
+    );
+    return _parseApiKey(body);
+  }
+
+  /// Parses the auth response, accepting the alternate field names the
+  /// CLOB returns (`apiKey`/`api_key`, `passphrase`/`passPhrase`/`pass_phrase`).
+  ApiKey _parseApiKey(Map<String, dynamic> body) {
+    String pick(List<String> keys) {
+      for (final k in keys) {
+        final v = body[k];
+        if (v is String && v.isNotEmpty) return v;
+      }
+      return '';
+    }
+
+    final key = pick(<String>['apiKey', 'api_key']);
+    final secret = pick(<String>['secret']);
+    final passphrase = pick(<String>['passphrase', 'passPhrase', 'pass_phrase']);
+    final apiKey = ApiKey(key: key, secret: secret, passphrase: passphrase);
+    apiKey.validate();
+    return apiKey;
   }
 }
