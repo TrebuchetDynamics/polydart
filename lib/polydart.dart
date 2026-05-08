@@ -61,6 +61,19 @@ export 'src/marketdiscovery/market_discovery.dart'
 export 'src/marketresolver/market_resolver.dart'
     show MarketResolver, ResolvedMarket, parseClobTokenIds;
 export 'src/modes/modes.dart';
+export 'src/orders/amounts.dart'
+    show
+        OrderAmounts,
+        buildSalt,
+        computeAmounts,
+        defaultExpiration,
+        generateOrderSalt,
+        roundToTick,
+        usdcDecimals,
+        validatePriceAgainstTick;
+export 'src/orders/order_builder.dart' show OrderBuilder;
+export 'src/orders/order_intent.dart'
+    show LifecycleState, OrderIntent, OrderResponse, SignedOrder;
 export 'src/pagination/pagination.dart'
     show CursorPage, CursorPager, OffsetPager;
 export 'src/transport/circuit_breaker.dart'
