@@ -61,6 +61,16 @@ export 'src/auth/eth_hex.dart'
         uint256BigEndian;
 export 'src/auth/wallet_signer.dart' show WalletSigner;
 export 'src/bookreader/bookreader.dart' show BookReader;
+export 'src/clob/clob_analytics_types.dart'
+    show
+        RawRewards,
+        RebatedFees,
+        RewardPercentages,
+        RewardsConfig,
+        TotalEarnings,
+        UserEarnings,
+        UserRewardsByMarketRequest,
+        UserRewardsMarket;
 export 'src/clob/clob_auth_types.dart'
     show
         BalanceAllowanceParams,

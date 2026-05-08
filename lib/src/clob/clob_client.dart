@@ -13,6 +13,7 @@ import '../modes/modes.dart';
 import '../transport/http_transport.dart';
 import '../transport/transport_config.dart';
 import '../types/clob.dart';
+import 'clob_analytics_types.dart';
 import 'clob_auth_types.dart';
 import 'clob_params.dart';
 import 'clob_writes.dart';
@@ -151,6 +152,212 @@ final class ClobClient {
       query: params.toQuery(),
     );
     return PriceHistory.fromJson(body);
+  }
+
+  // --- Market metadata ---
+
+  /// Returns whether [tokenId] belongs to a negative-risk market.
+  ///
+  /// Mirrors `internal/clob/client.go::NegRisk`. The wire response is
+  /// `{"neg_risk": bool}`; only the boolean flag is surfaced.
+  Future<bool> negRisk(String tokenId) async {
+    final body = await _transport.getJson(
+      '/neg-risk',
+      query: <String, dynamic>{'token_id': tokenId},
+    );
+    return body['neg_risk'] == true;
+  }
+
+  /// Returns the maker fee rate in basis points for [tokenId].
+  ///
+  /// Mirrors polygolem `FeeRateBps`. Response shape:
+  /// `{"fee_rate_bps": <number>}`.
+  Future<int> feeRateBps(String tokenId) async {
+    final body = await _transport.getJson(
+      '/fee-rate',
+      query: <String, dynamic>{'token_id': tokenId},
+    );
+    return _toInt(body['fee_rate_bps']);
+  }
+
+  /// Cursor-paginated list of simplified markets.
+  Future<ClobPaginatedMarkets> simplifiedMarkets({String? nextCursor}) async {
+    final body = await _transport.getJson(
+      '/simplified-markets',
+      query: nextCursor == null || nextCursor.isEmpty
+          ? null
+          : <String, dynamic>{'next_cursor': nextCursor},
+    );
+    return ClobPaginatedMarkets.fromJson(body);
+  }
+
+  /// Cursor-paginated list of sampling markets.
+  Future<ClobPaginatedMarkets> samplingMarkets({String? nextCursor}) async {
+    final body = await _transport.getJson(
+      '/sampling-markets',
+      query: nextCursor == null || nextCursor.isEmpty
+          ? null
+          : <String, dynamic>{'next_cursor': nextCursor},
+    );
+    return ClobPaginatedMarkets.fromJson(body);
+  }
+
+  /// Cursor-paginated list of sampling-simplified markets.
+  Future<ClobPaginatedMarkets> samplingSimplifiedMarkets({
+    String? nextCursor,
+  }) async {
+    final body = await _transport.getJson(
+      '/sampling-simplified-markets',
+      query: nextCursor == null || nextCursor.isEmpty
+          ? null
+          : <String, dynamic>{'next_cursor': nextCursor},
+    );
+    return ClobPaginatedMarkets.fromJson(body);
+  }
+
+  // --- Batch pricing ---
+
+  /// Best bid/ask for a list of token+side pairs.
+  ///
+  /// Posts to `/prices-post`; on transport failure (4xx/5xx) falls back
+  /// to the legacy `/prices` endpoint. Mirrors polygolem `Prices`.
+  /// Response shape `{"<token>": {"price": "<value>"}}` is flattened to
+  /// `tokenId → priceString`. Non-wrapped values fall back to their raw
+  /// JSON encoding.
+  Future<Map<String, String>> prices(List<BookParams> params) async {
+    final payload = params.map((p) => p.toJson()).toList(growable: false);
+    Map<String, dynamic> raw;
+    try {
+      raw = await _transport.postJson('/prices-post', payload);
+    } on TransportException {
+      raw = await _transport.postJson('/prices', payload);
+    }
+    return _flattenWrapped(raw, 'price');
+  }
+
+  /// Midpoints for a list of token+side pairs.
+  ///
+  /// Mirrors polygolem `Midpoints`. Wrapped response
+  /// `{"<token>": {"mid": "<value>"}}` is flattened.
+  Future<Map<String, String>> midpoints(List<BookParams> params) async {
+    final payload = params.map((p) => p.toJson()).toList(growable: false);
+    final raw = await _transport.postJson('/midpoints', payload);
+    return _flattenWrapped(raw, 'mid');
+  }
+
+  /// Last-trade prices for a list of token+side pairs.
+  ///
+  /// Mirrors polygolem `LastTradesPrices`. Wrapped response
+  /// `{"<token>": {"price": "<value>"}}` is flattened.
+  Future<Map<String, String>> lastTradesPrices(List<BookParams> params) async {
+    final payload = params.map((p) => p.toJson()).toList(growable: false);
+    final raw = await _transport.postJson('/last-trades-prices', payload);
+    return _flattenWrapped(raw, 'price');
+  }
+
+  // --- Order scoring ---
+
+  /// Whether [orderId] is currently scored for rewards.
+  ///
+  /// Wire response: `{"scoring": bool}`.
+  Future<bool> orderScoring(String orderId) async {
+    final body = await _transport.getJson(
+      '/orders/scoring',
+      query: <String, dynamic>{'order_id': orderId},
+    );
+    return body['scoring'] == true;
+  }
+
+  /// Batch scoring lookup. Returns one boolean per id, in the order
+  /// the server returns them. Wire body: `{"order_ids": [...]}`,
+  /// response: `[bool, ...]`.
+  Future<List<bool>> ordersScoring(List<String> orderIds) async {
+    final list = await _transport.postJsonList(
+      '/orders/scoring',
+      <String, dynamic>{'order_ids': orderIds},
+    );
+    return list.map((e) => e == true).toList(growable: false);
+  }
+
+  // --- Rewards ---
+
+  /// Active rewards configuration across all markets.
+  Future<List<RewardsConfig>> rewardsConfig() async {
+    final list = await _transport.getJsonList('/rewards/config');
+    return list
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => RewardsConfig.fromJson(m.cast<String, dynamic>()))
+        .toList(growable: false);
+  }
+
+  /// Raw rewards series for a market (`market` is the condition id).
+  Future<List<RawRewards>> rawRewards(String market) async {
+    final list = await _transport.getJsonList(
+      '/rewards/raw',
+      query: <String, dynamic>{'market': market},
+    );
+    return list
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => RawRewards.fromJson(m.cast<String, dynamic>()))
+        .toList(growable: false);
+  }
+
+  /// Caller-scoped earnings on [date] (YYYY-MM-DD).
+  Future<List<UserEarnings>> userEarnings(String date) async {
+    final list = await _transport.getJsonList(
+      '/rewards/earnings',
+      query: <String, dynamic>{'date': date},
+    );
+    return list
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => UserEarnings.fromJson(m.cast<String, dynamic>()))
+        .toList(growable: false);
+  }
+
+  /// Aggregated earnings across all markets on [date] (YYYY-MM-DD).
+  Future<TotalEarnings> totalEarnings(String date) async {
+    final body = await _transport.getJson(
+      '/rewards/total-earnings',
+      query: <String, dynamic>{'date': date},
+    );
+    return TotalEarnings.fromJson(body);
+  }
+
+  /// Per-market reward percentages.
+  Future<List<RewardPercentages>> rewardPercentages() async {
+    final list = await _transport.getJsonList('/rewards/percentages');
+    return list
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => RewardPercentages.fromJson(m.cast<String, dynamic>()))
+        .toList(growable: false);
+  }
+
+  /// Caller-scoped rewards segmented by market. Optional [params]
+  /// narrow the query (date / order_by / no_competition).
+  Future<List<UserRewardsMarket>> userRewardsByMarket([
+    UserRewardsByMarketRequest? params,
+  ]) async {
+    final query = params?.toQuery();
+    final list = await _transport.getJsonList(
+      '/rewards/markets',
+      query: (query == null || query.isEmpty)
+          ? null
+          : query.map((k, v) => MapEntry<String, dynamic>(k, v)),
+    );
+    return list
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => UserRewardsMarket.fromJson(m.cast<String, dynamic>()))
+        .toList(growable: false);
+  }
+
+  /// Maker rebated fees, summed across markets when the API returns
+  /// rows without a `market` key.
+  Future<List<RebatedFees>> rebatedFees() async {
+    final list = await _transport.getJsonList('/rebates');
+    return list
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => RebatedFees.fromJson(m.cast<String, dynamic>()))
+        .toList(growable: false);
   }
 
   /// Headless onboarding: creates the L2 API-key triple by signing the
@@ -305,6 +512,34 @@ final class ClobClient {
       first = false;
     });
     return sb.toString();
+  }
+
+  /// Flattens `{"<token>": {"<inner>": "<value>"}}` to
+  /// `tokenId → value`. Non-wrapped values fall back to their raw JSON
+  /// encoding (matching polygolem's `string(v)` fallback for raw bytes).
+  Map<String, String> _flattenWrapped(
+    Map<String, dynamic> raw,
+    String innerKey,
+  ) {
+    final out = <String, String>{};
+    raw.forEach((k, v) {
+      if (v is Map) {
+        final inner = v[innerKey];
+        if (inner != null) {
+          out[k] = inner.toString();
+          return;
+        }
+      }
+      out[k] = v == null ? '' : v.toString();
+    });
+    return out;
+  }
+
+  int _toInt(Object? raw) {
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    if (raw is String) return int.tryParse(raw) ?? 0;
+    return 0;
   }
 
   /// Parses the auth response, accepting the alternate field names the
