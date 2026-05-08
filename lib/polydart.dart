@@ -163,6 +163,18 @@ export 'src/wallet/deposit_wallet_signing.dart'
         walletBatchCallTypeString,
         walletBatchTypeHash,
         walletBatchTypeString;
+export 'src/stream/dedup.dart' show Deduplicator, splitArray;
+export 'src/stream/market_client.dart'
+    show MarketClient, WebSocketChannelFactory;
+export 'src/stream/stream_config.dart'
+    show StreamConfig, defaultStreamUrl;
+export 'src/stream/stream_messages.dart'
+    show
+        BookMessage,
+        LastTradeMessage,
+        PriceChangeEntry,
+        PriceChangeMessage,
+        PriceLevel;
 export 'src/relayer/relayer_client.dart'
     show RelayerClient, defaultRelayerBaseUrl, depositWalletFactoryAddr;
 export 'src/relayer/relayer_types.dart'
