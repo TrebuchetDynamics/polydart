@@ -12,6 +12,14 @@ export 'src/auth/clob_auth.dart'
         clobAuthDomainName,
         clobAuthDomainVersion,
         hashClobAuth;
+export 'src/auth/create2.dart'
+    show
+        PolymarketAddresses,
+        deriveDepositWallet,
+        deriveProxyWallet,
+        deriveSafeWallet,
+        makerAddressForSignatureType,
+        predictCreate2Address;
 export 'src/auth/eip712.dart'
     show
         Eip712Domain,
