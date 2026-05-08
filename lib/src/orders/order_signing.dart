@@ -17,7 +17,11 @@ import 'package:meta/meta.dart';
 
 import '../auth/eip712.dart';
 import '../auth/eth_hex.dart';
+import '../auth/wallet_signer.dart';
+import '../errors/errors.dart';
 import '../types/enums.dart';
+import 'amounts.dart';
+import 'order_intent.dart';
 
 const String polymarketCtfV2DomainName = 'Polymarket CTF Exchange';
 const String polymarketCtfV2DomainVersion = '2';
@@ -177,6 +181,84 @@ Uint8List orderV2DomainSeparator({bool negRisk = false}) {
       chainId: polymarketChainId,
       verifyingContract: OrderV2Draft.verifyingContract(negRisk: negRisk),
     ),
+  );
+}
+
+/// Builds, signs, and packages an [OrderIntent] into a wire-ready
+/// [SignedOrder]. Mirrors the orchestration in
+/// `polygolem/internal/clob/orders.go::signCLOBOrder` for V2 / EOA
+/// signature flows; POLY_1271 (deposit-wallet) consumers should still go
+/// through `wrapPoly1271Signature` after this returns the raw signature.
+///
+/// - For [SignatureType.eoa] (default), `maker = signer = signer.address`.
+/// - For other signature types, the caller must supply [intent.funder]
+///   (the proxy / safe / deposit-wallet address). `signer` is always the
+///   EOA. If [makerOverride] is set, it wins over the funder field.
+Future<SignedOrder> signOrderV2({
+  required OrderIntent intent,
+  required WalletSigner signer,
+  String builderCode = bytes32Zero,
+  String? makerOverride,
+}) async {
+  intent.validate();
+  final amounts = computeAmounts(intent);
+
+  final eoa = signer.address;
+  final maker = makerOverride ??
+      (intent.signatureType == SignatureType.eoa ? eoa : intent.funder);
+  if (maker.isEmpty) {
+    throw const ValidationException(
+      code: ErrorCode.missingField,
+      message:
+          'maker address is empty: pass intent.funder for non-EOA signature types',
+      field: 'funder',
+    );
+  }
+
+  final salt = generateOrderSalt();
+  final timestampMs = DateTime.now().millisecondsSinceEpoch.toString();
+
+  final draft = OrderV2Draft(
+    salt: salt,
+    maker: maker,
+    signer: eoa,
+    tokenId: intent.tokenId,
+    makerAmount: amounts.makerAmount.toString(),
+    takerAmount: amounts.takerAmount.toString(),
+    side: intent.side,
+    signatureType: intent.signatureType,
+    timestamp: timestampMs,
+    metadata: bytes32Zero,
+    builder: builderCode,
+  );
+
+  final typed = buildOrderV2TypedData(draft: draft, negRisk: intent.negRisk);
+  final sigBytes = await signer.signTypedData(typed);
+  if (sigBytes.length != 65) {
+    throw ValidationException(
+      code: ErrorCode.invalidSignature,
+      message:
+          'wallet returned ${sigBytes.length}-byte signature (expected 65)',
+    );
+  }
+
+  return SignedOrder(
+    salt: draft.salt,
+    maker: draft.maker,
+    signer: draft.signer,
+    taker: '0x0000000000000000000000000000000000000000',
+    tokenId: draft.tokenId,
+    makerAmount: draft.makerAmount,
+    takerAmount: draft.takerAmount,
+    side: draft.side,
+    signatureType: draft.signatureType,
+    expiration: intent.expiration,
+    nonce: intent.nonce,
+    feeRateBps: intent.feeRateBps,
+    signature: bytesToHex0x(sigBytes),
+    timestamp: int.parse(draft.timestamp),
+    metadata: draft.metadata,
+    builder: draft.builder,
   );
 }
 

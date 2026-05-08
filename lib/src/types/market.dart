@@ -289,6 +289,273 @@ final class HealthResponse {
   final String data;
 }
 
+/// A series of events (Gamma view). Stores the raw payload for fields the
+/// SDK has not typed yet.
+@immutable
+final class Series {
+  const Series({
+    required this.id,
+    required this.ticker,
+    required this.slug,
+    required this.title,
+    required this.subtitle,
+    required this.seriesType,
+    required this.recurrence,
+    required this.description,
+    required this.image,
+    required this.icon,
+    required this.active,
+    required this.closed,
+    required this.archived,
+    required this.featured,
+    required this.startDate,
+    required this.volume,
+    required this.volume24hr,
+    required this.liquidity,
+    required this.commentCount,
+    required this.events,
+    required this.tags,
+    required this.raw,
+  });
+
+  factory Series.fromJson(Map<String, dynamic> json) => Series(
+    id: json['id']?.toString() ?? '',
+    ticker: json['ticker']?.toString() ?? '',
+    slug: json['slug']?.toString() ?? '',
+    title: json['title']?.toString() ?? '',
+    subtitle: json['subtitle']?.toString() ?? '',
+    seriesType: json['seriesType']?.toString() ?? '',
+    recurrence: json['recurrence']?.toString() ?? '',
+    description: json['description']?.toString() ?? '',
+    image: json['image']?.toString() ?? '',
+    icon: json['icon']?.toString() ?? '',
+    active: json['active'] == true,
+    closed: json['closed'] == true,
+    archived: json['archived'] == true,
+    featured: json['featured'] == true,
+    startDate: parseNormalizedDateTime(json['startDate']),
+    volume: _double(json['volume']),
+    volume24hr: _double(json['volume24hr']),
+    liquidity: _double(json['liquidity']),
+    commentCount: _int(json['commentCount']),
+    events: _events(json['events']),
+    tags: _tags(json['tags']),
+    raw: Map.unmodifiable(json),
+  );
+
+  final String id;
+  final String ticker;
+  final String slug;
+  final String title;
+  final String subtitle;
+  final String seriesType;
+  final String recurrence;
+  final String description;
+  final String image;
+  final String icon;
+  final bool active;
+  final bool closed;
+  final bool archived;
+  final bool featured;
+  final DateTime? startDate;
+  final double volume;
+  final double volume24hr;
+  final double liquidity;
+  final int commentCount;
+  final List<Event> events;
+  final List<Tag> tags;
+  final Map<String, dynamic> raw;
+}
+
+/// Comment author identity.
+@immutable
+final class CommentUser {
+  const CommentUser({
+    required this.address,
+    required this.pseudonym,
+    required this.profileImage,
+  });
+
+  factory CommentUser.fromJson(Map<String, dynamic> json) => CommentUser(
+    address: json['address']?.toString() ?? '',
+    pseudonym: json['pseudonym']?.toString() ?? '',
+    profileImage: json['profileImage']?.toString() ?? '',
+  );
+
+  final String address;
+  final String pseudonym;
+  final String profileImage;
+}
+
+/// A Polymarket comment.
+@immutable
+final class Comment {
+  const Comment({
+    required this.id,
+    required this.body,
+    required this.user,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.parentId,
+    required this.replies,
+  });
+
+  factory Comment.fromJson(Map<String, dynamic> json) => Comment(
+    id: json['id']?.toString() ?? '',
+    body: json['body']?.toString() ?? '',
+    user: json['user'] is Map
+        ? CommentUser.fromJson((json['user'] as Map).cast<String, dynamic>())
+        : const CommentUser(address: '', pseudonym: '', profileImage: ''),
+    createdAt: parseNormalizedDateTime(json['createdAt']),
+    updatedAt: parseNormalizedDateTime(json['updatedAt']),
+    parentId: json['parentId'] is num
+        ? (json['parentId'] as num).toInt()
+        : (json['parentId'] is String
+              ? int.tryParse(json['parentId'] as String)
+              : null),
+    replies: _comments(json['replies']),
+  );
+
+  final String id;
+  final String body;
+  final CommentUser user;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final int? parentId;
+  final List<Comment> replies;
+}
+
+/// A sports team (Gamma view).
+@immutable
+final class Team {
+  const Team({
+    required this.id,
+    required this.name,
+    required this.league,
+    required this.record,
+    required this.logo,
+    required this.abbreviation,
+    required this.alias,
+  });
+
+  factory Team.fromJson(Map<String, dynamic> json) => Team(
+    id: _int(json['id']),
+    name: json['name']?.toString() ?? '',
+    league: json['league']?.toString() ?? '',
+    record: json['record']?.toString() ?? '',
+    logo: json['logo']?.toString() ?? '',
+    abbreviation: json['abbreviation']?.toString() ?? '',
+    alias: json['alias']?.toString() ?? '',
+  );
+
+  final int id;
+  final String name;
+  final String league;
+  final String record;
+  final String logo;
+  final String abbreviation;
+  final String alias;
+}
+
+/// Metadata for a sport (Gamma).
+@immutable
+final class SportMetadata {
+  const SportMetadata({
+    required this.sport,
+    required this.image,
+    required this.resolution,
+    required this.ordering,
+    required this.tags,
+    required this.series,
+  });
+
+  factory SportMetadata.fromJson(Map<String, dynamic> json) => SportMetadata(
+    sport: json['sport']?.toString() ?? '',
+    image: json['image']?.toString() ?? '',
+    resolution: json['resolution']?.toString() ?? '',
+    ordering: json['ordering']?.toString() ?? '',
+    tags: json['tags']?.toString() ?? '',
+    series: json['series']?.toString() ?? '',
+  );
+
+  final String sport;
+  final String image;
+  final String resolution;
+  final String ordering;
+  final String tags;
+  final String series;
+}
+
+/// A valid sports market type (Gamma).
+@immutable
+final class SportsMarketType {
+  const SportsMarketType({
+    required this.id,
+    required this.name,
+    required this.slug,
+  });
+
+  factory SportsMarketType.fromJson(Map<String, dynamic> json) =>
+      SportsMarketType(
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        slug: json['slug']?.toString() ?? '',
+      );
+
+  final String id;
+  final String name;
+  final String slug;
+}
+
+/// A relationship edge between two tags.
+@immutable
+final class TagRelationship {
+  const TagRelationship({
+    required this.id,
+    required this.tagId,
+    required this.relatedTagId,
+    required this.rank,
+  });
+
+  factory TagRelationship.fromJson(Map<String, dynamic> json) =>
+      TagRelationship(
+        id: json['id']?.toString() ?? '',
+        tagId: _int(json['tagID']),
+        relatedTagId: _int(json['relatedTagID']),
+        rank: _int(json['rank']),
+      );
+
+  final String id;
+  final int tagId;
+  final int relatedTagId;
+  final int rank;
+}
+
+/// A market resolved by CLOB token id.
+@immutable
+final class MarketByTokenResponse {
+  const MarketByTokenResponse({
+    required this.market,
+    required this.tokenId,
+    required this.outcome,
+  });
+
+  factory MarketByTokenResponse.fromJson(Map<String, dynamic> json) {
+    final m = json['market'];
+    return MarketByTokenResponse(
+      market: m is Map
+          ? Market.fromJson(m.cast<String, dynamic>())
+          : Market.fromJson(const <String, dynamic>{}),
+      tokenId: json['token_id']?.toString() ?? '',
+      outcome: json['outcome']?.toString() ?? '',
+    );
+  }
+
+  final Market market;
+  final String tokenId;
+  final String outcome;
+}
+
 // ---- helpers ----
 
 double _double(Object? raw) {
@@ -341,5 +608,13 @@ List<Event> _events(Object? raw) {
   return raw
       .whereType<Map<dynamic, dynamic>>()
       .map((m) => Event.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+}
+
+List<Comment> _comments(Object? raw) {
+  if (raw is! List) return const <Comment>[];
+  return raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => Comment.fromJson(m.cast<String, dynamic>()))
       .toList(growable: false);
 }

@@ -13,6 +13,7 @@ import '../modes/modes.dart';
 import '../transport/http_transport.dart';
 import '../transport/transport_config.dart';
 import '../types/clob.dart';
+import 'clob_auth_types.dart';
 import 'clob_params.dart';
 import 'clob_writes.dart';
 
@@ -199,6 +200,111 @@ final class ClobClient {
       headers: headers,
     );
     return _parseApiKey(body);
+  }
+
+  /// Returns every open order owned by the API-key wallet.
+  ///
+  /// Mirrors `internal/clob/orders.go::ListOrders`. Caller must supply a
+  /// derived [ApiKey] — use [createOrDeriveApiKey] to mint one.
+  Future<List<OrderRecord>> listOrders({required ApiKey apiKey}) async {
+    final list = await _l2GetList(path: '/data/orders', apiKey: apiKey);
+    return list
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => OrderRecord.fromJson(m.cast<String, dynamic>()))
+        .toList(growable: false);
+  }
+
+  /// Returns the trade history for the API-key wallet.
+  Future<List<TradeRecord>> listTrades({required ApiKey apiKey}) async {
+    final list = await _l2GetList(path: '/data/trades', apiKey: apiKey);
+    return list
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => TradeRecord.fromJson(m.cast<String, dynamic>()))
+        .toList(growable: false);
+  }
+
+  /// Returns one order by id, scoped to the API-key wallet.
+  Future<OrderRecord> order({
+    required String orderId,
+    required ApiKey apiKey,
+  }) async {
+    final path = '/data/order/$orderId';
+    final body = await _l2Get(path: path, apiKey: apiKey);
+    return OrderRecord.fromJson(body);
+  }
+
+  /// Returns CLOB collateral or conditional-token balance plus the V2
+  /// exchange-spender allowances.
+  Future<BalanceAllowanceResponse> balanceAllowance({
+    required ApiKey apiKey,
+    required BalanceAllowanceParams params,
+  }) async {
+    final query = params.toQuery();
+    final body = await _l2Get(
+      path: '/balance-allowance',
+      apiKey: apiKey,
+      query: query,
+    );
+    return BalanceAllowanceResponse.fromJson(body);
+  }
+
+  /// Forces the CLOB to refresh its on-chain balance/allowance cache.
+  Future<BalanceAllowanceResponse> updateBalanceAllowance({
+    required ApiKey apiKey,
+    required BalanceAllowanceParams params,
+  }) async {
+    final query = params.toQuery();
+    final body = await _l2Get(
+      path: '/balance-allowance/update',
+      apiKey: apiKey,
+      query: query,
+    );
+    return BalanceAllowanceResponse.fromJson(body);
+  }
+
+  Future<Map<String, dynamic>> _l2Get({
+    required String path,
+    required ApiKey apiKey,
+    Map<String, String>? query,
+  }) async {
+    final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final headers = buildL2Headers(
+      apiKey: apiKey,
+      timestamp: ts,
+      method: 'GET',
+      path: _pathForSig(path, query),
+    );
+    return _transport.getJson(path, query: query, headers: headers);
+  }
+
+  Future<List<dynamic>> _l2GetList({
+    required String path,
+    required ApiKey apiKey,
+    Map<String, String>? query,
+  }) async {
+    final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final headers = buildL2Headers(
+      apiKey: apiKey,
+      timestamp: ts,
+      method: 'GET',
+      path: _pathForSig(path, query),
+    );
+    return _transport.getJsonList(path, query: query, headers: headers);
+  }
+
+  /// HMAC over the path + query for L2 GETs. Matches polygolem's
+  /// `internal/auth.SignHMAC` input where `path` is the full URL path
+  /// including query string.
+  String _pathForSig(String path, Map<String, String>? query) {
+    if (query == null || query.isEmpty) return path;
+    final sb = StringBuffer(path)..write('?');
+    var first = true;
+    query.forEach((k, v) {
+      if (!first) sb.write('&');
+      sb..write(Uri.encodeQueryComponent(k))..write('=')..write(Uri.encodeQueryComponent(v));
+      first = false;
+    });
+    return sb.toString();
   }
 
   /// Parses the auth response, accepting the alternate field names the

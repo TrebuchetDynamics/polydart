@@ -61,14 +61,43 @@ export 'src/auth/eth_hex.dart'
         uint256BigEndian;
 export 'src/auth/wallet_signer.dart' show WalletSigner;
 export 'src/bookreader/bookreader.dart' show BookReader;
+export 'src/clob/clob_auth_types.dart'
+    show
+        BalanceAllowanceParams,
+        BalanceAllowanceResponse,
+        OrderRecord,
+        TradeRecord;
 export 'src/clob/clob_client.dart' show ClobClient;
 export 'src/clob/clob_params.dart' show BookParams, PriceHistoryParams;
 export 'src/clob/clob_writes.dart'
     show CancelResponse, ClobWrites, CreateOrderRequest;
+export 'src/dataapi/dataapi_client.dart' show DataApiClient;
+export 'src/dataapi/dataapi_types.dart'
+    show
+        Activity,
+        ClosedPosition,
+        LiveVolumeEntry,
+        LiveVolumeResponse,
+        MetaHolder,
+        OpenInterest,
+        Position,
+        TotalMarketsTraded,
+        TotalValue,
+        Trade,
+        TraderLeaderboardEntry;
 export 'src/config/config.dart';
 export 'src/errors/errors.dart';
-export 'src/gamma/gamma_client.dart' show GammaClient;
-export 'src/gamma/gamma_params.dart' show GetMarketsParams, SearchParams;
+export 'src/gamma/gamma_client.dart' show GammaClient, KeysetPage;
+export 'src/gamma/gamma_params.dart'
+    show
+        CommentQuery,
+        GetEventsParams,
+        GetMarketsParams,
+        GetSeriesParams,
+        GetTagsParams,
+        GetTeamsParams,
+        KeysetParams,
+        SearchParams;
 export 'src/logging/logger.dart';
 export 'src/marketdiscovery/market_discovery.dart'
     show EnrichedMarket, MarketDiscovery;
@@ -86,6 +115,12 @@ export 'src/orders/amounts.dart'
         usdcDecimals,
         validatePriceAgainstTick;
 export 'src/orders/order_builder.dart' show OrderBuilder;
+export 'src/orders/order_placement.dart'
+    show
+        CreateLimitOrderParams,
+        CreateMarketOrderParams,
+        createLimitOrder,
+        createMarketOrder;
 export 'src/orders/order_signing.dart'
     show
         OrderV2Draft,
@@ -100,7 +135,8 @@ export 'src/orders/order_signing.dart'
         orderV2StructHash,
         polymarketChainId,
         polymarketCtfV2DomainName,
-        polymarketCtfV2DomainVersion;
+        polymarketCtfV2DomainVersion,
+        signOrderV2;
 export 'src/orders/order_intent.dart'
     show LifecycleState, OrderIntent, OrderResponse, SignedOrder;
 export 'src/pagination/pagination.dart'

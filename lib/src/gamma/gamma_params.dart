@@ -1,8 +1,9 @@
 /// Query parameter shapes for the Gamma client.
 ///
-/// Mirrors the relevant `polytypes.Get*Params` records. Phase 1 covers the
-/// shapes used by `markets` and `search`; events / series / tags / teams
-/// land alongside their corresponding client methods in a later commit.
+/// Mirrors the relevant `polytypes.Get*Params` records and `buildQueryPath`
+/// in `internal/gamma/client.go`. Each `toQuery` matches the Go encoder's
+/// emitted keys exactly — fields that the Go encoder ignores are omitted
+/// here too so the wire shape stays in lockstep.
 library;
 
 import 'package:meta/meta.dart';
@@ -112,6 +113,173 @@ final class SearchParams {
     if (searchProfiles != null) {
       q['search_profiles'] = searchProfiles!.toString();
     }
+    return q;
+  }
+}
+
+@immutable
+final class GetEventsParams {
+  const GetEventsParams({
+    this.limit,
+    this.offset,
+    this.order,
+    this.ascending,
+    this.slug = const <String>[],
+    this.tagId,
+    this.closed,
+  });
+
+  final int? limit;
+  final int? offset;
+  final String? order;
+  final bool? ascending;
+  final List<String> slug;
+  final int? tagId;
+  final bool? closed;
+
+  Map<String, dynamic> toQuery() {
+    final q = <String, dynamic>{};
+    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
+    if (offset != null && offset! > 0) q['offset'] = offset!.toString();
+    if (closed != null) q['closed'] = closed!.toString();
+    if (tagId != null) q['tag_id'] = tagId!.toString();
+    if (order != null && order!.isNotEmpty) q['order'] = order;
+    if (ascending != null) q['ascending'] = ascending!.toString();
+    if (slug.isNotEmpty) q['slug'] = slug;
+    return q;
+  }
+}
+
+@immutable
+final class GetSeriesParams {
+  const GetSeriesParams({
+    this.limit,
+    this.offset,
+    this.order,
+    this.ascending,
+    this.closed,
+  });
+
+  final int? limit;
+  final int? offset;
+  final String? order;
+  final bool? ascending;
+  final bool? closed;
+
+  Map<String, dynamic> toQuery() {
+    final q = <String, dynamic>{};
+    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
+    if (offset != null && offset! > 0) q['offset'] = offset!.toString();
+    if (closed != null) q['closed'] = closed!.toString();
+    if (order != null && order!.isNotEmpty) q['order'] = order;
+    if (ascending != null) q['ascending'] = ascending!.toString();
+    return q;
+  }
+}
+
+@immutable
+final class GetTagsParams {
+  const GetTagsParams({this.limit, this.offset, this.order, this.ascending});
+
+  final int? limit;
+  final int? offset;
+  final String? order;
+  final bool? ascending;
+
+  Map<String, dynamic> toQuery() {
+    final q = <String, dynamic>{};
+    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
+    if (offset != null && offset! > 0) q['offset'] = offset!.toString();
+    if (order != null && order!.isNotEmpty) q['order'] = order;
+    if (ascending != null) q['ascending'] = ascending!.toString();
+    return q;
+  }
+}
+
+@immutable
+final class GetTeamsParams {
+  const GetTeamsParams({
+    this.limit,
+    this.offset,
+    this.order,
+    this.ascending,
+    this.league = const <String>[],
+    this.name = const <String>[],
+  });
+
+  final int? limit;
+  final int? offset;
+  final String? order;
+  final bool? ascending;
+  final List<String> league;
+  final List<String> name;
+
+  Map<String, dynamic> toQuery() {
+    final q = <String, dynamic>{};
+    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
+    if (offset != null && offset! > 0) q['offset'] = offset!.toString();
+    if (order != null && order!.isNotEmpty) q['order'] = order;
+    if (ascending != null) q['ascending'] = ascending!.toString();
+    if (league.isNotEmpty) q['league'] = league;
+    if (name.isNotEmpty) q['name'] = name;
+    return q;
+  }
+}
+
+/// Query for `GET /comments`. Mirrors `buildCommentPath` in polygolem.
+@immutable
+final class CommentQuery {
+  const CommentQuery({
+    this.entityId,
+    this.entityType,
+    this.limit,
+    this.offset,
+  });
+
+  final int? entityId;
+  final String? entityType;
+  final int? limit;
+  final int? offset;
+
+  Map<String, dynamic> toQuery() {
+    final q = <String, dynamic>{};
+    if (entityId != null) q['entity_id'] = entityId!.toString();
+    if (entityType != null && entityType!.isNotEmpty) {
+      q['entity_type'] = entityType;
+    }
+    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
+    if (offset != null && offset! > 0) q['offset'] = offset!.toString();
+    return q;
+  }
+}
+
+/// Keyset pagination params. Mirrors `buildKeysetPath` in polygolem.
+@immutable
+final class KeysetParams {
+  const KeysetParams({
+    this.limit,
+    this.keysetId,
+    this.ascending,
+    this.active,
+    this.closed,
+    this.order,
+  });
+
+  final int? limit;
+  final String? keysetId;
+  final bool? ascending;
+  final bool? active;
+  final bool? closed;
+  final String? order;
+
+  Map<String, dynamic> toQuery() {
+    final q = <String, dynamic>{};
+    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
+    if (keysetId != null && keysetId!.isNotEmpty) q['keyset_id'] = keysetId;
+    if (ascending != null) q['ascending'] = ascending!.toString();
+    if (active != null) q['active'] = active!.toString();
+    if (closed != null) q['closed'] = closed!.toString();
+    if (order != null && order!.isNotEmpty) q['order'] = order;
     return q;
   }
 }

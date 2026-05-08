@@ -1,14 +1,21 @@
 /// Read-only Gamma API client.
 ///
-/// Mirrors the read-side of `internal/gamma`. Phase 1 ships `markets`,
-/// `marketBySlug`, `marketById`, `search`, and `health`. Events, series,
-/// tags, comments, and teams arrive in later commits.
+/// Mirrors the read-side of `internal/gamma/client.go`. Covers markets,
+/// events, series, tags, teams, comments, profiles, sports metadata,
+/// market-by-token, and keyset pagination.
 library;
 
 import '../transport/http_transport.dart';
 import '../transport/transport_config.dart';
 import '../types/market.dart';
 import 'gamma_params.dart';
+
+/// One page of a keyset-paginated response.
+///
+/// `nextCursor` is empty when no further pages exist. Mirrors the
+/// `(data, next_cursor, error)` triple polygolem returns from
+/// [GammaClient.eventsKeyset] / [GammaClient.marketsKeyset].
+typedef KeysetPage<T> = ({List<T> data, String nextCursor});
 
 final class GammaClient {
   GammaClient({HttpTransport? transport})
@@ -74,8 +81,232 @@ final class GammaClient {
     return SearchResponse.fromJson(body);
   }
 
+  /// Returns active, non-closed markets. Sugar for
+  /// `markets(GetMarketsParams(active: true, closed: false))`.
+  Future<List<Market>> activeMarkets() =>
+      markets(const GetMarketsParams(active: true, closed: false));
+
+  /// Lists events with optional filters.
+  Future<List<Event>> events([
+    GetEventsParams params = const GetEventsParams(),
+  ]) async {
+    final list = await _transport.getJsonList(
+      '/events',
+      query: params.toQuery(),
+    );
+    return _events(list);
+  }
+
+  /// Returns a single event by Gamma id.
+  Future<Event?> eventById(String id) async {
+    final body = await _transport.getJson('/events/$id');
+    if (body.isEmpty) return null;
+    return Event.fromJson(body);
+  }
+
+  /// Returns a single event by slug.
+  ///
+  /// Gamma's `/events/{id}` route only accepts numeric ids; slug lookups
+  /// must go through `/events?slug=...&limit=1`. Returns null if no event
+  /// matches.
+  Future<Event?> eventBySlug(String slug) async {
+    final list = await events(GetEventsParams(limit: 1, slug: <String>[slug]));
+    if (list.isEmpty) return null;
+    return list.first;
+  }
+
+  /// Lists series with optional filters.
+  Future<List<Series>> series([
+    GetSeriesParams params = const GetSeriesParams(),
+  ]) async {
+    final list = await _transport.getJsonList(
+      '/series',
+      query: params.toQuery(),
+    );
+    return _seriesList(list);
+  }
+
+  /// Returns a single series by id.
+  Future<Series?> seriesById(String id) async {
+    final body = await _transport.getJson('/series/$id');
+    if (body.isEmpty) return null;
+    return Series.fromJson(body);
+  }
+
+  /// Lists tags with optional filters.
+  Future<List<Tag>> tags([
+    GetTagsParams params = const GetTagsParams(),
+  ]) async {
+    final list = await _transport.getJsonList(
+      '/tags',
+      query: params.toQuery(),
+    );
+    return _tagList(list);
+  }
+
+  /// Returns a single tag by id.
+  Future<Tag?> tagById(String id) async {
+    final body = await _transport.getJson('/tags/$id');
+    if (body.isEmpty) return null;
+    return Tag.fromJson(body);
+  }
+
+  /// Returns a single tag by slug. Polymarket reuses the `/tags/{id}` route
+  /// for slug lookups.
+  Future<Tag?> tagBySlug(String slug) async {
+    final body = await _transport.getJson('/tags/$slug');
+    if (body.isEmpty) return null;
+    return Tag.fromJson(body);
+  }
+
+  /// Returns related tags for a tag id.
+  Future<List<TagRelationship>> relatedTagsById(String tagId) async {
+    final list = await _transport.getJsonList('/tags/$tagId/related');
+    return _tagRelationships(list);
+  }
+
+  /// Returns related tags for a tag slug.
+  Future<List<TagRelationship>> relatedTagsBySlug(String slug) async {
+    final list = await _transport.getJsonList('/tags/$slug/related');
+    return _tagRelationships(list);
+  }
+
+  /// Lists sports teams with optional filters.
+  Future<List<Team>> teams([
+    GetTeamsParams params = const GetTeamsParams(),
+  ]) async {
+    final list = await _transport.getJsonList(
+      '/teams',
+      query: params.toQuery(),
+    );
+    return _teams(list);
+  }
+
+  /// Lists comments with optional filters.
+  Future<List<Comment>> comments(CommentQuery query) async {
+    final list = await _transport.getJsonList(
+      '/comments',
+      query: query.toQuery(),
+    );
+    return _commentsList(list);
+  }
+
+  /// Returns a single comment by id.
+  Future<Comment?> commentById(String id) async {
+    final body = await _transport.getJson('/comments/$id');
+    if (body.isEmpty) return null;
+    return Comment.fromJson(body);
+  }
+
+  /// Lists comments authored by a user. Mirrors polygolem's
+  /// `CommentsByUser(addr, limit)` shape: both query parameters are always
+  /// emitted, even when [limit] is zero.
+  Future<List<Comment>> commentsByUser(
+    String userAddress, {
+    int limit = 0,
+  }) async {
+    final list = await _transport.getJsonList(
+      '/comments',
+      query: <String, dynamic>{
+        'user_address': userAddress,
+        'limit': limit.toString(),
+      },
+    );
+    return _commentsList(list);
+  }
+
+  /// Returns sports metadata.
+  Future<List<SportMetadata>> sportsMetadata() async {
+    final list = await _transport.getJsonList('/sports-metadata');
+    return _sportsMetadata(list);
+  }
+
+  /// Returns the catalogue of valid sports market types.
+  Future<List<SportsMarketType>> sportsMarketTypes() async {
+    final list = await _transport.getJsonList('/sports-market-types');
+    return _sportsMarketTypes(list);
+  }
+
+  /// Resolves a market by CLOB token id.
+  Future<MarketByTokenResponse?> marketByToken(String tokenId) async {
+    final body = await _transport.getJson('/markets/token/$tokenId');
+    if (body.isEmpty) return null;
+    return MarketByTokenResponse.fromJson(body);
+  }
+
+  /// Returns the public profile for a wallet address.
+  Future<Profile?> publicProfile(String walletAddress) async {
+    final body = await _transport.getJson('/profiles/$walletAddress');
+    if (body.isEmpty) return null;
+    return Profile.fromJson(body);
+  }
+
+  /// Keyset-paginated events. Returns the data slice and the cursor for the
+  /// next page (empty when there is no next page).
+  Future<KeysetPage<Event>> eventsKeyset(KeysetParams params) async {
+    final body = await _transport.getJson(
+      '/events-keyset',
+      query: params.toQuery(),
+    );
+    final raw = body['data'];
+    final data = raw is List ? _events(raw) : const <Event>[];
+    return (data: data, nextCursor: body['next_cursor']?.toString() ?? '');
+  }
+
+  /// Keyset-paginated markets. Returns the data slice and the cursor for
+  /// the next page (empty when there is no next page).
+  Future<KeysetPage<Market>> marketsKeyset(KeysetParams params) async {
+    final body = await _transport.getJson(
+      '/markets-keyset',
+      query: params.toQuery(),
+    );
+    final raw = body['data'];
+    final data = raw is List ? _markets(raw) : const <Market>[];
+    return (data: data, nextCursor: body['next_cursor']?.toString() ?? '');
+  }
+
   static List<Market> _markets(List<dynamic> raw) => raw
       .whereType<Map<dynamic, dynamic>>()
       .map((m) => Market.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+
+  static List<Event> _events(List<dynamic> raw) => raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => Event.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+
+  static List<Series> _seriesList(List<dynamic> raw) => raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => Series.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+
+  static List<Tag> _tagList(List<dynamic> raw) => raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => Tag.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+
+  static List<TagRelationship> _tagRelationships(List<dynamic> raw) => raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => TagRelationship.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+
+  static List<Team> _teams(List<dynamic> raw) => raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => Team.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+
+  static List<Comment> _commentsList(List<dynamic> raw) => raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => Comment.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+
+  static List<SportMetadata> _sportsMetadata(List<dynamic> raw) => raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => SportMetadata.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+
+  static List<SportsMarketType> _sportsMarketTypes(List<dynamic> raw) => raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => SportsMarketType.fromJson(m.cast<String, dynamic>()))
       .toList(growable: false);
 }
