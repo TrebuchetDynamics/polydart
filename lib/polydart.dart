@@ -4,6 +4,34 @@
 /// `docs/PLAN.md`.
 library;
 
+export 'src/auth/clob_auth.dart'
+    show
+        buildClobAuthTypedData,
+        buildL1Headers,
+        clobAuthDefaultMessage,
+        clobAuthDomainName,
+        clobAuthDomainVersion,
+        hashClobAuth;
+export 'src/auth/eip712.dart'
+    show
+        Eip712Domain,
+        Eip712Field,
+        eip712DomainSeparator,
+        eip712HashStruct,
+        eip712TypeHash,
+        hashTypedData;
+export 'src/auth/eth_hex.dart'
+    show
+        bytesToHex,
+        bytesToHex0x,
+        concatBytes,
+        hexToBytes,
+        keccak256Bytes,
+        keccak256Utf8,
+        leftPadBytes,
+        normalizeAddress,
+        uint256BigEndian;
+export 'src/auth/wallet_signer.dart' show WalletSigner;
 export 'src/bookreader/bookreader.dart' show BookReader;
 export 'src/clob/clob_client.dart' show ClobClient;
 export 'src/clob/clob_params.dart' show BookParams, PriceHistoryParams;
