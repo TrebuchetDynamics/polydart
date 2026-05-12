@@ -371,6 +371,8 @@ export 'src/wallet/deposit_wallet_signing.dart'
         walletBatchTypeString;
 export 'src/wallet/deposit_wallet_readiness.dart'
     show
+        DepositWalletApprovalCheck,
+        DepositWalletApprovalKind,
         DepositWalletReadiness,
         DepositWalletReadinessService,
         DepositWalletReadinessStatus;

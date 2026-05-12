@@ -85,14 +85,27 @@ void main() {
     expect(credentials.toString(), isNot(contains('relayer-key')));
 
     final readiness = DepositWalletReadiness(
-      status: DepositWalletReadinessStatus.blocked,
+      status: DepositWalletReadinessStatus.needsApproval,
       ownerEoa: '0x0000000000000000000000000000000000001234',
       depositWallet: '0xfd5041047be8c192c725a66228f141196fa3cf9c',
-      deployed: false,
-      credentialsReady: false,
-      reason: 'credentials missing',
+      deployed: true,
+      approvalsChecked: true,
+      fundingChecked: true,
+      clobBalance: '1000000',
+      missingApprovals: const <String>['pusd:ctfExchangeV2'],
+      approvalChecks: const <DepositWalletApprovalCheck>[
+        DepositWalletApprovalCheck(
+          label: 'pusd:ctfExchangeV2',
+          kind: DepositWalletApprovalKind.erc20Allowance,
+          token: '0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB',
+          spender: '0xE111180000d2663C0091e4f400237545B87B996B',
+          ready: false,
+          value: '0',
+        ),
+      ],
     );
-    expect(readiness.status, DepositWalletReadinessStatus.blocked);
-    expect(readiness.credentialsReady, isFalse);
+    expect(readiness.status, DepositWalletReadinessStatus.needsApproval);
+    expect(readiness.fundingChecked, isTrue);
+    expect(readiness.approvalChecks.single.ready, isFalse);
   });
 }

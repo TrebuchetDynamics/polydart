@@ -85,9 +85,11 @@ inside the app-provided wallet adapter.
 
 After credentials are available, call
 `DepositWalletReadinessService.checkWithCredentials(...)`. It builds the
-Relayer V2 client from the relayer key, checks deploy state, and returns
-`blocked` with a protocol reason instead of making the app infer that missing
-credentials prevented the check.
+Relayer V2 client from the relayer key, checks deploy state, verifies the six
+V2 pUSD/CTF approvals, and reads CLOB `balance-allowance` with
+`signature_type=3`. It returns `blocked`, `needsDeploy`,
+`needsApprovalCheck`, `needsApproval`, `needsFunding`, or `ready` without
+making the app infer protocol state from exceptions.
 
 Signature flows assume Polygon mainnet unless a lower-level helper documents a
 different chain. Wallet-backed signing should verify `chainId == 137` before

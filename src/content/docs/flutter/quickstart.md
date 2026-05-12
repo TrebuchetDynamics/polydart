@@ -118,4 +118,5 @@ secure storage through `CredentialStore`.
 Pass those credentials into
 `DepositWalletReadinessService.checkWithCredentials(...)` before prompting for
 deploy or approval actions. The readiness result stays machine-readable:
-`needsDeploy`, `needsApprovalCheck`, or `blocked`.
+`needsDeploy`, `needsApprovalCheck`, `needsApproval`, `needsFunding`, `ready`,
+or `blocked`.

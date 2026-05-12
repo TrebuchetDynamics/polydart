@@ -56,8 +56,8 @@ orchestration surface. It:
 
 Next live-readiness slices:
 
-- `signatureType=3`, maker/signer/funder separation, and approval checks
-- CLOB `balance-allowance` checks for deposit-wallet-backed live trading
+- `signatureType=3` order placement with maker/signer/funder separation
+- pUSD routing from EOA available balance into the deposit wallet
 
 ## First Public API Target
 
@@ -76,9 +76,6 @@ Initial machine-readable states:
 - `needsDeploy`
 - `needsApprovalCheck`
 - `blocked`
-
-Future tests should add these states only when the service can verify them:
-
 - `needsApproval`
 - `needsFunding`
 - `ready`
@@ -91,14 +88,14 @@ The readiness object should include:
 - credential readiness provenance
 - approval-check provenance
 - required approval set
+- missing approval set
+- CLOB collateral balance/allowance using `signature_type=3`
 
 Future tests should add:
 
-- missing approval set, once allowance checks can prove it
 - deposit-wallet pUSD balance
 - EOA pUSD balance as available-to-fund only
-- CLOB balance/allowance using `signature_type=3`
-- missing approval set, blocked reason, and funding state as checks mature
+- funding source recommendations as checks mature
 
 No UI copy in `polydart`; Flutter owns labels, localization, and warnings.
 

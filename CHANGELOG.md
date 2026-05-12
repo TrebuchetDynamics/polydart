@@ -33,6 +33,9 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 - Deposit-wallet readiness can consume `LiveCredentialReadiness` directly,
   build a Relayer V2 client from the relayer key, and return a blocked
   machine-readable state when credentials are incomplete.
+- Deposit-wallet readiness now checks the six V2 pUSD/CTF approvals plus CLOB
+  `balance-allowance` with `signature_type=3`, returning `needsApproval`,
+  `needsFunding`, or `ready`.
 - CI workflow: format, analyze, test (network tests opt-in).
 
 ## [0.1.0-alpha.1] — TBD

@@ -208,5 +208,153 @@ void main() {
         expect(readiness.reason, contains('relayer unavailable'));
       },
     );
+
+    test(
+      'checkWithCredentials returns needsApproval when a required approval is missing',
+      () async {
+        final clobUrls = <Uri>[];
+
+        final readiness =
+            await DepositWalletReadinessService.checkWithCredentials(
+              eoaAddress: _eoa,
+              credentials: _readyCredentials,
+              relayerTransport: _relayerTransport(deployed: true),
+              clob: _clobWithBalance('1000000', capturedUrls: clobUrls),
+              rpcClient: _approvalRpc(missingApprovalIndexes: <int>{3}),
+              rpcUrl: 'http://rpc.test',
+            );
+
+        expect(readiness.status, DepositWalletReadinessStatus.needsApproval);
+        expect(readiness.approvalsChecked, isTrue);
+        expect(readiness.fundingChecked, isTrue);
+        expect(readiness.missingApprovals, <String>['ctf:negRiskExchangeV2']);
+        expect(readiness.approvalChecks, hasLength(6));
+        expect(readiness.clobBalance, '1000000');
+        expect(clobUrls.single.path, '/balance-allowance');
+        expect(clobUrls.single.queryParameters['asset_type'], 'COLLATERAL');
+        expect(clobUrls.single.queryParameters['signature_type'], '3');
+      },
+    );
+
+    test(
+      'checkWithCredentials returns needsFunding when approvals are ready but CLOB balance is zero',
+      () async {
+        final readiness =
+            await DepositWalletReadinessService.checkWithCredentials(
+              eoaAddress: _eoa,
+              credentials: _readyCredentials,
+              relayerTransport: _relayerTransport(deployed: true),
+              clob: _clobWithBalance('0'),
+              rpcClient: _approvalRpc(),
+              rpcUrl: 'http://rpc.test',
+            );
+
+        expect(readiness.status, DepositWalletReadinessStatus.needsFunding);
+        expect(readiness.approvalsChecked, isTrue);
+        expect(readiness.fundingChecked, isTrue);
+        expect(readiness.missingApprovals, isEmpty);
+        expect(readiness.clobBalance, '0');
+      },
+    );
+
+    test(
+      'checkWithCredentials returns ready when deployed, approved, and funded',
+      () async {
+        final readiness =
+            await DepositWalletReadinessService.checkWithCredentials(
+              eoaAddress: _eoa,
+              credentials: _readyCredentials,
+              relayerTransport: _relayerTransport(deployed: true),
+              clob: _clobWithBalance('2500000'),
+              rpcClient: _approvalRpc(),
+              rpcUrl: 'http://rpc.test',
+            );
+
+        expect(readiness.status, DepositWalletReadinessStatus.ready);
+        expect(readiness.deployed, isTrue);
+        expect(readiness.approvalsChecked, isTrue);
+        expect(readiness.fundingChecked, isTrue);
+        expect(readiness.missingApprovals, isEmpty);
+        expect(readiness.clobBalance, '2500000');
+      },
+    );
   });
+}
+
+const LiveCredentialReadiness _readyCredentials = LiveCredentialReadiness(
+  clobApiKey: CredentialReadiness<ApiKey>(
+    status: LiveCredentialStatus.cached,
+    value: _clobKey,
+  ),
+  builderFeeKey: CredentialReadiness<ApiKey>(
+    status: LiveCredentialStatus.cached,
+    value: _clobKey,
+  ),
+  relayerApiKey: CredentialReadiness<V2APIKey>(
+    status: LiveCredentialStatus.cached,
+    value: _relayerKey,
+  ),
+);
+
+HttpTransport _relayerTransport({required bool deployed}) {
+  return HttpTransport(
+    config: const TransportConfig(baseUrl: defaultRelayerBaseUrl, retryMax: 0),
+    inner: MockClient((req) async {
+      expect(req.url.path, '/deployed');
+      return http.Response(
+        jsonEncode(<String, dynamic>{'deployed': deployed}),
+        200,
+      );
+    }),
+  );
+}
+
+ClobClient _clobWithBalance(String balance, {List<Uri>? capturedUrls}) {
+  return ClobClient(
+    transport: HttpTransport(
+      config: const TransportConfig(
+        baseUrl: ClobClient.defaultBaseUrl,
+        retryMax: 0,
+      ),
+      inner: MockClient((req) async {
+        capturedUrls?.add(req.url);
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'balance': balance,
+            'allowances': <String, String>{'0xCtfExchangeV2': '999999999'},
+          }),
+          200,
+        );
+      }),
+    ),
+  );
+}
+
+http.Client _approvalRpc({Set<int> missingApprovalIndexes = const <int>{}}) {
+  var callIndex = 0;
+  return MockClient((req) async {
+    final body = jsonDecode(req.body) as Map<String, dynamic>;
+    expect(body['method'], 'eth_call');
+    final params = body['params'] as List<dynamic>;
+    final call = params[0] as Map<String, dynamic>;
+    final input = (call['input'] as String).toLowerCase();
+    final isAllowance = input.startsWith('0xdd62ed3e');
+    final isApprovalForAll = input.startsWith('0xe985e9c5');
+    expect(isAllowance || isApprovalForAll, isTrue);
+
+    final ready = !missingApprovalIndexes.contains(callIndex);
+    callIndex++;
+    return _rpcResult(_word(ready ? 1 : 0));
+  });
+}
+
+http.Response _rpcResult(String result) {
+  return http.Response(
+    jsonEncode(<String, Object>{'jsonrpc': '2.0', 'id': 1, 'result': result}),
+    200,
+  );
+}
+
+String _word(int value) {
+  return '0x${value.toRadixString(16).padLeft(64, '0')}';
 }
