@@ -206,15 +206,28 @@ final class OrderResponse {
     required this.status,
     this.errorMessage,
     this.transactionHash,
+    this.makingAmount,
+    this.takingAmount,
+    this.transactionHashes = const <String>[],
+    this.tradeIds = const <String>[],
   });
 
   factory OrderResponse.fromJson(Map<String, dynamic> json) {
+    final singleTransactionHash = json['transaction_hash']?.toString();
     return OrderResponse(
       success: json['success'] == true,
-      orderId: json['order_id']?.toString() ?? '',
+      orderId: (json['orderID'] ?? json['order_id'])?.toString() ?? '',
       status: json['status']?.toString() ?? '',
-      errorMessage: json['error_msg']?.toString(),
-      transactionHash: json['transaction_hash']?.toString(),
+      errorMessage: (json['errorMsg'] ?? json['error_msg'])?.toString(),
+      transactionHash: singleTransactionHash,
+      makingAmount: (json['makingAmount'] ?? json['making_amount'])?.toString(),
+      takingAmount: (json['takingAmount'] ?? json['taking_amount'])?.toString(),
+      transactionHashes: _stringList(
+        json['transactionsHashes'] ??
+            json['transaction_hashes'] ??
+            singleTransactionHash,
+      ),
+      tradeIds: _stringList(json['tradeIDs'] ?? json['trade_ids']),
     );
   }
 
@@ -223,4 +236,18 @@ final class OrderResponse {
   final String status;
   final String? errorMessage;
   final String? transactionHash;
+  final String? makingAmount;
+  final String? takingAmount;
+  final List<String> transactionHashes;
+  final List<String> tradeIds;
+}
+
+List<String> _stringList(Object? raw) {
+  if (raw == null) return const <String>[];
+  if (raw is List) {
+    return raw.map((e) => e.toString()).toList(growable: false);
+  }
+  final value = raw.toString();
+  if (value.isEmpty) return const <String>[];
+  return <String>[value];
 }

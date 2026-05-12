@@ -1,10 +1,11 @@
 /// Ethereum hex / address utilities used by the auth and order modules.
 library;
 
+import 'dart:convert' show utf8;
 import 'dart:typed_data';
 
 import 'package:convert/convert.dart' show hex;
-import 'package:web3dart/crypto.dart' as web3_crypto;
+import 'package:pointycastle/digests/keccak.dart';
 
 import '../errors/errors.dart';
 
@@ -68,11 +69,15 @@ String normalizeAddress(String address) {
 }
 
 /// Keccak-256 of [bytes] (32-byte digest).
-Uint8List keccak256Bytes(List<int> bytes) =>
-    web3_crypto.keccak256(Uint8List.fromList(bytes));
+Uint8List keccak256Bytes(List<int> bytes) {
+  final digest = KeccakDigest(256);
+  return digest.process(Uint8List.fromList(bytes));
+}
 
 /// Keccak-256 of UTF-8 [text].
-Uint8List keccak256Utf8(String text) => web3_crypto.keccakUtf8(text);
+Uint8List keccak256Utf8(String text) {
+  return keccak256Bytes(utf8.encode(text));
+}
 
 /// Concatenates [parts] into a single Uint8List.
 Uint8List concatBytes(Iterable<List<int>> parts) {

@@ -241,7 +241,7 @@ Pinned for review; happy to flip any of these on user input.
 
 | Risk | Mitigation in this plan |
 |------|-------------------------|
-| `web3dart` lacks first-class EIP-712 | Phase 2 includes a thin internal `eip712.dart` built on `pointycastle` + manual encoding, validated against polygolem vectors. |
+| EIP-712 encoding mismatch | Internal `eip712.dart` uses manual encoding plus `pointycastle` Keccak, validated against polygolem vectors. |
 | Polymarket API drift | Weekly parity job (§9) catches schema/normalization drift early. |
 | Relayer credential leak | Injected config only in `polydart`; app-local secure storage in the consumer app; no shared embedded creds; optional proxy later. |
 | CREATE2 mismatch | Phase 2 acceptance gates on shared address vector. |

@@ -2,13 +2,30 @@
 ///
 /// Mirrors `pkg/stream/client.go` (`BookMessage`, `PriceLevel`,
 /// `PriceChangeMessage`, `PriceChangeEntry`, `LastTradeMessage`,
-/// `BestBidAskMessage`, `TickSizeChangeMessage`). JSON tags match polygolem
-/// verbatim so the same wire payloads decode in both SDKs.
+/// `BestBidAskMessage`, `TickSizeChangeMessage`, `NewMarketMessage`,
+/// `MarketResolvedMessage`). JSON tags match polygolem verbatim so the same
+/// wire payloads decode in both SDKs.
 library;
 
 import 'package:meta/meta.dart';
 
 String _str(Object? v) => (v ?? '').toString();
+
+bool _bool(Object? v) {
+  if (v is bool) return v;
+  if (v is String) return v.toLowerCase() == 'true';
+  return false;
+}
+
+List<String> _strings(Object? raw) {
+  if (raw is! List) return const <String>[];
+  return raw.map(_str).toList(growable: false);
+}
+
+Map<String, dynamic> _map(Object? raw) {
+  if (raw is! Map) return const <String, dynamic>{};
+  return raw.map<String, dynamic>((k, v) => MapEntry(k.toString(), v));
+}
 
 List<PriceLevel> _levels(Object? raw) {
   if (raw is! List) return const <PriceLevel>[];
@@ -233,4 +250,118 @@ final class TickSizeChangeMessage {
   final String oldTickSize;
   final String newTickSize;
   final String timestamp;
+}
+
+/// Market lifecycle creation event (`event_type: "new_market"`).
+@immutable
+final class NewMarketMessage {
+  const NewMarketMessage({
+    required this.eventType,
+    required this.id,
+    required this.question,
+    required this.market,
+    required this.slug,
+    required this.description,
+    required this.assetIds,
+    required this.outcomes,
+    this.eventMessage = const <String, dynamic>{},
+    required this.timestamp,
+    required this.tags,
+    required this.conditionId,
+    required this.clobTokenIds,
+    required this.active,
+    this.sportsMarketType = '',
+    this.line = '',
+    this.gameStartTime = '',
+    this.orderPriceMinTickSize = '',
+    this.groupItemTitle = '',
+    this.takerBaseFee = '',
+    this.feesEnabled = false,
+    this.feeSchedule = const <String, dynamic>{},
+  });
+
+  factory NewMarketMessage.fromJson(Map<String, dynamic> json) =>
+      NewMarketMessage(
+        eventType: _str(json['event_type']),
+        id: _str(json['id']),
+        question: _str(json['question']),
+        market: _str(json['market']),
+        slug: _str(json['slug']),
+        description: _str(json['description']),
+        assetIds: _strings(json['assets_ids']),
+        outcomes: _strings(json['outcomes']),
+        eventMessage: _map(json['event_message']),
+        timestamp: _str(json['timestamp']),
+        tags: _strings(json['tags']),
+        conditionId: _str(json['condition_id']),
+        clobTokenIds: _strings(json['clob_token_ids']),
+        active: _bool(json['active']),
+        sportsMarketType: _str(json['sports_market_type']),
+        line: _str(json['line']),
+        gameStartTime: _str(json['game_start_time']),
+        orderPriceMinTickSize: _str(json['order_price_min_tick_size']),
+        groupItemTitle: _str(json['group_item_title']),
+        takerBaseFee: _str(json['taker_base_fee']),
+        feesEnabled: _bool(json['fees_enabled']),
+        feeSchedule: _map(json['fee_schedule']),
+      );
+
+  final String eventType;
+  final String id;
+  final String question;
+  final String market;
+  final String slug;
+  final String description;
+  final List<String> assetIds;
+  final List<String> outcomes;
+  final Map<String, dynamic> eventMessage;
+  final String timestamp;
+  final List<String> tags;
+  final String conditionId;
+  final List<String> clobTokenIds;
+  final bool active;
+  final String sportsMarketType;
+  final String line;
+  final String gameStartTime;
+  final String orderPriceMinTickSize;
+  final String groupItemTitle;
+  final String takerBaseFee;
+  final bool feesEnabled;
+  final Map<String, dynamic> feeSchedule;
+}
+
+/// Market lifecycle resolution event (`event_type: "market_resolved"`).
+@immutable
+final class MarketResolvedMessage {
+  const MarketResolvedMessage({
+    required this.eventType,
+    required this.id,
+    required this.market,
+    required this.assetIds,
+    required this.winningAssetId,
+    required this.winningOutcome,
+    required this.timestamp,
+    required this.tags,
+  });
+
+  factory MarketResolvedMessage.fromJson(Map<String, dynamic> json) =>
+      MarketResolvedMessage(
+        eventType: _str(json['event_type']),
+        id: _str(json['id']),
+        market: _str(json['market']),
+        assetIds: _strings(json['assets_ids']),
+        winningAssetId: _str(json['winning_asset_id']),
+        winningOutcome: _str(json['winning_outcome']),
+        timestamp: _str(json['timestamp']),
+        tags: _strings(json['tags']),
+      );
+
+  final String eventType;
+  final String id;
+  final String market;
+  final List<String> assetIds;
+  final String winningAssetId;
+  final String winningOutcome;
+  final String timestamp;
+  final List<String> tags;
 }

@@ -106,48 +106,139 @@ void main() {
   });
 
   group('createOrder', () {
-    test('POSTs /order with signed payload and L2 headers', () async {
+    test(
+      'POSTs /order with signed payload, L2 headers, and Polygolem response casing',
+      () async {
+        http.BaseRequest? captured;
+        String? capturedBody;
+        final c = _liveClient((req) async {
+          captured = req;
+          if (req is http.Request) capturedBody = req.body;
+          return http.Response(
+            jsonEncode(<String, dynamic>{
+              'success': true,
+              'orderID': 'O-9',
+              'status': 'matched',
+              'makingAmount': '1000000',
+              'takingAmount': '5000000',
+              'errorMsg': '',
+              'transactionsHashes': <String>['0xtx'],
+              'tradeIDs': <String>['trade-1'],
+            }),
+            200,
+          );
+        });
+
+        final resp = await c.writes.createOrder(
+          order: _sampleSignedOrder(),
+          owner: 'owner-1',
+          apiKey: _apiKey,
+          orderType: OrderType.gtc,
+        );
+
+        expect(captured!.method, 'POST');
+        expect(captured!.url.path, '/order');
+        expect(captured!.headers['POLY_API_KEY'], 'test-key');
+        expect(captured!.headers['POLY_PASSPHRASE'], 'pass');
+        expect(captured!.headers['POLY_TIMESTAMP'], isNotNull);
+        expect(captured!.headers['POLY_SIGNATURE'], isNotNull);
+
+        final body = jsonDecode(capturedBody!) as Map<String, dynamic>;
+        expect(body['owner'], 'owner-1');
+        expect(body['orderType'], 'GTC');
+        expect((body['order'] as Map)['tokenId'], '999');
+
+        expect(resp.success, isTrue);
+        expect(resp.orderId, 'O-9');
+        expect(resp.makingAmount, '1000000');
+        expect(resp.takingAmount, '5000000');
+        expect(resp.transactionHashes, ['0xtx']);
+        expect(resp.tradeIds, ['trade-1']);
+      },
+    );
+  });
+
+  group('createOrders', () {
+    test('POSTs /orders with signed order payload array', () async {
       http.BaseRequest? captured;
       String? capturedBody;
       final c = _liveClient((req) async {
         captured = req;
         if (req is http.Request) capturedBody = req.body;
         return http.Response(
-          jsonEncode(<String, dynamic>{
-            'success': true,
-            'order_id': 'O-9',
-            'status': 'matched',
-          }),
+          jsonEncode(<Map<String, dynamic>>[
+            <String, dynamic>{
+              'success': true,
+              'orderID': 'O-1',
+              'status': 'live',
+            },
+            <String, dynamic>{
+              'success': true,
+              'orderID': 'O-2',
+              'status': 'live',
+            },
+          ]),
           200,
         );
       });
 
-      final resp = await c.writes.createOrder(
-        order: _sampleSignedOrder(),
-        owner: 'owner-1',
+      final response = await c.writes.createOrders(
+        requests: <CreateOrderRequest>[
+          CreateOrderRequest(
+            order: _sampleSignedOrder(),
+            owner: 'owner-1',
+            orderType: OrderType.gtc,
+          ),
+          CreateOrderRequest(
+            order: _sampleSignedOrder(),
+            owner: 'owner-1',
+            orderType: OrderType.gtc,
+            postOnly: true,
+          ),
+        ],
         apiKey: _apiKey,
-        orderType: OrderType.gtc,
       );
 
       expect(captured!.method, 'POST');
-      expect(captured!.url.path, '/order');
+      expect(captured!.url.path, '/orders');
       expect(captured!.headers['POLY_API_KEY'], 'test-key');
-      expect(captured!.headers['POLY_PASSPHRASE'], 'pass');
-      expect(captured!.headers['POLY_TIMESTAMP'], isNotNull);
-      expect(captured!.headers['POLY_SIGNATURE'], isNotNull);
+      final body = jsonDecode(capturedBody!) as List<dynamic>;
+      expect(body, hasLength(2));
+      expect((body.last as Map<String, dynamic>)['postOnly'], isTrue);
+      expect(response.orders.map((o) => o.orderId), ['O-1', 'O-2']);
+    });
 
-      final body = jsonDecode(capturedBody!) as Map<String, dynamic>;
-      expect(body['owner'], 'owner-1');
-      expect(body['orderType'], 'GTC');
-      expect((body['order'] as Map)['tokenId'], '999');
+    test('rejects empty and oversized batches before network', () async {
+      var hit = false;
+      final c = _liveClient((req) async {
+        hit = true;
+        return http.Response('[]', 200);
+      });
 
-      expect(resp.success, isTrue);
-      expect(resp.orderId, 'O-9');
+      await expectLater(
+        c.writes.createOrders(requests: const [], apiKey: _apiKey),
+        throwsA(isA<ValidationException>()),
+      );
+      await expectLater(
+        c.writes.createOrders(
+          requests: <CreateOrderRequest>[
+            for (var i = 0; i < 16; i++)
+              CreateOrderRequest(
+                order: _sampleSignedOrder(),
+                owner: 'owner-1',
+                orderType: OrderType.gtc,
+              ),
+          ],
+          apiKey: _apiKey,
+        ),
+        throwsA(isA<ValidationException>()),
+      );
+      expect(hit, isFalse);
     });
   });
 
   group('cancelOrder', () {
-    test('DELETEs /order with {orderId} body and L2 headers', () async {
+    test('DELETEs /order with {orderID} body and L2 headers', () async {
       http.BaseRequest? captured;
       String? capturedBody;
       final c = _liveClient((req) async {
@@ -167,7 +258,7 @@ void main() {
       expect(captured!.method, 'DELETE');
       expect(captured!.url.path, '/order');
       final body = jsonDecode(capturedBody!) as Map<String, dynamic>;
-      expect(body['orderId'], 'O-1');
+      expect(body['orderID'], 'O-1');
       expect(captured!.headers['POLY_API_KEY'], 'test-key');
 
       expect(resp.canceled, ['O-1']);
@@ -199,7 +290,7 @@ void main() {
   });
 
   group('cancelOrders', () {
-    test('DELETEs /orders with array body', () async {
+    test('DELETEs /orders with {orderIDs} body', () async {
       http.BaseRequest? captured;
       String? capturedBody;
       final c = _liveClient((req) async {
@@ -221,8 +312,8 @@ void main() {
 
       expect(captured!.method, 'DELETE');
       expect(captured!.url.path, '/orders');
-      final body = jsonDecode(capturedBody!) as List<dynamic>;
-      expect(body, ['O-1', 'O-2', 'O-3']);
+      final body = jsonDecode(capturedBody!) as Map<String, dynamic>;
+      expect(body['orderIDs'], ['O-1', 'O-2', 'O-3']);
       expect(resp.canceled, ['O-1', 'O-2']);
       expect(resp.notCanceled, {'O-3': 'already filled'});
     });
@@ -283,8 +374,7 @@ void main() {
       expect(captured!.method, 'DELETE');
       expect(captured!.url.path, '/cancel-market-orders');
       expect(captured!.headers['POLY_SIGNATURE'], isNotNull);
-      final decoded =
-          jsonDecode(capturedBody ?? '{}') as Map<String, dynamic>;
+      final decoded = jsonDecode(capturedBody ?? '{}') as Map<String, dynamic>;
       expect(decoded['market'], '0xMarket');
       expect(decoded['asset_id'], 'token-1');
       expect(resp.canceled, ['O-9']);
@@ -296,6 +386,46 @@ void main() {
         () => c.writes.cancelMarket(apiKey: _apiKey),
         throwsA(isA<ValidationException>()),
       );
+    });
+  });
+
+  group('heartbeat', () {
+    test('POSTs /v1/heartbeats with nullable heartbeat_id', () async {
+      http.BaseRequest? captured;
+      String? capturedBody;
+      final c = _liveClient((req) async {
+        captured = req;
+        if (req is http.Request) capturedBody = req.body;
+        return http.Response(
+          jsonEncode(<String, dynamic>{'status': 'ok'}),
+          200,
+        );
+      });
+
+      await c.writes.heartbeat(apiKey: _apiKey);
+
+      expect(captured!.method, 'POST');
+      expect(captured!.url.path, '/v1/heartbeats');
+      expect(jsonDecode(capturedBody!), <String, dynamic>{
+        'heartbeat_id': null,
+      });
+    });
+
+    test('includes heartbeat id when supplied', () async {
+      String? capturedBody;
+      final c = _liveClient((req) async {
+        if (req is http.Request) capturedBody = req.body;
+        return http.Response(
+          jsonEncode(<String, dynamic>{'status': 'ok'}),
+          200,
+        );
+      });
+
+      await c.writes.heartbeat(apiKey: _apiKey, heartbeatId: 'hb-123');
+
+      expect(jsonDecode(capturedBody!), <String, dynamic>{
+        'heartbeat_id': 'hb-123',
+      });
     });
   });
 

@@ -9,6 +9,23 @@ import 'package:meta/meta.dart';
 
 import '../wallet/deposit_wallet_signing.dart' show WalletBatchCall;
 
+/// Structured error returned by the Relayer API.
+@immutable
+final class RelayerError {
+  const RelayerError({required this.error, this.code});
+
+  factory RelayerError.fromJson(Map<String, dynamic> json) {
+    final rawCode = json['code'];
+    return RelayerError(
+      error: (json['error'] ?? '').toString(),
+      code: rawCode is num ? rawCode.toInt() : int.tryParse('$rawCode'),
+    );
+  }
+
+  final String error;
+  final int? code;
+}
+
 /// Relayer transaction state machine.
 enum RelayerTransactionState {
   newState('STATE_NEW'),

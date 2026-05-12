@@ -1,10 +1,8 @@
 /// Public Polymarket CLOB market WebSocket client.
 ///
 /// Mirrors `internal/stream/client.go::MarketClient`. The polygolem version
-/// fans events out via `OnBook` / `OnPriceChange` / `OnLastTrade` callbacks;
-/// this Dart port replaces them with broadcast `Stream` getters
-/// ([books], [priceChanges], [lastTrades], [errors]) so consumers can mix in
-/// `await for`, `StreamGroup`, etc.
+/// fans events out via callbacks; this Dart port replaces them with broadcast
+/// `Stream` getters so consumers can mix in `await for`, `StreamGroup`, etc.
 library;
 
 import 'dart:async';
@@ -32,8 +30,7 @@ final class MarketClient {
   }) : _config = config,
        _channelFactory =
            channelFactory ??
-           ((Uri url) =>
-               platform.defaultOpenChannel(url, config.pingInterval));
+           ((Uri url) => platform.defaultOpenChannel(url, config.pingInterval));
 
   final StreamConfig _config;
   final WebSocketChannelFactory _channelFactory;
@@ -44,11 +41,20 @@ final class MarketClient {
       StreamController<PriceChangeMessage>.broadcast();
   final StreamController<LastTradeMessage> _lastTrades =
       StreamController<LastTradeMessage>.broadcast();
+  final StreamController<TickSizeChangeMessage> _tickSizeChanges =
+      StreamController<TickSizeChangeMessage>.broadcast();
+  final StreamController<BestBidAskMessage> _bestBidAsks =
+      StreamController<BestBidAskMessage>.broadcast();
+  final StreamController<NewMarketMessage> _newMarkets =
+      StreamController<NewMarketMessage>.broadcast();
+  final StreamController<MarketResolvedMessage> _marketResolutions =
+      StreamController<MarketResolvedMessage>.broadcast();
   final StreamController<Object> _errors = StreamController<Object>.broadcast();
 
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _subscription;
   Timer? _reconnectTimer;
+  List<String> _subscribedAssetIds = const <String>[];
   int _reconnects = 0;
   bool _connected = false;
   bool _closed = false;
@@ -61,6 +67,19 @@ final class MarketClient {
 
   /// Decoded last-trade fills (`event_type: "last_trade_price"`).
   Stream<LastTradeMessage> get lastTrades => _lastTrades.stream;
+
+  /// Decoded tick-size updates (`event_type: "tick_size_change"`).
+  Stream<TickSizeChangeMessage> get tickSizeChanges => _tickSizeChanges.stream;
+
+  /// Decoded top-of-book updates (`event_type: "best_bid_ask"`).
+  Stream<BestBidAskMessage> get bestBidAsks => _bestBidAsks.stream;
+
+  /// Decoded market creation events (`event_type: "new_market"`).
+  Stream<NewMarketMessage> get newMarkets => _newMarkets.stream;
+
+  /// Decoded market resolution events (`event_type: "market_resolved"`).
+  Stream<MarketResolvedMessage> get marketResolutions =>
+      _marketResolutions.stream;
 
   /// WebSocket and parse errors. Surfacing them keeps the underlying socket
   /// alive (errors are not fatal — reconnect handles transport faults).
@@ -99,10 +118,28 @@ final class MarketClient {
     if (channel == null || !_connected) {
       throw StateError('MarketClient: not connected');
     }
-    final payload = <String, dynamic>{
-      'type': 'market',
-      'assets_ids': assetIds,
-    };
+    _writeSubscribe(channel, assetIds);
+    _subscribedAssetIds = List<String>.unmodifiable(assetIds);
+  }
+
+  void _resubscribe() {
+    final assetIds = _subscribedAssetIds;
+    if (assetIds.isEmpty) return;
+    final channel = _channel;
+    if (channel == null || !_connected) {
+      throw StateError('MarketClient: not connected');
+    }
+    _writeSubscribe(channel, assetIds);
+  }
+
+  void _writeSubscribe(WebSocketChannel channel, List<String> assetIds) {
+    final payload = <String, dynamic>{'type': 'market', 'assets_ids': assetIds};
+    if (_config.level > 0) {
+      payload['level'] = _config.level;
+    }
+    if (_config.customFeatureEnabled) {
+      payload['custom_feature_enabled'] = true;
+    }
     channel.sink.add(jsonEncode(payload));
   }
 
@@ -128,6 +165,10 @@ final class MarketClient {
     await _books.close();
     await _priceChanges.close();
     await _lastTrades.close();
+    await _tickSizeChanges.close();
+    await _bestBidAsks.close();
+    await _newMarkets.close();
+    await _marketResolutions.close();
     await _errors.close();
   }
 
@@ -177,6 +218,14 @@ final class MarketClient {
         _priceChanges.add(PriceChangeMessage.fromJson(payload));
       case 'last_trade_price':
         _lastTrades.add(LastTradeMessage.fromJson(payload));
+      case 'tick_size_change':
+        _tickSizeChanges.add(TickSizeChangeMessage.fromJson(payload));
+      case 'best_bid_ask':
+        _bestBidAsks.add(BestBidAskMessage.fromJson(payload));
+      case 'new_market':
+        _newMarkets.add(NewMarketMessage.fromJson(payload));
+      case 'market_resolved':
+        _marketResolutions.add(MarketResolvedMessage.fromJson(payload));
       default:
         // Unknown / unsupported event — drop silently to match polygolem.
         return;
@@ -220,6 +269,7 @@ final class MarketClient {
       if (_closed) return;
       try {
         await _dial();
+        _resubscribe();
       } on Object catch (e) {
         _emitError(e);
         _scheduleReconnect();

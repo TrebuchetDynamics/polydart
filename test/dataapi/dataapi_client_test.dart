@@ -374,6 +374,22 @@ void main() {
       expect(tv.value, 1234.56);
       expect(tv.timestamp, '1714000000');
     });
+
+    test('decodes array-wrapped total value response', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode(<Map<String, dynamic>>[
+            <String, dynamic>{'user': '0xuser', 'value': 42},
+          ]),
+          200,
+        );
+      });
+
+      final tv = await client.totalValue('0xuser');
+
+      expect(tv.user, '0xuser');
+      expect(tv.value, 42);
+    });
   });
 
   group('marketsTraded', () {
@@ -477,6 +493,28 @@ void main() {
       expect(lv.events, hasLength(2));
       expect(lv.events.first.eventSlug, 'slug-1');
       expect(lv.events.last.volume, 2000.0);
+    });
+
+    test('decodes array-wrapped live volume response', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode(<Map<String, dynamic>>[
+            <String, dynamic>{
+              'total': 42.5,
+              'markets': [
+                <String, dynamic>{'market': '0xmarket', 'value': 42.5},
+              ],
+            },
+          ]),
+          200,
+        );
+      });
+
+      final lv = await client.liveVolume();
+
+      expect(lv.total, 42.5);
+      expect(lv.markets.single.market, '0xmarket');
+      expect(lv.markets.single.value, 42.5);
     });
   });
 }

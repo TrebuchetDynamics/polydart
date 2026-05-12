@@ -120,8 +120,9 @@ Plus companion methods if we want full parity with the official SDKs:
 paths visible.
 
 Polygolem mirror: `internal/clob/client.go` already exposes
-`CreateOrDeriveAPIKey`. Adding `CreateBuilderAPIKey(ctx, privateKey, apiKey)`
-is the equivalent ~30-line addition.
+`CreateOrDeriveAPIKey`. In Polydart, the equivalent addition must stay
+wallet-mediated: accept a `WalletSigner` or prebuilt L1 headers plus the CLOB
+`ApiKey`, never local key material.
 
 ## Relayer API Key — `/relayer/api/auth`
 
@@ -287,7 +288,7 @@ inject anti-bot headers.
 The full pipeline is reachable headlessly:
 
 ```
-EOA private key
+WalletSigner user approval
   → /auth/api-key (L1 ClobAuth)            → CLOB L2 creds
   → /auth/builder-api-key (L2 HMAC)         → CLOB Builder Fee Key
   → gamma-api/nonce                         → SIWE nonce

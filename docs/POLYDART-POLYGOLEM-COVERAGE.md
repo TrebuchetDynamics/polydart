@@ -6,6 +6,7 @@ custody architecture as described in `docs/adr/0001-wallet-mediated-eoa-signing.
 
 - Canonical upstream source: `polygolem/`
 - Last scaffolded Polygolem commit: `2b7cde7`
+- Last fidelity sync commit: `2b7cde7`
 - Legacy reference commit at scaffold time: `2b7cde7`
 - Scaffold command: `python3 skills/polydart/scripts/polygolem_inventory.py --root .`
 
@@ -23,9 +24,9 @@ all accounted for.
 | Wallet-mediated EOA custody | internal/auth, internal/wallet | lib/src/auth, lib/src/wallet | intentional Dart divergence | test/auth, test/wallet | required | 2b7cde7 | Enforce ADR 0001 in signing and wallet work |
 | Deposit-wallet live semantics | internal/wallet, internal/relayer, internal/clob | lib/src/wallet, lib/src/relayer, lib/src/clob | partial | test/wallet, test/relayer, test/clob | required | 2b7cde7 | Verify `signatureType=3`, maker/signer/funder separation, pUSD routing |
 | EIP-712 / ERC-7739 / POLY_1271 signing | internal/auth, internal/clob/orders.go | lib/src/auth, lib/src/orders | partial | test/auth, test/orders | required | 2b7cde7 | Expand byte-level parity vectors |
-| Relayer and enable-trading surfaces | pkg/relayer, pkg/enabletrading, internal/enabletrading | lib/src/relayer, lib/src/enabletrading | partial | test/relayer, test/enabletrading | required | 2b7cde7 | Enable-trading typed data and relayer allowlist classification covered; continue Relayer V2 API-key endpoint parity |
-| CLOB write responses and order results | internal/clob, pkg/orderresults | lib/src/clob, lib/src/orders, lib/src/orderresults | partial | test/clob, test/orders, test/orderresults | required | 2b7cde7 | Order-results report builder covered with ApiKey reader; continue CLOB response DTO/error fields |
-| Data API live V2 field shapes | internal/dataapi, pkg/data | lib/src/dataapi | partial | test/dataapi | not_required | 2b7cde7 | Current-position, closed-position, and trade camelCase decoding covered; add order-result decoding |
+| Relayer and enable-trading surfaces | pkg/relayer, pkg/enabletrading, internal/enabletrading | lib/src/relayer, lib/src/enabletrading | partial | test/relayer, test/enabletrading | required | 2b7cde7 | Relayer V2 API-key headers, transaction object/list responses, poll defaults, and allowlist classification covered; continue live submission UX docs |
+| CLOB write responses and order results | internal/clob, pkg/orderresults | lib/src/clob, lib/src/orders, lib/src/orderresults | partial | test/clob, test/orders, test/orderresults | required | 2b7cde7 | Order response casing, batch create, cancel body casing, heartbeat, and order-results report builder covered; continue live error DTO fields |
+| Data API live V2 field shapes | internal/dataapi, pkg/data | lib/src/dataapi | partial | test/dataapi | not_required | 2b7cde7 | Current-position, closed-position, trade, holder, open-interest, volume, and aggregate object/list decoding covered; add order-result decoding |
 
 ## Surface Inventory
 
@@ -47,16 +48,16 @@ all accounted for.
 | pkg/orderresults | polygolem/pkg/orderresults | lib/src/orderresults | implemented | test/orderresults | not_required | 2b7cde7 | Report builder covered; CLOB inclusion uses ApiKey reader instead of raw private key |
 | pkg/pagination | polygolem/pkg/pagination | lib/src/pagination | implemented | test/pagination | not_required | 2b7cde7 | Cursor/offset stream, collect, and batch helpers covered |
 | pkg/plugins | polygolem/pkg/plugins | lib/src/plugins | implemented | test/plugins | not_required | 2b7cde7 | Plugin interfaces covered |
-| pkg/relayer | polygolem/pkg/relayer | lib/src/relayer | partial | test/relayer | required | 2b7cde7 | Allowlist rejection classifier covered; continue V2 auth headers, transaction response shapes, and endpoint parity |
+| pkg/relayer | polygolem/pkg/relayer | lib/src/relayer | partial | test/relayer | required | 2b7cde7 | V2 auth headers, transaction response shapes, poll defaults, and allowlist rejection classifier covered; continue endpoint parity |
 | pkg/settlement | polygolem/pkg/settlement | lib/src/settlement | partial | test/settlement | required | 2b7cde7 | Read-only redeem discovery, call planning, and readiness checks covered; live relay submission gated out |
-| pkg/stream | polygolem/pkg/stream | lib/src/stream | partial | test/stream | not_required | 2b7cde7 | Verify reconnect and dedupe behavior |
+| pkg/stream | polygolem/pkg/stream | lib/src/stream | implemented | test/stream | not_required | 2b7cde7 | Default URL, config payload, reconnect resubscribe, dedupe, and lifecycle events covered |
 | pkg/types | polygolem/pkg/types | lib/src/types | partial | test/types | not_required | 2b7cde7 | Compare DTO field names and casing |
 | pkg/universal | polygolem/pkg/universal | lib/src/universal | partial | test/universal | not_required | 2b7cde7 | Read-only universal facade covered; authenticated raw-key write methods intentionally excluded from default public surface |
 | pkg/wallet | polygolem/pkg/wallet | lib/src/wallet | partial | test/wallet | required | 2b7cde7 | Port protocol behavior without raw EOA keys |
 | internal/auth | polygolem/internal/auth | lib/src/auth | partial | test/auth | required | 2b7cde7 | Expand signing parity vectors |
 | internal/clob | polygolem/internal/clob | lib/src/clob | partial | test/clob | required | 2b7cde7 | Compare order placement, cancellation, responses |
 | internal/config | polygolem/internal/config | lib/src/config | partial | test/config | not_required | 2b7cde7 | Verify redaction and env mapping |
-| internal/dataapi | polygolem/internal/dataapi | lib/src/dataapi | partial | test/dataapi | not_required | 2b7cde7 | Current-position, closed-position, and trade V2 fields covered; continue order results |
+| internal/dataapi | polygolem/internal/dataapi | lib/src/dataapi | partial | test/dataapi | not_required | 2b7cde7 | Current-position, closed-position, trade, holder, open-interest, volume, and aggregate object/list fields covered; continue order results |
 | internal/enabletrading | polygolem/internal/enabletrading | lib/src/enabletrading | partial | test/enabletrading | required | 2b7cde7 | Wallet-mediated typed-data builders covered; no raw EOA key submission surface |
 | internal/errors | polygolem/internal/errors | lib/src/errors | partial | test/errors | not_required | 2b7cde7 | Compare error categories and codes |
 | internal/execution | polygolem/internal/execution | lib/src/paper, lib/src/modes | partial | test/paper, test/modes | required | 2b7cde7 | Map executor semantics to paper/live/read-only boundaries |
@@ -68,10 +69,10 @@ all accounted for.
 | internal/paper | polygolem/internal/paper | lib/src/paper | implemented | test/paper | not_required | 2b7cde7 | Local paper state covered |
 | internal/polytypes | polygolem/internal/polytypes | lib/src/types | partial | test/types | not_required | 2b7cde7 | Use upstream DTO fixtures to drive type parity |
 | internal/preflight | polygolem/internal/preflight | lib/src/preflight | implemented | test/preflight | not_required | 2b7cde7 | Async preflight runner covered |
-| internal/relayer | polygolem/internal/relayer | lib/src/relayer | partial | test/relayer | required | 2b7cde7 | Signing, submit, and allowlist classification covered; continue Relayer V2 response/auth parity |
+| internal/relayer | polygolem/internal/relayer | lib/src/relayer | partial | test/relayer | required | 2b7cde7 | Signing, submit, V2 auth headers, object/list transaction responses, and allowlist classification covered; continue endpoint parity |
 | internal/risk | polygolem/internal/risk | lib/src/risk | implemented | test/risk | not_required | 2b7cde7 | Local risk breaker covered |
 | internal/rpc | polygolem/internal/rpc | lib/src/rpc | partial | test/rpc | not_required | 2b7cde7 | Read-only code/approval/allowance helpers covered; live transfer/swap still gated out |
-| internal/stream | polygolem/internal/stream | lib/src/stream | partial | test/stream | not_required | 2b7cde7 | Compare stream message handling |
+| internal/stream | polygolem/internal/stream | lib/src/stream | implemented | test/stream | not_required | 2b7cde7 | Message parsing, lifecycle events, reconnect resubscribe, and custom-feature subscription covered |
 | internal/telemetry | polygolem/internal/telemetry | lib/src/telemetry | implemented | test/telemetry | not_required | 2b7cde7 | Request/retry/rate-limit/circuit-open telemetry and redaction covered |
 | internal/transport | polygolem/internal/transport | lib/src/transport | partial | test/transport | not_required | 2b7cde7 | Compare retry, rate limit, circuit breaker |
 | internal/wallet | polygolem/internal/wallet | lib/src/wallet | partial | test/wallet | required | 2b7cde7 | Compare derive/deploy/status/batch semantics |

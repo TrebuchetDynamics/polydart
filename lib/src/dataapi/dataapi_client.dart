@@ -14,9 +14,7 @@ final class DataApiClient {
   DataApiClient({HttpTransport? transport})
     : _transport =
           transport ??
-          HttpTransport(
-            config: const TransportConfig(baseUrl: defaultBaseUrl),
-          );
+          HttpTransport(config: const TransportConfig(baseUrl: defaultBaseUrl));
 
   /// Public Polymarket Data API base URL.
   static const String defaultBaseUrl = 'https://data-api.polymarket.com';
@@ -87,10 +85,7 @@ final class DataApiClient {
   Future<List<MetaHolder>> topHolders(String tokenId, {int limit = 0}) async {
     final list = await _transport.getJsonList(
       '/top-holders',
-      query: <String, dynamic>{
-        'token_id': tokenId,
-        'limit': limit.toString(),
-      },
+      query: <String, dynamic>{'token_id': tokenId, 'limit': limit.toString()},
     );
     return list
         .whereType<Map<dynamic, dynamic>>()
@@ -100,11 +95,11 @@ final class DataApiClient {
 
   /// Returns the total dollar value of [user]'s open positions.
   Future<TotalValue> totalValue(String user) async {
-    final body = await _transport.getJson(
+    final body = await _transport.getJsonValue(
       '/total-value',
       query: <String, dynamic>{'user': user},
     );
-    return TotalValue.fromJson(body);
+    return TotalValue.fromJson(body, defaultUser: user);
   }
 
   /// Returns the count of distinct markets [user] has traded.
@@ -141,7 +136,7 @@ final class DataApiClient {
 
   /// Returns the live-volume leaderboard for events.
   Future<LiveVolumeResponse> liveVolume({int limit = 0}) async {
-    final body = await _transport.getJson(
+    final body = await _transport.getJsonValue(
       '/live-volume',
       query: <String, dynamic>{'limit': limit.toString()},
     );

@@ -14,11 +14,9 @@ dependencies:
   crypto: ^3.0.0
   http: ^1.2.0
   meta: ^1.12.0
-  # Widened so polydart can be consumed by Flutter apps that ship newer
-  # pointycastle / web3dart majors. Only stable keccak primitives are used
-  # from web3dart; pointycastle is transitive and not directly imported.
+  # Used directly for Keccak-256 so Flutter apps do not inherit a web3dart
+  # major-version constraint only for crypto helpers.
   pointycastle: '>=3.7.0 <5.0.0'
-  web3dart: '>=2.7.0 <4.0.0'
   web_socket_channel: '>=2.4.0 <4.0.0'
 
 dev_dependencies:

@@ -9,7 +9,7 @@ import 'package:meta/meta.dart';
 
 /// Default public Polymarket CLOB market WebSocket URL.
 const String defaultStreamUrl =
-    'wss://ws-subscriptions-clob.polymarket.com/ws/';
+    'wss://ws-subscriptions-clob.polymarket.com/ws/market';
 
 /// Connection settings for [MarketClient].
 @immutable
@@ -22,6 +22,8 @@ final class StreamConfig {
     this.reconnectDelay = const Duration(seconds: 2),
     this.reconnectMaxDelay = const Duration(seconds: 30),
     this.reconnectMax = 5,
+    this.level = 0,
+    this.customFeatureEnabled = false,
   });
 
   /// Builds a [StreamConfig] with polygolem's defaults. [url] overrides the
@@ -29,7 +31,7 @@ final class StreamConfig {
   factory StreamConfig.defaults({String? url}) =>
       StreamConfig(url: url ?? defaultStreamUrl);
 
-  /// WebSocket URL (e.g. `wss://ws-subscriptions-clob.polymarket.com/ws/`).
+  /// WebSocket URL (e.g. `wss://ws-subscriptions-clob.polymarket.com/ws/market`).
   final String url;
 
   /// Interval between client pings. Forwarded to `IOWebSocketChannel`'s
@@ -52,4 +54,12 @@ final class StreamConfig {
 
   /// Hard ceiling on consecutive reconnect attempts.
   final int reconnectMax;
+
+  /// Optional market subscription level. Values greater than zero are included
+  /// as `level` in subscribe payloads.
+  final int level;
+
+  /// Enables Polymarket custom feature events such as best bid/ask and market
+  /// lifecycle updates.
+  final bool customFeatureEnabled;
 }

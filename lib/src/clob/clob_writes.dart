@@ -52,6 +52,26 @@ final class CreateOrderRequest {
   }
 }
 
+/// Maximum batch size accepted by the upstream `POST /orders` endpoint.
+const int maxBatchPostSize = 15;
+
+/// Response shape for `POST /orders`.
+@immutable
+final class BatchOrderResponse {
+  const BatchOrderResponse({required this.orders});
+
+  factory BatchOrderResponse.fromJsonList(List<dynamic> json) {
+    return BatchOrderResponse(
+      orders: json
+          .whereType<Map<String, dynamic>>()
+          .map(OrderResponse.fromJson)
+          .toList(growable: false),
+    );
+  }
+
+  final List<OrderResponse> orders;
+}
+
 /// Response shape for the cancel endpoints. Lists every order id that was
 /// removed and a reason map for those that were not.
 @immutable
@@ -126,6 +146,41 @@ final class ClobWrites {
     return OrderResponse.fromJson(resp);
   }
 
+  /// Places a batch of signed orders via `POST /orders`.
+  Future<BatchOrderResponse> createOrders({
+    required List<CreateOrderRequest> requests,
+    required ApiKey apiKey,
+  }) async {
+    if (requests.isEmpty) {
+      throw const ValidationException(
+        code: ErrorCode.missingField,
+        message: 'requests must not be empty',
+        field: 'requests',
+      );
+    }
+    if (requests.length > maxBatchPostSize) {
+      throw const ValidationException(
+        code: ErrorCode.invalidValue,
+        message: 'requests exceeds maxBatchPostSize',
+        field: 'requests',
+      );
+    }
+    requireLive(_mode, liveTradingEnabled: _liveTradingEnabled);
+    final body = requests.map((r) => r.toJson()).toList(growable: false);
+    final headers = _l2Headers(
+      method: 'POST',
+      path: '/orders',
+      body: body,
+      apiKey: apiKey,
+    );
+    final resp = await _transport.postJsonList(
+      '/orders',
+      body,
+      headers: headers,
+    );
+    return BatchOrderResponse.fromJsonList(resp);
+  }
+
   /// Cancels a single open order by id. Returns the cancel report.
   Future<CancelResponse> cancelOrder({
     required String orderId,
@@ -139,7 +194,7 @@ final class ClobWrites {
       );
     }
     requireLive(_mode, liveTradingEnabled: _liveTradingEnabled);
-    final body = <String, dynamic>{'orderId': orderId};
+    final body = <String, dynamic>{'orderID': orderId};
     final headers = _l2Headers(
       method: 'DELETE',
       path: '/order',
@@ -166,16 +221,24 @@ final class ClobWrites {
         field: 'orderIds',
       );
     }
+    if (orderIds.length > 3000) {
+      throw const ValidationException(
+        code: ErrorCode.invalidValue,
+        message: 'orderIds exceeds max cancel batch size',
+        field: 'orderIds',
+      );
+    }
     requireLive(_mode, liveTradingEnabled: _liveTradingEnabled);
+    final body = <String, dynamic>{'orderIDs': orderIds};
     final headers = _l2Headers(
       method: 'DELETE',
       path: '/orders',
-      body: orderIds,
+      body: body,
       apiKey: apiKey,
     );
     final resp = await _transport.delete(
       '/orders',
-      body: orderIds,
+      body: body,
       headers: headers,
     );
     return CancelResponse.fromJson(resp);
@@ -225,6 +288,23 @@ final class ClobWrites {
       headers: headers,
     );
     return CancelResponse.fromJson(resp);
+  }
+
+  /// Sends the live CLOB heartbeat used by long-running makers.
+  Future<void> heartbeat({
+    required ApiKey apiKey,
+    String heartbeatId = '',
+  }) async {
+    requireLive(_mode, liveTradingEnabled: _liveTradingEnabled);
+    final id = heartbeatId.trim();
+    final body = <String, dynamic>{'heartbeat_id': id.isEmpty ? null : id};
+    final headers = _l2Headers(
+      method: 'POST',
+      path: '/v1/heartbeats',
+      body: body,
+      apiKey: apiKey,
+    );
+    await _transport.postJson('/v1/heartbeats', body, headers: headers);
   }
 
   Map<String, String> _l2Headers({

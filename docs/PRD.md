@@ -1,15 +1,15 @@
 # Polydart PRD — Standalone Polymarket Dart SDK for Flutter
 
-> **Status:** Draft — awaiting implementation plan  
-> **Date:** 2026-05-07  
-> **Owner:** TrebuchetDynamics  
+> **Status:** Active alpha implementation
+> **Date:** 2026-05-07
+> **Owner:** TrebuchetDynamics
 > **License:** MIT (public)
 
 ---
 
 ## 1. Vision
 
-Polydart is the **official Dart-native Polymarket SDK** — a peer implementation to `polygolem` that brings the full Polymarket protocol stack to Flutter applications. It enables Flutter developers to build self-contained trading apps that interact directly with Polymarket APIs, with minimal or zero server dependency.
+Polydart is the **official Dart-native Polymarket SDK** — a peer implementation to `polygolem` that brings Polymarket protocol clients, typed-data planning, market data, paper mode, and safety-gated live building blocks to Flutter applications. It enables Flutter developers to build self-contained apps that interact directly with public Polymarket APIs, with server boundaries only where browser cookie rules or application custody policy require them.
 
 **Polydart will always mirror the polygolem repository.** Every protocol module, API client, signing scheme, and safety boundary in polygolem has a corresponding Dart implementation in polydart. When polygolem evolves, polydart evolves in lockstep.
 
@@ -22,7 +22,7 @@ Polydart is the **official Dart-native Polymarket SDK** — a peer implementatio
 | **Purpose** | Server/bot SDK and CLI | Flutter/mobile SDK |
 | **Architecture** | Cobra CLI + internal packages | Flutter package + Dart internals |
 | **Protocol parity** | Reference implementation | **Mirror — spec-for-spec** |
-| **Crypto** | Go `crypto/ecdsa`, `go-ethereum` | Dart `web3dart`, `pointycastle` |
+| **Crypto** | Go `crypto/ecdsa`, `go-ethereum` | Dart manual EIP-712 + `pointycastle` |
 | **HTTP** | `net/http` with custom retry | `http` package with interceptor stack |
 | **WebSocket** | Gorilla + custom reconnect | `web_socket_channel` with reconnect |
 | **State** | File-based paper state | `shared_preferences` / `hive` |
@@ -73,7 +73,7 @@ polydart/
 
 | Capability | Dart Implementation |
 |-----------|---------------------|
-| EIP-712 typed data signing | `web3dart` `Credentials.signTypedData` |
+| EIP-712 typed data signing | Manual typed-data builders via caller-provided `WalletSigner` |
 | POLY_1271 order signatures | Custom — appends `0x03` signature type byte |
 | ERC-7739 context | Custom — wraps order hash with chain/verifying contract |
 | Deposit wallet CREATE2 | Keccak-256 + `eth_call` to factory |
@@ -87,7 +87,7 @@ polydart/
 
 - **Read endpoints** (no auth): book, trades, prices, spread, orders
 - **Write endpoints** (signing required): create-order, cancel, update-balance
-- **Signature type:** `POLY_1271` (deposit wallet) only — EOA/proxy/Safe blocked
+- **Signature type:** wallet-mediated signatures only in the public SDK; deposit-wallet/POLY_1271 is the preferred Flutter live path, while direct EOA signing requires explicit app-owned user approval and live gates.
 
 ### 4.3 `gamma` — Market Discovery
 
@@ -206,15 +206,17 @@ await client.paper.submit(order);
 ### 6.3 Live Mode
 
 ```dart
-final client = await Polydart.live(
-  reownProvider: walletConnectProvider,
-  eoaAddress: '0x...',
-  serverProxyUrl: 'https://your-relayer-proxy.com',
+// Current public SDK shape: build read/paper clients at the top level, and
+// wire lower-level live clients explicitly behind application-owned gates.
+final gates = validateLiveGates(
+  const LiveGateInput(
+    envEnabled: true,
+    configEnabled: true,
+    confirmLive: true,
+    preflightOk: true,
+  ),
 );
-
-// Real signing via MetaMask
-final order = await client.orders.buy(tokenId: '...').atPrice(0.5).forSize(10).build();
-await client.clob.submit(order); // prompts MetaMask
+if (!gates.allowed) throw StateError('live mode blocked');
 ```
 
 ---
@@ -274,12 +276,8 @@ await client.clob.submit(order); // prompts MetaMask
 dependencies:
   http: ^1.2.0
   web_socket_channel: ^2.4.0
-  web3dart: ^2.7.0
   pointycastle: ^3.7.0
-  reown_appkit: ^1.0.0  # WalletConnect / Reown
-  shared_preferences: ^2.2.0
-  hive: ^2.2.0
-  freezed_annotation: ^2.4.0
+  crypto: ^3.0.0
   json_annotation: ^4.8.0
 
 dev_dependencies:
@@ -311,7 +309,7 @@ dev_dependencies:
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
-| `web3dart` lacks EIP-712 support | Medium | High | Contribute PR or fork; fallback to manual RLP encoding |
+| EIP-712 encoding mismatch | Medium | High | Manual encoding validated against polygolem parity vectors |
 | Mobile signing latency (Reown) | High | Medium | Pre-build orders, queue for batch sign |
 | Polymarket API drift | Medium | High | Automated contract tests against live API weekly |
 | Relayer credential leak | Low | Critical | Per-EOA secure storage in the consumer app; never embed shared creds; redact logs; optional proxy later |

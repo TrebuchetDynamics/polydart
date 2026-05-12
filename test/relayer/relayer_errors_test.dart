@@ -17,6 +17,27 @@ const _builder = BuilderConfig(
 );
 
 void main() {
+  group('RelayerError', () {
+    test('decodes structured relayer error response', () {
+      final err = RelayerError.fromJson(const <String, dynamic>{
+        'error': 'invalid authorization',
+        'code': 401,
+      });
+
+      expect(err.error, 'invalid authorization');
+      expect(err.code, 401);
+    });
+
+    test('defaults missing optional code to null', () {
+      final err = RelayerError.fromJson(const <String, dynamic>{
+        'error': 'transaction not found',
+      });
+
+      expect(err.error, 'transaction not found');
+      expect(err.code, isNull);
+    });
+  });
+
   group('classifyRelayerAllowlistError', () {
     test('matches upstream allowlist rejection markers case-insensitively', () {
       const cases = <String>[

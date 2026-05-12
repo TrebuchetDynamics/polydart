@@ -6,7 +6,10 @@ Dart-native Polymarket SDK — peer implementation to [polygolem](https://github
 
 ## What it is
 
-A spec-for-spec mirror of polygolem in Dart. Brings the full Polymarket protocol stack (CLOB, Gamma, Data API, Builder relayer, deposit-wallet lifecycle, EIP-712 / POLY_1271 / ERC-7739 signing, paper mode, risk gates) to Dart and Flutter.
+A spec-for-spec mirror of polygolem in Dart. Polydart currently provides
+tested public market reads, Data API reads, paper-mode primitives,
+wallet-mediated signing helpers, guarded CLOB write helpers, stream clients,
+and relayer/readiness building blocks for Dart and Flutter applications.
 
 ## Quick start (read-only)
 
@@ -37,24 +40,46 @@ Run the bundled example:
 dart run example/read_only.dart
 ```
 
+## Flutter app readiness
+
+Polydart is a Dart package that can be consumed by Flutter apps without adding
+Flutter as a dependency to Polydart itself. See
+[`docs/FLUTTER-APP-READINESS.md`](docs/FLUTTER-APP-READINESS.md) for install
+snippets, platform notes, lifecycle guidance, read-only usage, and the
+`WalletSigner` adapter pattern.
+
 ## Modes
 
 | Factory | Mode | Wallet | Live writes |
 |---------|------|--------|-------------|
 | `Polydart.readOnly()` | `readOnly` | none | blocked |
 | `Polydart.paper(eoaAddress: ...)` | `paper` | EOA only | simulated |
-| `Polydart.live(...)` | `live` | Reown / WalletSigner | real (Phase 2) |
+| lower-level live clients | `live` | app-owned `WalletSigner` | explicitly gated |
 
 Risk gates (`requireLive`, `requirePaperOrLive`) refuse calls that don't
 match the active mode and require `liveTradingEnabled=true` for any real
 order submission.
+
+The package root currently exposes `Polydart.readOnly()` and
+`Polydart.paper(...)`. Live paths are available through lower-level clients and
+must be wired by the application with wallet-mediated user approval, explicit
+live configuration, confirmation, and preflight checks.
 
 ## Documents
 
 - `docs/PRD.md` — product requirements
 - `docs/PLAN.md` — implementation plan
 - `docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md` — next live-readiness TDD slice
+- `docs/FLUTTER-APP-READINESS.md` — Flutter integration notes
+- `src/content/docs/` — Astro Starlight documentation source
 - `CHANGELOG.md` — release log
+
+Build the Starlight docs with:
+
+```sh
+npm ci
+npm run build
+```
 
 ## Mirror commitment
 

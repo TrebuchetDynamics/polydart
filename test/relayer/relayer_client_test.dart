@@ -7,6 +7,7 @@ import 'package:polydart/src/auth/l2.dart';
 import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/relayer/relayer_client.dart';
 import 'package:polydart/src/relayer/relayer_types.dart';
+import 'package:polydart/src/relayer/v2_auth.dart';
 import 'package:polydart/src/transport/http_transport.dart';
 import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
@@ -18,7 +19,9 @@ const _builder = BuilderConfig(
   passphrase: 'pass',
 );
 
-RelayerClient _client(Future<http.Response> Function(http.BaseRequest) handler) {
+RelayerClient _client(
+  Future<http.Response> Function(http.BaseRequest) handler,
+) {
   return RelayerClient(
     builderConfig: _builder,
     transport: HttpTransport(
@@ -46,38 +49,91 @@ void main() {
         throwsA(isA<AuthException>()),
       );
     });
+
+    test('v2 constructor requires relayer key and address', () {
+      expect(
+        () => RelayerClient.v2(
+          apiKey: const V2APIKey(key: '', address: '0xabc'),
+        ),
+        throwsA(isA<AuthException>()),
+      );
+      expect(
+        () => RelayerClient.v2(
+          apiKey: const V2APIKey(key: 'relayer-key', address: '  '),
+        ),
+        throwsA(isA<AuthException>()),
+      );
+    });
+  });
+
+  group('v2 auth headers', () {
+    test(
+      'sends RELAYER_API_KEY headers without POLY_BUILDER headers',
+      () async {
+        Map<String, String>? capturedHeaders;
+        final client = RelayerClient.v2(
+          apiKey: const V2APIKey(key: 'relayer-key', address: '0xowner'),
+          transport: HttpTransport(
+            config: const TransportConfig(
+              baseUrl: defaultRelayerBaseUrl,
+              retryMax: 0,
+            ),
+            inner: MockClient((req) async {
+              capturedHeaders = req.headers;
+              return http.Response(
+                jsonEncode(<String, dynamic>{'nonce': '11'}),
+                200,
+              );
+            }),
+          ),
+        );
+
+        final nonce = await client.getNonce(ownerAddress: '0xowner');
+
+        expect(nonce, '11');
+        expect(capturedHeaders!['RELAYER_API_KEY'], 'relayer-key');
+        expect(capturedHeaders!['RELAYER_API_KEY_ADDRESS'], '0xowner');
+        expect(capturedHeaders!.containsKey('POLY_BUILDER_API_KEY'), isFalse);
+        expect(capturedHeaders!.containsKey('POLY_BUILDER_SIGNATURE'), isFalse);
+      },
+    );
   });
 
   group('getNonce', () {
-    test('GETs /nonce with address+type query and POLY_BUILDER_* headers',
-        () async {
-      Uri? capturedUrl;
-      Map<String, String>? capturedHeaders;
-      final client = _client((req) async {
-        capturedUrl = req.url;
-        capturedHeaders = req.headers;
-        return http.Response(
-          jsonEncode(<String, dynamic>{'nonce': '7'}),
-          200,
+    test(
+      'GETs /nonce with address+type query and POLY_BUILDER_* headers',
+      () async {
+        Uri? capturedUrl;
+        Map<String, String>? capturedHeaders;
+        final client = _client((req) async {
+          capturedUrl = req.url;
+          capturedHeaders = req.headers;
+          return http.Response(
+            jsonEncode(<String, dynamic>{'nonce': '7'}),
+            200,
+          );
+        });
+
+        final nonce = await client.getNonce(
+          ownerAddress: '0xb72dbe5d44c1b549351bef276ba48a1cca5df662',
         );
-      });
 
-      final nonce = await client.getNonce(
-        ownerAddress: '0xb72dbe5d44c1b549351bef276ba48a1cca5df662',
-      );
-
-      expect(capturedUrl!.path, '/nonce');
-      expect(
-        capturedUrl!.queryParameters['address'],
-        '0xb72dbe5d44c1b549351bef276ba48a1cca5df662',
-      );
-      expect(capturedUrl!.queryParameters['type'], 'WALLET');
-      expect(capturedHeaders!['POLY_BUILDER_API_KEY'], _builder.key);
-      expect(capturedHeaders!['POLY_BUILDER_PASSPHRASE'], _builder.passphrase);
-      expect(capturedHeaders!['POLY_BUILDER_TIMESTAMP'], '1700000000');
-      expect(capturedHeaders!['POLY_BUILDER_SIGNATURE'], isNotNull);
-      expect(nonce, '7');
-    });
+        expect(capturedUrl!.path, '/nonce');
+        expect(
+          capturedUrl!.queryParameters['address'],
+          '0xb72dbe5d44c1b549351bef276ba48a1cca5df662',
+        );
+        expect(capturedUrl!.queryParameters['type'], 'WALLET');
+        expect(capturedHeaders!['POLY_BUILDER_API_KEY'], _builder.key);
+        expect(
+          capturedHeaders!['POLY_BUILDER_PASSPHRASE'],
+          _builder.passphrase,
+        );
+        expect(capturedHeaders!['POLY_BUILDER_TIMESTAMP'], '1700000000');
+        expect(capturedHeaders!['POLY_BUILDER_SIGNATURE'], isNotNull);
+        expect(nonce, '7');
+      },
+    );
 
     test('throws when relayer returns empty nonce', () async {
       final client = _client((req) async {
@@ -96,10 +152,7 @@ void main() {
       final client = _client((req) async {
         capturedUrl = req.url;
         return http.Response(
-          jsonEncode(<String, dynamic>{
-            'deployed': true,
-            'address': '0xfeed',
-          }),
+          jsonEncode(<String, dynamic>{'deployed': true, 'address': '0xfeed'}),
           200,
         );
       });
@@ -112,12 +165,76 @@ void main() {
     });
   });
 
+  group('getTransaction', () {
+    test('parses object response', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'transactionID': 'tx-object',
+            'transactionHash': '0xabc',
+            'state': 'STATE_CONFIRMED',
+            'type': 'WALLET-CREATE',
+          }),
+          200,
+        );
+      });
+
+      final tx = await client.getTransaction(txId: 'tx-object');
+
+      expect(tx.transactionId, 'tx-object');
+      expect(tx.transactionHash, '0xabc');
+      expect(tx.parsedState, RelayerTransactionState.confirmed);
+    });
+
+    test('parses first transaction from array response', () async {
+      final client = _client((req) async {
+        expect(req.url.path, '/transaction');
+        expect(req.url.queryParameters['id'], 'tx-array');
+        return http.Response(
+          jsonEncode(<Map<String, dynamic>>[
+            <String, dynamic>{
+              'transactionID': 'tx-array',
+              'transactionHash': '0xdef',
+              'state': 'STATE_MINED',
+              'type': 'WALLET',
+            },
+          ]),
+          200,
+        );
+      });
+
+      final tx = await client.getTransaction(txId: 'tx-array');
+
+      expect(tx.transactionId, 'tx-array');
+      expect(tx.transactionHash, '0xdef');
+      expect(tx.parsedState, RelayerTransactionState.mined);
+    });
+
+    test('throws explicit not-found error for empty array response', () async {
+      final client = _client((req) async {
+        return http.Response(jsonEncode(<Object>[]), 200);
+      });
+
+      expect(
+        () => client.getTransaction(txId: 'missing-tx'),
+        throwsA(
+          isA<TransportException>().having(
+            (e) => e.message,
+            'message',
+            contains('missing-tx'),
+          ),
+        ),
+      );
+    });
+  });
+
   group('submitWalletCreate', () {
     test('POSTs /submit with WALLET-CREATE shape', () async {
       Map<String, dynamic>? capturedBody;
       final client = _client((req) async {
-        capturedBody = jsonDecode(req is http.Request ? req.body : '')
-            as Map<String, dynamic>;
+        capturedBody =
+            jsonDecode(req is http.Request ? req.body : '')
+                as Map<String, dynamic>;
         return http.Response(
           jsonEncode(<String, dynamic>{
             'transactionID': 'tx-1',
@@ -143,8 +260,9 @@ void main() {
     test('POSTs /submit with WALLET shape and nested params', () async {
       Map<String, dynamic>? capturedBody;
       final client = _client((req) async {
-        capturedBody = jsonDecode(req is http.Request ? req.body : '')
-            as Map<String, dynamic>;
+        capturedBody =
+            jsonDecode(req is http.Request ? req.body : '')
+                as Map<String, dynamic>;
         return http.Response(
           jsonEncode(<String, dynamic>{
             'transactionID': 'tx-2',
@@ -172,7 +290,8 @@ void main() {
       expect(capturedBody!['type'], 'WALLET');
       expect(capturedBody!['nonce'], '3');
       expect(capturedBody!['signature'], '0xdeadbeef');
-      final params = capturedBody!['depositWalletParams'] as Map<String, dynamic>;
+      final params =
+          capturedBody!['depositWalletParams'] as Map<String, dynamic>;
       expect(params['depositWallet'], '0xwallet');
       expect(params['deadline'], '1700000300');
       expect((params['calls'] as List).length, 1);
@@ -196,6 +315,62 @@ void main() {
   });
 
   group('pollTransaction', () {
+    test(
+      'uses upstream default attempts when maxAttempts is non-positive',
+      () async {
+        var calls = 0;
+        final client = _client((req) async {
+          calls++;
+          return http.Response(
+            jsonEncode(<String, dynamic>{
+              'transactionID': 'tx-default-attempts',
+              'state': 'STATE_MINED',
+            }),
+            200,
+          );
+        });
+
+        final tx = await client.pollTransaction(
+          txId: 'tx-default-attempts',
+          maxAttempts: 0,
+          sleep: (_) async {},
+        );
+
+        expect(tx.transactionId, 'tx-default-attempts');
+        expect(calls, 1);
+      },
+    );
+
+    test(
+      'uses upstream default interval when interval is non-positive',
+      () async {
+        final states = <String>['STATE_NEW', 'STATE_MINED'];
+        final sleeps = <Duration>[];
+        var idx = 0;
+        final client = _client((req) async {
+          final state = states[idx.clamp(0, states.length - 1)];
+          idx++;
+          return http.Response(
+            jsonEncode(<String, dynamic>{
+              'transactionID': 'tx-default-interval',
+              'state': state,
+            }),
+            200,
+          );
+        });
+
+        final tx = await client.pollTransaction(
+          txId: 'tx-default-interval',
+          maxAttempts: 2,
+          interval: Duration.zero,
+          sleep: (duration) async => sleeps.add(duration),
+        );
+
+        expect(tx.parsedState, RelayerTransactionState.mined);
+        expect(sleeps, <Duration>[const Duration(seconds: 2)]);
+      },
+    );
+
     test('returns when state reaches STATE_MINED', () async {
       final states = <String>['STATE_NEW', 'STATE_EXECUTED', 'STATE_MINED'];
       var idx = 0;

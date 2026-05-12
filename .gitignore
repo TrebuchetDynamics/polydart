@@ -4,6 +4,11 @@
 build/
 pubspec.lock
 
+# Node / Astro docs
+node_modules/
+.astro/
+dist/
+
 # Generated
 *.g.dart
 *.freezed.dart

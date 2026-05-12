@@ -61,6 +61,18 @@ final class HttpTransport {
     return _decodeList(resp);
   }
 
+  /// Performs a GET request and returns decoded JSON without constraining the
+  /// top-level shape.
+  Future<Object?> getJsonValue(
+    String path, {
+    Map<String, dynamic>? query,
+    Map<String, String>? headers,
+  }) async {
+    final resp = await _do('GET', path, query: query, headers: headers);
+    if (resp.body.isEmpty) return null;
+    return jsonDecode(resp.body);
+  }
+
   /// Performs a POST request. POSTs are not retried.
   Future<Map<String, dynamic>> postJson(
     String path,

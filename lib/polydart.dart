@@ -119,7 +119,12 @@ export 'src/clob/clob_auth_types.dart'
 export 'src/clob/clob_client.dart' show ClobClient;
 export 'src/clob/clob_params.dart' show BookParams, PriceHistoryParams;
 export 'src/clob/clob_writes.dart'
-    show CancelResponse, ClobWrites, CreateOrderRequest;
+    show
+        BatchOrderResponse,
+        CancelResponse,
+        ClobWrites,
+        CreateOrderRequest,
+        maxBatchPostSize;
 export 'src/contracts/contracts.dart'
     show
         CTF,
@@ -160,6 +165,7 @@ export 'src/dataapi/dataapi_types.dart'
         Activity,
         ClosedPosition,
         LiveVolumeEntry,
+        LiveVolumeMarket,
         LiveVolumeResponse,
         MetaHolder,
         OpenInterest,
@@ -366,6 +372,8 @@ export 'src/stream/stream_messages.dart'
         BestBidAskMessage,
         BookMessage,
         LastTradeMessage,
+        MarketResolvedMessage,
+        NewMarketMessage,
         PriceChangeEntry,
         PriceChangeMessage,
         PriceLevel,
@@ -386,6 +394,7 @@ export 'src/relayer/relayer_types.dart'
         DeployedResponse,
         DepositWalletCall,
         NonceResponse,
+        RelayerError,
         RelayerTransaction,
         RelayerTransactionState;
 export 'src/relayer/approvals.dart'
@@ -427,11 +436,10 @@ const String polydartVersion = '0.1.0-alpha.1';
 ///   * [Polydart.readOnly] — no wallet, no auth, no live writes.
 ///   * [Polydart.paper] — read-only protocol surface plus a paper-mode
 ///     marker so risk gates can permit simulated submissions. Wallet
-///     wiring lands in Phase 2.
+///     wiring remains application-owned.
 ///
-/// Live mode (`Polydart.live`) requires a [WalletSigner] and lands in
-/// Phase 2; until then [requireLive] inside `lib/src/modes` will block
-/// any live-only call site.
+/// Live write paths are exposed through lower-level clients and remain blocked
+/// unless the caller uses [PolydartMode.live] with explicit live-trading gates.
 final class Polydart {
   Polydart._({
     required this.config,
@@ -490,8 +498,7 @@ final class Polydart {
   /// Active operating mode. Sugar for `config.mode`.
   PolydartMode get mode => config.mode;
 
-  /// EOA address provided to [Polydart.paper] / [Polydart.live]. Empty
-  /// for read-only mode.
+  /// EOA address provided to [Polydart.paper]. Empty for read-only mode.
   final String eoaAddress;
 
   /// Gamma API surface — search, markets, events, …

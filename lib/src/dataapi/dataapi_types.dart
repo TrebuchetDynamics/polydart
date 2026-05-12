@@ -294,17 +294,23 @@ final class MetaHolder {
     required this.shares,
     required this.pnl,
     required this.volume,
+    this.proxyWallet = '',
+    this.amount = 0,
   });
 
   factory MetaHolder.fromJson(Map<String, dynamic> json) => MetaHolder(
-    address: json['address']?.toString() ?? '',
-    shares: _double(json['shares']),
+    address: _stringOf(json, const ['address', 'proxyWallet']),
+    proxyWallet: _stringOf(json, const ['proxyWallet', 'address']),
+    shares: _double(_firstOf(json, const ['shares', 'amount'])),
+    amount: _double(_firstOf(json, const ['amount', 'shares'])),
     pnl: _double(json['pnl']),
     volume: _double(json['volume']),
   );
 
   final String address;
+  final String proxyWallet;
   final double shares;
+  final double amount;
   final double pnl;
   final double volume;
 }
@@ -317,11 +323,16 @@ final class TotalValue {
     required this.timestamp,
   });
 
-  factory TotalValue.fromJson(Map<String, dynamic> json) => TotalValue(
-    user: json['user']?.toString() ?? '',
-    value: _double(json['value']),
-    timestamp: json['timestamp']?.toString() ?? '',
-  );
+  factory TotalValue.fromJson(Object? json, {String defaultUser = ''}) {
+    final map = _responseMap(json);
+    return TotalValue(
+      user: _stringOf(map, const ['user']).isEmpty
+          ? defaultUser
+          : _stringOf(map, const ['user']),
+      value: _double(map['value']),
+      timestamp: map['timestamp']?.toString() ?? '',
+    );
+  }
 
   final String user;
   final double value;
@@ -330,16 +341,25 @@ final class TotalValue {
 
 @immutable
 final class TotalMarketsTraded {
-  const TotalMarketsTraded({required this.user, required this.marketsTraded});
+  const TotalMarketsTraded({
+    required this.user,
+    required this.marketsTraded,
+    this.traded = 0,
+  });
 
-  factory TotalMarketsTraded.fromJson(Map<String, dynamic> json) =>
-      TotalMarketsTraded(
-        user: json['user']?.toString() ?? '',
-        marketsTraded: _int(json['markets_traded']),
-      );
+  factory TotalMarketsTraded.fromJson(Map<String, dynamic> json) {
+    final marketsTraded = _int(json['markets_traded']);
+    final traded = _int(json['traded']);
+    return TotalMarketsTraded(
+      user: json['user']?.toString() ?? '',
+      marketsTraded: marketsTraded == 0 ? traded : marketsTraded,
+      traded: traded == 0 ? marketsTraded : traded,
+    );
+  }
 
   final String user;
   final int marketsTraded;
+  final int traded;
 }
 
 @immutable
@@ -353,7 +373,7 @@ final class OpenInterest {
   factory OpenInterest.fromJson(Map<String, dynamic> json) => OpenInterest(
     market: json['market']?.toString() ?? '',
     assetId: json['asset_id']?.toString() ?? '',
-    openValue: _double(json['open_value']),
+    openValue: _double(_firstOf(json, const ['open_value', 'value'])),
   );
 
   final String market;
@@ -411,17 +431,39 @@ final class LiveVolumeEntry {
 }
 
 @immutable
-final class LiveVolumeResponse {
-  const LiveVolumeResponse({required this.total, required this.events});
+final class LiveVolumeMarket {
+  const LiveVolumeMarket({required this.market, required this.value});
 
-  factory LiveVolumeResponse.fromJson(Map<String, dynamic> json) =>
-      LiveVolumeResponse(
-        total: _int(json['total']),
-        events: _liveVolumeEntries(json['events']),
+  factory LiveVolumeMarket.fromJson(Map<String, dynamic> json) =>
+      LiveVolumeMarket(
+        market: json['market']?.toString() ?? '',
+        value: _double(json['value']),
       );
 
-  final int total;
+  final String market;
+  final double value;
+}
+
+@immutable
+final class LiveVolumeResponse {
+  const LiveVolumeResponse({
+    required this.total,
+    required this.events,
+    this.markets = const <LiveVolumeMarket>[],
+  });
+
+  factory LiveVolumeResponse.fromJson(Object? json) {
+    final map = _responseMap(json);
+    return LiveVolumeResponse(
+      total: _double(map['total']),
+      events: _liveVolumeEntries(map['events']),
+      markets: _liveVolumeMarkets(map['markets']),
+    );
+  }
+
+  final double total;
   final List<LiveVolumeEntry> events;
+  final List<LiveVolumeMarket> markets;
 }
 
 // ---- helpers ----
@@ -467,10 +509,28 @@ bool _bool(Object? raw) {
   return false;
 }
 
+Map<String, dynamic> _responseMap(Object? raw) {
+  if (raw is Map<String, dynamic>) return raw;
+  if (raw is Map) return raw.cast<String, dynamic>();
+  if (raw is List) {
+    final firstMap = raw.whereType<Map<dynamic, dynamic>>().firstOrNull;
+    return firstMap?.cast<String, dynamic>() ?? const <String, dynamic>{};
+  }
+  return const <String, dynamic>{};
+}
+
 List<LiveVolumeEntry> _liveVolumeEntries(Object? raw) {
   if (raw is! List) return const <LiveVolumeEntry>[];
   return raw
       .whereType<Map<dynamic, dynamic>>()
       .map((m) => LiveVolumeEntry.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+}
+
+List<LiveVolumeMarket> _liveVolumeMarkets(Object? raw) {
+  if (raw is! List) return const <LiveVolumeMarket>[];
+  return raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => LiveVolumeMarket.fromJson(m.cast<String, dynamic>()))
       .toList(growable: false);
 }
