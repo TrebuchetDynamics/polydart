@@ -7,8 +7,9 @@
 ///   * `hashOrderV2` — canonical EIP-712 digest, useful for verification
 ///     and as the input to ERC-7739 wrapping.
 ///
-/// Live-mode `wrapPoly1271Signature` (the 317-byte ERC-7739 envelope)
-/// lands in a follow-up commit alongside `polydart_flutter`.
+/// Deposit-wallet live orders use `signDepositWalletOrderV2`, which wraps the
+/// EOA wallet signature in the 317-byte ERC-7739 envelope required for
+/// signatureType=3.
 library;
 
 import 'dart:typed_data';
@@ -187,8 +188,8 @@ Uint8List orderV2DomainSeparator({bool negRisk = false}) {
 /// Builds, signs, and packages an [OrderIntent] into a wire-ready
 /// [SignedOrder]. Mirrors the orchestration in
 /// `polygolem/internal/clob/orders.go::signCLOBOrder` for V2 / EOA
-/// signature flows; POLY_1271 (deposit-wallet) consumers should still go
-/// through `wrapPoly1271Signature` after this returns the raw signature.
+/// signature flows. Use `signDepositWalletOrderV2` for POLY_1271
+/// deposit-wallet orders.
 ///
 /// - For [SignatureType.eoa] (default), `maker = signer = signer.address`.
 /// - For other signature types, the caller must supply [intent.funder]

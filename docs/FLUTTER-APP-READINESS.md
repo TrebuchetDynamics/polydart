@@ -91,6 +91,11 @@ V2 pUSD/CTF approvals, and reads CLOB `balance-allowance` with
 `needsApprovalCheck`, `needsApproval`, `needsFunding`, or `ready` without
 making the app infer protocol state from exceptions.
 
+When readiness returns `ready`, use `createDepositWalletLimitOrder(...)` for
+live limit orders. The helper derives the deposit wallet from `signer.address`,
+asks the app-owned `WalletSigner` to approve the ERC-7739 `TypedDataSign`
+payload, posts `signatureType=3`, and leaves raw private keys outside Polydart.
+
 Signature flows assume Polygon mainnet unless a lower-level helper documents a
 different chain. Wallet-backed signing should verify `chainId == 137` before
 asking the user to sign Polymarket payloads.

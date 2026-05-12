@@ -4,10 +4,12 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:polydart/src/auth/create2.dart';
 import 'package:polydart/src/auth/l2.dart';
 import 'package:polydart/src/auth/wallet_signer.dart';
 import 'package:polydart/src/clob/clob_client.dart';
 import 'package:polydart/src/modes/modes.dart';
+import 'package:polydart/src/orders/deposit_wallet_order_signing.dart';
 import 'package:polydart/src/orders/order_builder.dart';
 import 'package:polydart/src/orders/order_placement.dart';
 import 'package:polydart/src/orders/order_signing.dart';
@@ -100,6 +102,40 @@ void main() {
       expect(signed.signer, signer.address);
       expect(signed.signatureType, SignatureType.poly1271);
     });
+
+    test(
+      'wraps deposit-wallet orders with ERC-7739 approval envelope',
+      () async {
+        final signer = _CannedSigner();
+        final depositWallet = deriveDepositWallet(signer.address);
+        final intent =
+            (OrderBuilder(tokenId: '12345', side: Side.buy)
+                  ..price('0.50')
+                  ..size('10')
+                  ..tickSize('0.01')
+                  ..signatureType(SignatureType.poly1271)
+                  ..funder(depositWallet))
+                .build();
+
+        final signed = await signDepositWalletOrderV2(
+          intent: intent,
+          signer: signer,
+          depositWallet: depositWallet,
+        );
+
+        expect(signed.maker, depositWallet);
+        expect(signed.signer, depositWallet);
+        expect(signed.signatureType, SignatureType.poly1271);
+        expect(signed.signature.length, 636);
+        expect(signer.lastTyped!['primaryType'], 'TypedDataSign');
+        final message = signer.lastTyped!['message'] as Map<String, dynamic>;
+        expect(message['verifyingContract'], depositWallet);
+        final contents = message['contents'] as Map<String, dynamic>;
+        expect(contents['maker'], depositWallet);
+        expect(contents['signer'], depositWallet);
+        expect(contents['signatureType'], 3);
+      },
+    );
   });
 
   group('createLimitOrder', () {
@@ -146,6 +182,65 @@ void main() {
       expect(lastPath, '/order');
       expect(resp.orderId, 'ord-9');
     });
+
+    test(
+      'deposit-wallet helper derives maker, wraps signature, and uses EOA auth',
+      () async {
+        http.BaseRequest? orderRequest;
+        String? orderBody;
+        final signer = _CannedSigner();
+        final depositWallet = deriveDepositWallet(signer.address);
+        final client = _client((req) async {
+          switch (req.url.path) {
+            case '/tick-size':
+              return http.Response(
+                jsonEncode(<String, dynamic>{
+                  'minimum_tick_size': '0.01',
+                  'minimum_order_size': '5',
+                  'tick_size': '0.01',
+                }),
+                200,
+              );
+            case '/order':
+              orderRequest = req;
+              orderBody = (req as http.Request).body;
+              return http.Response(
+                jsonEncode(<String, dynamic>{
+                  'success': true,
+                  'order_id': 'ord-dw-1',
+                  'status': 'live',
+                }),
+                200,
+              );
+            default:
+              return http.Response('not found', 404);
+          }
+        });
+
+        final resp = await createDepositWalletLimitOrder(
+          client: client,
+          signer: signer,
+          apiKey: _testApiKey,
+          params: const CreateDepositWalletLimitOrderParams(
+            tokenId: '12345',
+            side: Side.buy,
+            price: '0.50',
+            size: '10',
+          ),
+        );
+
+        expect(resp.orderId, 'ord-dw-1');
+        expect(orderRequest!.headers['POLY_ADDRESS'], signer.address);
+        expect(signer.lastTyped!['primaryType'], 'TypedDataSign');
+        final body = jsonDecode(orderBody!) as Map<String, dynamic>;
+        expect(body['owner'], _testApiKey.key);
+        final order = body['order'] as Map<String, dynamic>;
+        expect(order['maker'], depositWallet);
+        expect(order['signer'], depositWallet);
+        expect(order['signatureType'], 3);
+        expect((order['signature'] as String).length, 636);
+      },
+    );
   });
 
   group('createMarketOrder', () {

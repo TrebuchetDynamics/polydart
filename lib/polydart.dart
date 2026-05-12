@@ -246,10 +246,14 @@ export 'src/orders/amounts.dart'
         usdcDecimals,
         validatePriceAgainstTick;
 export 'src/orders/order_builder.dart' show OrderBuilder;
+export 'src/orders/deposit_wallet_order_signing.dart'
+    show signDepositWalletOrderV2;
 export 'src/orders/order_placement.dart'
     show
+        CreateDepositWalletLimitOrderParams,
         CreateLimitOrderParams,
         CreateMarketOrderParams,
+        createDepositWalletLimitOrder,
         createLimitOrder,
         createMarketOrder;
 export 'src/orders/order_signing.dart'

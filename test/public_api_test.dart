@@ -17,6 +17,16 @@ void main() {
     const liveVolumeMarket = LiveVolumeMarket(market: '0xmarket', value: 42.5);
     expect(liveVolumeMarket.value, 42.5);
 
+    const depositLimitParams = CreateDepositWalletLimitOrderParams(
+      tokenId: '12345',
+      side: Side.buy,
+      price: '0.50',
+      size: '10',
+    );
+    expect(depositLimitParams.orderType, OrderType.gtc);
+    expect(createDepositWalletLimitOrder, isA<Function>());
+    expect(signDepositWalletOrderV2, isA<Function>());
+
     const newMarket = NewMarketMessage(
       eventType: 'new_market',
       id: 'M-1',

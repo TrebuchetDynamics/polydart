@@ -56,7 +56,7 @@ orchestration surface. It:
 
 Next live-readiness slices:
 
-- `signatureType=3` order placement with maker/signer/funder separation
+- deposit-wallet market-order pricing and live batch/cancel parity
 - pUSD routing from EOA available balance into the deposit wallet
 
 ## First Public API Target
@@ -90,6 +90,15 @@ The readiness object should include:
 - required approval set
 - missing approval set
 - CLOB collateral balance/allowance using `signature_type=3`
+
+First live order path:
+
+- `createDepositWalletLimitOrder(...)` derives the deposit wallet from the EOA
+  signer.
+- The EOA signs the ERC-7739 `TypedDataSign` envelope through `WalletSigner`.
+- The posted order uses `signatureType=3` and
+  `maker == signer == depositWallet`.
+- CLOB HMAC headers stay EOA-bound through `POLY_ADDRESS`.
 
 Future tests should add:
 

@@ -126,6 +126,7 @@ final class ClobWrites {
     OrderType orderType = OrderType.gtc,
     bool postOnly = false,
     bool deferExec = false,
+    String polyAddress = '',
   }) async {
     requireLive(_mode, liveTradingEnabled: _liveTradingEnabled);
     final req = CreateOrderRequest(
@@ -141,6 +142,7 @@ final class ClobWrites {
       path: '/order',
       body: body,
       apiKey: apiKey,
+      polyAddress: polyAddress,
     );
     final resp = await _transport.postJson('/order', body, headers: headers);
     return OrderResponse.fromJson(resp);
@@ -312,15 +314,21 @@ final class ClobWrites {
     required String path,
     required ApiKey apiKey,
     Object? body,
+    String polyAddress = '',
   }) {
     final ts = (_clock().millisecondsSinceEpoch / 1000).floor();
     final compact = body == null ? null : compactJson(jsonEncode(body));
-    return buildL2Headers(
+    final headers = buildL2Headers(
       apiKey: apiKey,
       timestamp: ts,
       method: method,
       path: path,
       body: compact,
     );
+    final address = polyAddress.trim();
+    if (address.isNotEmpty) {
+      headers['POLY_ADDRESS'] = address;
+    }
+    return headers;
   }
 }

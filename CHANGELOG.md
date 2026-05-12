@@ -36,6 +36,9 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 - Deposit-wallet readiness now checks the six V2 pUSD/CTF approvals plus CLOB
   `balance-allowance` with `signature_type=3`, returning `needsApproval`,
   `needsFunding`, or `ready`.
+- Deposit-wallet limit-order placement now derives the deposit wallet from the
+  EOA signer, signs the ERC-7739 `TypedDataSign` envelope, posts
+  `signatureType=3`, and keeps CLOB HMAC auth EOA-bound.
 - CI workflow: format, analyze, test (network tests opt-in).
 
 ## [0.1.0-alpha.1] — TBD

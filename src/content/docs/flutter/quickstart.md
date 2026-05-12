@@ -120,3 +120,8 @@ Pass those credentials into
 deploy or approval actions. The readiness result stays machine-readable:
 `needsDeploy`, `needsApprovalCheck`, `needsApproval`, `needsFunding`, `ready`,
 or `blocked`.
+
+After a `ready` result, use `createDepositWalletLimitOrder(...)` for live limit
+orders. It derives the deposit wallet from the connected EOA, prompts the
+app-owned `WalletSigner` for the ERC-7739 typed-data approval, and posts
+`signatureType=3`.

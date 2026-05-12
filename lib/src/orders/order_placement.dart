@@ -11,10 +11,12 @@ library;
 
 import 'package:meta/meta.dart';
 
+import '../auth/create2.dart';
 import '../auth/l2.dart';
 import '../auth/wallet_signer.dart';
 import '../clob/clob_client.dart';
 import '../types/enums.dart';
+import 'deposit_wallet_order_signing.dart';
 import 'order_builder.dart';
 import 'order_intent.dart';
 import 'order_signing.dart';
@@ -60,6 +62,38 @@ final class CreateLimitOrderParams {
   /// 0x-prefixed 32-byte builder code from
   /// `polymarket.com/settings?tab=builder`. Defaults to all-zeros (no
   /// builder attribution).
+  final String builderCode;
+}
+
+/// Inputs for [createDepositWalletLimitOrder].
+///
+/// This is intentionally separate from [CreateLimitOrderParams] so callers do
+/// not choose a signature type or funder manually. The helper derives the
+/// deposit wallet from the EOA [WalletSigner].
+@immutable
+final class CreateDepositWalletLimitOrderParams {
+  const CreateDepositWalletLimitOrderParams({
+    required this.tokenId,
+    required this.side,
+    required this.price,
+    required this.size,
+    this.orderType = OrderType.gtc,
+    this.negRisk = false,
+    this.feeRateBps = 0,
+    this.expiration = 0,
+    this.postOnly = false,
+    this.builderCode = bytes32Zero,
+  });
+
+  final String tokenId;
+  final Side side;
+  final String price;
+  final String size;
+  final OrderType orderType;
+  final bool negRisk;
+  final int feeRateBps;
+  final int expiration;
+  final bool postOnly;
   final String builderCode;
 }
 
@@ -114,11 +148,18 @@ Future<OrderResponse> createLimitOrder({
             ..postOnly(params.postOnly))
           .build();
 
-  final signed = await signOrderV2(
-    intent: intent,
-    signer: signer,
-    builderCode: params.builderCode,
-  );
+  final signed = intent.signatureType == SignatureType.poly1271
+      ? await signDepositWalletOrderV2(
+          intent: intent,
+          signer: signer,
+          depositWallet: intent.funder,
+          builderCode: params.builderCode,
+        )
+      : await signOrderV2(
+          intent: intent,
+          signer: signer,
+          builderCode: params.builderCode,
+        );
 
   return client.writes.createOrder(
     order: signed,
@@ -126,6 +167,40 @@ Future<OrderResponse> createLimitOrder({
     apiKey: apiKey,
     orderType: params.orderType,
     postOnly: params.postOnly,
+    polyAddress: signer.address,
+  );
+}
+
+/// End-to-end deposit-wallet limit-order placement.
+///
+/// The EOA [signer] approves the ERC-7739 envelope. The order body uses
+/// signatureType=3 with `maker == signer == depositWallet`, while CLOB HMAC
+/// authentication remains bound to the EOA address.
+Future<OrderResponse> createDepositWalletLimitOrder({
+  required ClobClient client,
+  required WalletSigner signer,
+  required ApiKey apiKey,
+  required CreateDepositWalletLimitOrderParams params,
+}) {
+  final depositWallet = deriveDepositWallet(signer.address);
+  return createLimitOrder(
+    client: client,
+    signer: signer,
+    apiKey: apiKey,
+    params: CreateLimitOrderParams(
+      tokenId: params.tokenId,
+      side: params.side,
+      price: params.price,
+      size: params.size,
+      orderType: params.orderType,
+      signatureType: SignatureType.poly1271,
+      negRisk: params.negRisk,
+      feeRateBps: params.feeRateBps,
+      expiration: params.expiration,
+      funder: depositWallet,
+      postOnly: params.postOnly,
+      builderCode: params.builderCode,
+    ),
   );
 }
 
@@ -149,16 +224,24 @@ Future<OrderResponse> createMarketOrder({
             ..funder(params.funder))
           .build();
 
-  final signed = await signOrderV2(
-    intent: intent,
-    signer: signer,
-    builderCode: params.builderCode,
-  );
+  final signed = intent.signatureType == SignatureType.poly1271
+      ? await signDepositWalletOrderV2(
+          intent: intent,
+          signer: signer,
+          depositWallet: intent.funder,
+          builderCode: params.builderCode,
+        )
+      : await signOrderV2(
+          intent: intent,
+          signer: signer,
+          builderCode: params.builderCode,
+        );
 
   return client.writes.createOrder(
     order: signed,
     owner: apiKey.key,
     apiKey: apiKey,
     orderType: params.orderType,
+    polyAddress: signer.address,
   );
 }
