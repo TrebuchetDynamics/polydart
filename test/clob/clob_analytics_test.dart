@@ -165,29 +165,24 @@ void main() {
       expect(result['tok-2'], '0.75');
     });
 
-    test(
-      'falls back to /prices when /prices-post returns 4xx',
-      () async {
-        final hits = <String>[];
-        final client = _client((req) async {
-          hits.add(req.url.path);
-          if (req.url.path == '/prices-post') {
-            return http.Response('not found', 404);
-          }
-          return http.Response(
-            jsonEncode(<String, dynamic>{
-              'tok-1': <String, dynamic>{'price': '0.40'},
-            }),
-            200,
-          );
-        });
-        final result = await client.prices([
-          const BookParams(tokenId: 'tok-1'),
-        ]);
-        expect(hits, <String>['/prices-post', '/prices']);
-        expect(result['tok-1'], '0.40');
-      },
-    );
+    test('falls back to /prices when /prices-post returns 4xx', () async {
+      final hits = <String>[];
+      final client = _client((req) async {
+        hits.add(req.url.path);
+        if (req.url.path == '/prices-post') {
+          return http.Response('not found', 404);
+        }
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'tok-1': <String, dynamic>{'price': '0.40'},
+          }),
+          200,
+        );
+      });
+      final result = await client.prices([const BookParams(tokenId: 'tok-1')]);
+      expect(hits, <String>['/prices-post', '/prices']);
+      expect(result['tok-1'], '0.40');
+    });
   });
 
   group('midpoints', () {
@@ -329,10 +324,7 @@ void main() {
               'earnings': 3.21,
               'market': 'm1',
             },
-            <String, dynamic>{
-              'date': '2026-05-07',
-              'earnings': 0.5,
-            },
+            <String, dynamic>{'date': '2026-05-07', 'earnings': 0.5},
           ]),
           200,
         );

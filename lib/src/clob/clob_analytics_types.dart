@@ -61,11 +61,7 @@ final class RawRewards {
 /// Earnings for a user, optionally scoped to a single market.
 @immutable
 final class UserEarnings {
-  const UserEarnings({
-    required this.date,
-    required this.earnings,
-    this.market,
-  });
+  const UserEarnings({required this.date, required this.earnings, this.market});
 
   factory UserEarnings.fromJson(Map<String, dynamic> json) {
     final market = json['market']?.toString();

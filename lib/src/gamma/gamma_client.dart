@@ -134,13 +134,8 @@ final class GammaClient {
   }
 
   /// Lists tags with optional filters.
-  Future<List<Tag>> tags([
-    GetTagsParams params = const GetTagsParams(),
-  ]) async {
-    final list = await _transport.getJsonList(
-      '/tags',
-      query: params.toQuery(),
-    );
+  Future<List<Tag>> tags([GetTagsParams params = const GetTagsParams()]) async {
+    final list = await _transport.getJsonList('/tags', query: params.toQuery());
     return _tagList(list);
   }
 

@@ -129,27 +129,28 @@ void main() {
   });
 
   group('signWalletBatch (WalletSigner integration)', () {
-    test('passes the typed-data envelope to the signer and returns hex',
-        () async {
-      final signer = _StubSigner(
-        signature: Uint8List.fromList(
-          List<int>.generate(65, (i) => 0xb0 + (i % 16)),
-        ),
-      );
-      final hex = await signWalletBatch(
-        signer: signer,
-        walletAddress: _wallet,
-        nonce: _nonce,
-        deadline: _deadline,
-        calls: _sampleCalls(),
-      );
-      expect(hex.startsWith('0x'), isTrue);
-      expect(hex.length, 132); // 65 bytes
-      expect(signer.lastEnvelope, isNotNull);
-      final domain =
-          signer.lastEnvelope!['domain'] as Map<String, dynamic>;
-      expect(domain['chainId'], 137);
-    });
+    test(
+      'passes the typed-data envelope to the signer and returns hex',
+      () async {
+        final signer = _StubSigner(
+          signature: Uint8List.fromList(
+            List<int>.generate(65, (i) => 0xb0 + (i % 16)),
+          ),
+        );
+        final hex = await signWalletBatch(
+          signer: signer,
+          walletAddress: _wallet,
+          nonce: _nonce,
+          deadline: _deadline,
+          calls: _sampleCalls(),
+        );
+        expect(hex.startsWith('0x'), isTrue);
+        expect(hex.length, 132); // 65 bytes
+        expect(signer.lastEnvelope, isNotNull);
+        final domain = signer.lastEnvelope!['domain'] as Map<String, dynamic>;
+        expect(domain['chainId'], 137);
+      },
+    );
 
     test('rejects empty calls before signing', () async {
       final signer = _StubSigner(signature: Uint8List(65));

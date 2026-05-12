@@ -204,7 +204,8 @@ Future<SignedOrder> signOrderV2({
   final amounts = computeAmounts(intent);
 
   final eoa = signer.address;
-  final maker = makerOverride ??
+  final maker =
+      makerOverride ??
       (intent.signatureType == SignatureType.eoa ? eoa : intent.funder);
   if (maker.isEmpty) {
     throw const ValidationException(

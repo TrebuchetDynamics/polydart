@@ -186,39 +186,41 @@ void main() {
       passphrase: 'l2-pass',
     );
 
-    test('POSTs /auth/builder-api-key with L2 headers and parses {key,...}',
-        () async {
-      String? capturedPath;
-      String? capturedMethod;
-      Map<String, String>? capturedHeaders;
+    test(
+      'POSTs /auth/builder-api-key with L2 headers and parses {key,...}',
+      () async {
+        String? capturedPath;
+        String? capturedMethod;
+        Map<String, String>? capturedHeaders;
 
-      final client = _client((req) async {
-        capturedPath = req.url.path;
-        capturedMethod = req.method;
-        capturedHeaders = req.headers;
-        return http.Response(
-          jsonEncode(<String, dynamic>{
-            'key': 'fee-key-uuid',
-            'secret': 'BASE64SECRETYY',
-            'passphrase': 'fee-pass',
-          }),
-          200,
-        );
-      });
+        final client = _client((req) async {
+          capturedPath = req.url.path;
+          capturedMethod = req.method;
+          capturedHeaders = req.headers;
+          return http.Response(
+            jsonEncode(<String, dynamic>{
+              'key': 'fee-key-uuid',
+              'secret': 'BASE64SECRETYY',
+              'passphrase': 'fee-pass',
+            }),
+            200,
+          );
+        });
 
-      final feeKey = await client.createBuilderFeeKey(apiKey: apiKey);
+        final feeKey = await client.createBuilderFeeKey(apiKey: apiKey);
 
-      expect(capturedMethod, 'POST');
-      expect(capturedPath, '/auth/builder-api-key');
-      expect(capturedHeaders!['POLY_API_KEY'], 'l2-key-uuid');
-      expect(capturedHeaders!['POLY_PASSPHRASE'], 'l2-pass');
-      expect(capturedHeaders!['POLY_TIMESTAMP'], isNotNull);
-      expect(capturedHeaders!['POLY_SIGNATURE'], isNotNull);
+        expect(capturedMethod, 'POST');
+        expect(capturedPath, '/auth/builder-api-key');
+        expect(capturedHeaders!['POLY_API_KEY'], 'l2-key-uuid');
+        expect(capturedHeaders!['POLY_PASSPHRASE'], 'l2-pass');
+        expect(capturedHeaders!['POLY_TIMESTAMP'], isNotNull);
+        expect(capturedHeaders!['POLY_SIGNATURE'], isNotNull);
 
-      expect(feeKey.key, 'fee-key-uuid');
-      expect(feeKey.secret, 'BASE64SECRETYY');
-      expect(feeKey.passphrase, 'fee-pass');
-    });
+        expect(feeKey.key, 'fee-key-uuid');
+        expect(feeKey.secret, 'BASE64SECRETYY');
+        expect(feeKey.passphrase, 'fee-pass');
+      },
+    );
   });
 
   group('listBuilderFeeKeys', () {

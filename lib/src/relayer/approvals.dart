@@ -58,11 +58,7 @@ List<DepositWalletCall> buildApprovalCalls() {
 
 DepositWalletCall _buildApproveCall(String token, String spender) {
   final data = '0x$_erc20ApproveSelector${_pad32(spender)}$_maxUint256';
-  return DepositWalletCall(
-    target: _checksum(token),
-    value: '0',
-    data: data,
-  );
+  return DepositWalletCall(target: _checksum(token), value: '0', data: data);
 }
 
 DepositWalletCall _buildCtfApprovalCall(String operator) {

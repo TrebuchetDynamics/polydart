@@ -73,8 +73,7 @@ void main() {
       expect(orderV2ContentsType.length, 186);
     });
 
-    test('digest derived from typed-data envelope matches direct compute',
-        () {
+    test('digest derived from typed-data envelope matches direct compute', () {
       // poly1271DigestFromEnvelope re-walks the EIP-712 pipeline a wallet
       // would run on the envelope returned by
       // buildPoly1271TypedDataEnvelope. It must produce the same digest
@@ -107,7 +106,8 @@ void main() {
       expect(assembled.startsWith('0x'), isTrue);
 
       // Cross-validate against polygolem-emitted full-wrap fixture.
-      const expected = '0x'
+      const expected =
+          '0x'
           'a0a1a2a3a4a5a6a7a8a9aaabacadaeaf'
           'a0a1a2a3a4a5a6a7a8a9aaabacadaeaf'
           'a0a1a2a3a4a5a6a7a8a9aaabacadaeaf'
@@ -161,8 +161,7 @@ void main() {
   });
 
   group('wrapPoly1271Signature (WalletSigner integration)', () {
-    test('passes the envelope to the signer and assembles the wrap',
-        () async {
+    test('passes the envelope to the signer and assembles the wrap', () async {
       final signer = _StubSigner(
         signature: Uint8List.fromList(
           List<int>.generate(65, (i) => 0xa0 + (i % 16)),

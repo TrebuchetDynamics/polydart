@@ -9,8 +9,7 @@ void main() {
       expect(calls, hasLength(6));
     });
 
-    test('alternates pUSD-approve / CTF-setApprovalForAll for each spender',
-        () {
+    test('alternates pUSD-approve / CTF-setApprovalForAll for each spender', () {
       // Even indices = pUSD ERC-20 approve (target=pUSD, selector 0x095ea7b3)
       // Odd  indices = CTF ERC-1155 setApprovalForAll (target=CTF, selector 0xa22cb465)
       for (var i = 0; i < calls.length; i++) {
@@ -18,13 +17,18 @@ void main() {
         expect(c.value, '0');
         expect(c.data.startsWith('0x'), isTrue);
         if (i.isEven) {
-          expect(c.target.toLowerCase(),
-              pusdAddress.toLowerCase(),
-              reason: 'index $i should target pUSD');
+          expect(
+            c.target.toLowerCase(),
+            pusdAddress.toLowerCase(),
+            reason: 'index $i should target pUSD',
+          );
           expect(c.data.substring(2, 10), '095ea7b3');
         } else {
-          expect(c.target.toLowerCase(), ctfAddress.toLowerCase(),
-              reason: 'index $i should target CTF');
+          expect(
+            c.target.toLowerCase(),
+            ctfAddress.toLowerCase(),
+            reason: 'index $i should target CTF',
+          );
           expect(c.data.substring(2, 10), 'a22cb465');
         }
       }
@@ -41,12 +45,15 @@ void main() {
         // Both calls embed the spender right-padded into the calldata.
         final approveCall = calls[i * 2];
         final ctfCall = calls[i * 2 + 1];
-        final spenderHex =
-            spenders[i].substring(2).toLowerCase().padLeft(64, '0');
+        final spenderHex = spenders[i]
+            .substring(2)
+            .toLowerCase()
+            .padLeft(64, '0');
         expect(
           approveCall.data.toLowerCase().contains(spenderHex),
           isTrue,
-          reason: 'pUSD approve at index ${i * 2} should reference ${spenders[i]}',
+          reason:
+              'pUSD approve at index ${i * 2} should reference ${spenders[i]}',
         );
         expect(
           ctfCall.data.toLowerCase().contains(spenderHex),

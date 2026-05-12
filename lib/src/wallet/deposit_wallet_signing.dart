@@ -73,8 +73,7 @@ Uint8List hashWalletBatchCall(WalletBatchCall call) {
   if (target.length != 20) {
     throw ValidationException(
       code: ErrorCode.invalidValue,
-      message:
-          'Call.target must be a 20-byte address (got ${target.length})',
+      message: 'Call.target must be a 20-byte address (got ${target.length})',
       field: 'target',
     );
   }
@@ -115,8 +114,7 @@ Uint8List hashWalletBatchStruct({
   if (wallet.length != 20) {
     throw ValidationException(
       code: ErrorCode.invalidValue,
-      message:
-          'walletAddress must be a 20-byte address (got ${wallet.length})',
+      message: 'walletAddress must be a 20-byte address (got ${wallet.length})',
       field: 'walletAddress',
     );
   }
@@ -260,8 +258,7 @@ Future<String> signWalletBatch({
   if (sig.length != 65) {
     throw ValidationException(
       code: ErrorCode.invalidValue,
-      message:
-          'wallet returned ${sig.length}-byte signature (expected 65)',
+      message: 'wallet returned ${sig.length}-byte signature (expected 65)',
     );
   }
   return bytesToHex0x(sig);

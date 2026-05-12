@@ -8,10 +8,7 @@ List<int> _enc(Map<String, dynamic> m) => utf8.encode(jsonEncode(m));
 void main() {
   group('Deduplicator.process', () {
     test('first book message with hash is new', () {
-      final dedup = Deduplicator(
-        size: 64,
-        ttl: const Duration(seconds: 1),
-      );
+      final dedup = Deduplicator(size: 64, ttl: const Duration(seconds: 1));
       final msg = _enc(<String, dynamic>{
         'event_type': 'book',
         'hash': 'abc',
@@ -30,10 +27,7 @@ void main() {
         ttl: const Duration(seconds: 5),
         clock: () => fixed,
       );
-      final msg = _enc(<String, dynamic>{
-        'event_type': 'book',
-        'hash': 'abc',
-      });
+      final msg = _enc(<String, dynamic>{'event_type': 'book', 'hash': 'abc'});
       expect(dedup.process(msg), isTrue);
       expect(dedup.process(msg), isFalse);
       expect(dedup.inCount, 2);
@@ -48,10 +42,7 @@ void main() {
         ttl: const Duration(milliseconds: 100),
         clock: () => DateTime.fromMillisecondsSinceEpoch(nowMs),
       );
-      final msg = _enc(<String, dynamic>{
-        'event_type': 'book',
-        'hash': 'h1',
-      });
+      final msg = _enc(<String, dynamic>{'event_type': 'book', 'hash': 'h1'});
       expect(dedup.process(msg), isTrue);
       nowMs += 200;
       expect(dedup.process(msg), isTrue);
@@ -60,20 +51,14 @@ void main() {
     });
 
     test('empty bytes are counted as new (no key)', () {
-      final dedup = Deduplicator(
-        size: 16,
-        ttl: const Duration(seconds: 1),
-      );
+      final dedup = Deduplicator(size: 16, ttl: const Duration(seconds: 1));
       expect(dedup.process(const <int>[]), isTrue);
       expect(dedup.inCount, 1);
       expect(dedup.outCount, 1);
     });
 
     test('unparseable payload is counted as new (no key)', () {
-      final dedup = Deduplicator(
-        size: 16,
-        ttl: const Duration(seconds: 1),
-      );
+      final dedup = Deduplicator(size: 16, ttl: const Duration(seconds: 1));
       expect(dedup.process(utf8.encode('not json')), isTrue);
       expect(dedup.inCount, 1);
       expect(dedup.outCount, 1);
@@ -138,10 +123,7 @@ void main() {
         ttl: const Duration(seconds: 1),
         clock: () => fixed,
       );
-      final msg = _enc(<String, dynamic>{
-        'event_type': 'book',
-        'hash': 'h',
-      });
+      final msg = _enc(<String, dynamic>{'event_type': 'book', 'hash': 'h'});
       dedup.process(msg);
       dedup.process(msg);
       dedup.reset();
@@ -162,8 +144,7 @@ void main() {
       );
       final parts = splitArray(raw);
       expect(parts, hasLength(2));
-      final first =
-          jsonDecode(utf8.decode(parts[0])) as Map<String, dynamic>;
+      final first = jsonDecode(utf8.decode(parts[0])) as Map<String, dynamic>;
       expect(first['hash'], 'h1');
     });
 

@@ -97,7 +97,9 @@ void main() {
     });
 
     test('eventBySlug returns null on empty list', () async {
-      final client = _client((req) async => _jsonList(<Map<String, dynamic>>[]));
+      final client = _client(
+        (req) async => _jsonList(<Map<String, dynamic>>[]),
+      );
       expect(await client.eventBySlug('does-not-exist'), isNull);
     });
   });

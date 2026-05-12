@@ -572,7 +572,10 @@ final class ClobClient {
     var first = true;
     query.forEach((k, v) {
       if (!first) sb.write('&');
-      sb..write(Uri.encodeQueryComponent(k))..write('=')..write(Uri.encodeQueryComponent(v));
+      sb
+        ..write(Uri.encodeQueryComponent(k))
+        ..write('=')
+        ..write(Uri.encodeQueryComponent(v));
       first = false;
     });
     return sb.toString();
@@ -621,7 +624,11 @@ final class ClobClient {
     // returns the bare "key" field. Accept all variants.
     final key = pick(<String>['apiKey', 'api_key', 'key']);
     final secret = pick(<String>['secret']);
-    final passphrase = pick(<String>['passphrase', 'passPhrase', 'pass_phrase']);
+    final passphrase = pick(<String>[
+      'passphrase',
+      'passPhrase',
+      'pass_phrase',
+    ]);
     final apiKey = ApiKey(key: key, secret: secret, passphrase: passphrase);
     apiKey.validate();
     return apiKey;

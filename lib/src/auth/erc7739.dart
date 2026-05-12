@@ -71,8 +71,7 @@ Uint8List poly1271StructHash({
   if (dwAddr.length != 20) {
     throw ValidationException(
       code: ErrorCode.invalidValue,
-      message:
-          'depositWalletAddress must be 20 bytes (got ${dwAddr.length})',
+      message: 'depositWalletAddress must be 20 bytes (got ${dwAddr.length})',
     );
   }
   return keccak256Bytes(
@@ -184,14 +183,12 @@ String assemblePoly1271WrappedSignature({
   if (innerSignature.length != 65) {
     throw ValidationException(
       code: ErrorCode.invalidValue,
-      message:
-          'innerSignature must be 65 bytes (got ${innerSignature.length})',
+      message: 'innerSignature must be 65 bytes (got ${innerSignature.length})',
     );
   }
   final appDomainSep = orderV2DomainSeparator(negRisk: negRisk);
   final contents = orderV2StructHash(draft: draft);
-  final contentsTypeBytes =
-      Uint8List.fromList(orderV2ContentsType.codeUnits);
+  final contentsTypeBytes = Uint8List.fromList(orderV2ContentsType.codeUnits);
   final lenBuf = Uint8List(2)
     ..[0] = (contentsTypeBytes.length >> 8) & 0xff
     ..[1] = contentsTypeBytes.length & 0xff;

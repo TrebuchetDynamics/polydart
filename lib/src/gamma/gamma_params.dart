@@ -229,12 +229,7 @@ final class GetTeamsParams {
 /// Query for `GET /comments`. Mirrors `buildCommentPath` in polygolem.
 @immutable
 final class CommentQuery {
-  const CommentQuery({
-    this.entityId,
-    this.entityType,
-    this.limit,
-    this.offset,
-  });
+  const CommentQuery({this.entityId, this.entityType, this.limit, this.offset});
 
   final int? entityId;
   final String? entityType;

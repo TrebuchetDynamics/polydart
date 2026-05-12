@@ -62,11 +62,12 @@ ClobClient _client(Future<http.Response> Function(http.BaseRequest) handler) {
 void main() {
   group('signOrderV2', () {
     test('produces a SignedOrder for an EOA limit-buy intent', () async {
-      final intent = (OrderBuilder(tokenId: '12345', side: Side.buy)
-            ..price('0.50')
-            ..size('10')
-            ..tickSize('0.01'))
-          .build();
+      final intent =
+          (OrderBuilder(tokenId: '12345', side: Side.buy)
+                ..price('0.50')
+                ..size('10')
+                ..tickSize('0.01'))
+              .build();
 
       final signer = _CannedSigner();
       final signed = await signOrderV2(intent: intent, signer: signer);
@@ -83,13 +84,14 @@ void main() {
     });
 
     test('uses funder as maker for non-EOA signature types', () async {
-      final intent = (OrderBuilder(tokenId: '12345', side: Side.buy)
-            ..price('0.50')
-            ..size('10')
-            ..tickSize('0.01')
-            ..signatureType(SignatureType.poly1271)
-            ..funder('0xDeposit'))
-          .build();
+      final intent =
+          (OrderBuilder(tokenId: '12345', side: Side.buy)
+                ..price('0.50')
+                ..size('10')
+                ..tickSize('0.01')
+                ..signatureType(SignatureType.poly1271)
+                ..funder('0xDeposit'))
+              .build();
 
       final signer = _CannedSigner();
       final signed = await signOrderV2(intent: intent, signer: signer);

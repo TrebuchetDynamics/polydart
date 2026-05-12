@@ -31,7 +31,8 @@ void main() {
         now: DateTime.utc(2026, 5, 8, 12, 0, 0),
       );
       final got = msg.toString();
-      const want = 'polymarket.com wants you to sign in with your Ethereum account:\n'
+      const want =
+          'polymarket.com wants you to sign in with your Ethereum account:\n'
           '0x9d8A62f656a8d1615C1294fd71e9CFb3E4855A4F\n\n'
           'Welcome to Polymarket! Sign to connect.\n\n'
           'URI: https://polymarket.com\n'

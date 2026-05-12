@@ -100,18 +100,19 @@ Future<OrderResponse> createLimitOrder({
   required CreateLimitOrderParams params,
 }) async {
   final tick = await client.tickSize(params.tokenId);
-  final intent = (OrderBuilder(tokenId: params.tokenId, side: params.side)
-        ..price(params.price)
-        ..size(params.size)
-        ..orderType(params.orderType)
-        ..signatureType(params.signatureType)
-        ..tickSize(tick.tickSize)
-        ..negRisk(params.negRisk)
-        ..feeRateBps(params.feeRateBps)
-        ..expiration(params.expiration)
-        ..funder(params.funder)
-        ..postOnly(params.postOnly))
-      .build();
+  final intent =
+      (OrderBuilder(tokenId: params.tokenId, side: params.side)
+            ..price(params.price)
+            ..size(params.size)
+            ..orderType(params.orderType)
+            ..signatureType(params.signatureType)
+            ..tickSize(tick.tickSize)
+            ..negRisk(params.negRisk)
+            ..feeRateBps(params.feeRateBps)
+            ..expiration(params.expiration)
+            ..funder(params.funder)
+            ..postOnly(params.postOnly))
+          .build();
 
   final signed = await signOrderV2(
     intent: intent,
@@ -137,15 +138,16 @@ Future<OrderResponse> createMarketOrder({
   required CreateMarketOrderParams params,
 }) async {
   final tick = await client.tickSize(params.tokenId);
-  final intent = (OrderBuilder(tokenId: params.tokenId, side: params.side)
-        ..amountUsdc(params.amount)
-        ..orderType(params.orderType)
-        ..signatureType(params.signatureType)
-        ..tickSize(tick.tickSize)
-        ..negRisk(params.negRisk)
-        ..feeRateBps(params.feeRateBps)
-        ..funder(params.funder))
-      .build();
+  final intent =
+      (OrderBuilder(tokenId: params.tokenId, side: params.side)
+            ..amountUsdc(params.amount)
+            ..orderType(params.orderType)
+            ..signatureType(params.signatureType)
+            ..tickSize(tick.tickSize)
+            ..negRisk(params.negRisk)
+            ..feeRateBps(params.feeRateBps)
+            ..funder(params.funder))
+          .build();
 
   final signed = await signOrderV2(
     intent: intent,

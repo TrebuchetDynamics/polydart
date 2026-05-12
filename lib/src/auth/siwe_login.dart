@@ -74,9 +74,10 @@ final class SIWESession {
 
   Future<String> _fetchNonce() async {
     final uri = Uri.parse('$_gammaBaseUrl/nonce');
-    final resp = await _http.get(uri, headers: <String, String>{
-      'Accept': 'application/json',
-    });
+    final resp = await _http.get(
+      uri,
+      headers: <String, String>{'Accept': 'application/json'},
+    );
     _captureCookies(resp);
     if (resp.statusCode < 200 || resp.statusCode > 299) {
       throw TransportException(
@@ -97,11 +98,14 @@ final class SIWESession {
 
   Future<void> _callLogin(String bearerToken) async {
     final uri = Uri.parse('$_gammaBaseUrl/login');
-    final resp = await _http.get(uri, headers: <String, String>{
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $bearerToken',
-      if (_cookies.isNotEmpty) 'Cookie': cookieHeader(),
-    });
+    final resp = await _http.get(
+      uri,
+      headers: <String, String>{
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $bearerToken',
+        if (_cookies.isNotEmpty) 'Cookie': cookieHeader(),
+      },
+    );
     _captureCookies(resp);
     if (resp.statusCode < 200 || resp.statusCode > 299) {
       throw TransportException(
