@@ -8,6 +8,21 @@ const String _isApprovedForAllSelector = 'e985e9c5';
 const String _erc20AllowanceSelector = 'dd62ed3e';
 const String _erc20BalanceOfSelector = '70a08231';
 
+/// Minimal transaction receipt shape needed by wallet-submitted funding flows.
+final class TransactionReceipt {
+  const TransactionReceipt({
+    required this.transactionHash,
+    required this.status,
+  });
+
+  final String transactionHash;
+  final String status;
+
+  bool get succeeded => _parseQuantity(status, 'receipt status') == BigInt.one;
+
+  bool get failed => _parseQuantity(status, 'receipt status') == BigInt.zero;
+}
+
 /// Checks Polygon `eth_getCode` for non-empty bytecode.
 Future<bool> hasCode(
   String address, {
@@ -109,6 +124,39 @@ Future<BigInt> erc20BalanceOf(
 
   final word = _decodeHexWord(result, 'balanceOf');
   return BigInt.parse(_bytesToHex(word), radix: 16);
+}
+
+/// Returns a transaction receipt when the node has indexed [transactionHash].
+Future<TransactionReceipt?> transactionReceipt(
+  String transactionHash, {
+  String rpcUrl = polygonRpc,
+  http.Client? client,
+}) async {
+  final normalizedHash = _requireHexHash(transactionHash, 'transactionHash');
+  final result = await _rpc(
+    'eth_getTransactionReceipt',
+    <Object>[normalizedHash],
+    rpcUrl: rpcUrl,
+    client: client,
+  );
+  if (result == null) return null;
+  if (result is! Map<String, dynamic>) {
+    throw const FormatException(
+      'eth_getTransactionReceipt result must be an object or null',
+    );
+  }
+  final receiptHash = result['transactionHash'];
+  if (receiptHash is! String) {
+    throw const FormatException('transaction receipt hash must be a string');
+  }
+  final status = result['status'];
+  if (status is! String) {
+    throw const FormatException('transaction receipt status must be a string');
+  }
+  return TransactionReceipt(
+    transactionHash: _requireHexHash(receiptHash, 'transactionHash'),
+    status: _normalizeQuantity(status, 'receipt status'),
+  );
 }
 
 Future<Object?> _ethCall(
@@ -217,5 +265,37 @@ String _requireHexAddress(String address, String name) {
   return trimmed.toLowerCase();
 }
 
+String _requireHexHash(String hash, String name) {
+  final trimmed = hash.trim();
+  if (!_hexHashPattern.hasMatch(trimmed)) {
+    throw ArgumentError.value(hash, name, 'invalid transaction hash');
+  }
+  return trimmed.toLowerCase();
+}
+
+String _normalizeQuantity(String value, String label) {
+  final trimmed = value.trim();
+  _parseQuantity(trimmed, label);
+  return '0x${_stripLeadingZeroes(trimmed.substring(2).toLowerCase())}';
+}
+
+BigInt _parseQuantity(String value, String label) {
+  final trimmed = value.trim();
+  if (!trimmed.startsWith('0x')) {
+    throw FormatException('$label must be 0x-prefixed');
+  }
+  final raw = trimmed.substring(2);
+  if (raw.isEmpty || !_hexPattern.hasMatch(raw)) {
+    throw FormatException('$label must be a hex quantity');
+  }
+  return BigInt.parse(raw, radix: 16);
+}
+
+String _stripLeadingZeroes(String value) {
+  final stripped = value.replaceFirst(RegExp(r'^0+'), '');
+  return stripped.isEmpty ? '0' : stripped;
+}
+
 final RegExp _hexAddressPattern = RegExp(r'^0x[0-9a-fA-F]{40}$');
+final RegExp _hexHashPattern = RegExp(r'^0x[0-9a-fA-F]{64}$');
 final RegExp _hexPattern = RegExp(r'^[0-9a-fA-F]+$');

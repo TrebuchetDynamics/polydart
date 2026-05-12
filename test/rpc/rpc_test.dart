@@ -208,6 +208,51 @@ void main() {
       expect(balance, BigInt.from(2500000));
     });
   });
+
+  group('transactionReceipt', () {
+    test('calls eth_getTransactionReceipt and normalizes mined status', () async {
+      const hash =
+          '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+      final client = MockClient((request) async {
+        final body = _jsonBody(request);
+
+        expect(body['method'], 'eth_getTransactionReceipt');
+        expect(body['params'], <Object>[hash]);
+
+        return _rpcObjectResult(<String, Object>{
+          'transactionHash':
+              '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+          'status': '0x01',
+        });
+      });
+
+      final receipt = await transactionReceipt(
+        hash,
+        rpcUrl: 'http://rpc.test',
+        client: client,
+      );
+
+      expect(receipt, isNotNull);
+      expect(receipt!.transactionHash, hash);
+      expect(receipt.status, '0x1');
+      expect(receipt.succeeded, isTrue);
+      expect(receipt.failed, isFalse);
+    });
+
+    test('returns null before the transaction is indexed', () async {
+      const hash =
+          '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+      final client = MockClient((_) async => _rpcNullResult());
+
+      final receipt = await transactionReceipt(
+        hash,
+        rpcUrl: 'http://rpc.test',
+        client: client,
+      );
+
+      expect(receipt, isNull);
+    });
+  });
 }
 
 Map<String, dynamic> _jsonBody(http.Request request) {
@@ -217,6 +262,20 @@ Map<String, dynamic> _jsonBody(http.Request request) {
 http.Response _rpcResult(String result) {
   return http.Response(
     jsonEncode(<String, Object>{'jsonrpc': '2.0', 'id': 1, 'result': result}),
+    200,
+  );
+}
+
+http.Response _rpcObjectResult(Map<String, Object> result) {
+  return http.Response(
+    jsonEncode(<String, Object>{'jsonrpc': '2.0', 'id': 1, 'result': result}),
+    200,
+  );
+}
+
+http.Response _rpcNullResult() {
+  return http.Response(
+    jsonEncode(<String, Object?>{'jsonrpc': '2.0', 'id': 1, 'result': null}),
     200,
   );
 }

@@ -21,6 +21,8 @@ const _clobKey = ApiKey(
   passphrase: 'clob-pass',
 );
 const _relayerKey = V2APIKey(key: 'relayer-key', address: _eoa);
+const _fundingTxHash =
+    '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 
 RelayerClient _relayer(
   Future<http.Response> Function(http.BaseRequest) handler,
@@ -278,6 +280,84 @@ void main() {
         expect(readiness.clobBalance, '2500000');
       },
     );
+
+    test(
+      'waitForFundingReadiness waits for a wallet tx receipt before refreshing CLOB collateral',
+      () async {
+        final delays = <Duration>[];
+
+        final confirmation = await waitForDepositWalletFundingReadiness(
+          eoaAddress: _eoa,
+          credentials: _readyCredentials,
+          transactionHash: _fundingTxHash,
+          relayerTransport: _relayerTransport(deployed: true),
+          clob: _clobWithBalances(<String>['0', '2500000']),
+          rpcClient: _receiptThenApprovalRpc(
+            receiptResults: <Map<String, dynamic>?>[
+              null,
+              <String, dynamic>{
+                'transactionHash': _fundingTxHash,
+                'status': '0x1',
+              },
+            ],
+          ),
+          rpcUrl: 'http://rpc.test',
+          pollInterval: const Duration(milliseconds: 10),
+          maxAttempts: 4,
+          delay: (duration) async => delays.add(duration),
+        );
+
+        expect(
+          confirmation.status,
+          DepositWalletFundingConfirmationStatus.ready,
+        );
+        expect(confirmation.transactionConfirmed, isTrue);
+        expect(
+          confirmation.readiness.status,
+          DepositWalletReadinessStatus.ready,
+        );
+        expect(confirmation.readiness.clobBalance, '2500000');
+        expect(confirmation.readinessAttempts, 2);
+        expect(delays, hasLength(2));
+      },
+    );
+
+    test(
+      'waitForFundingReadiness reports a reverted wallet transaction separately from pending',
+      () async {
+        final confirmation = await waitForDepositWalletFundingReadiness(
+          eoaAddress: _eoa,
+          credentials: _readyCredentials,
+          transactionHash: _fundingTxHash,
+          relayerTransport: _relayerTransport(deployed: true),
+          clob: _clobWithBalance('0'),
+          rpcClient: _receiptThenApprovalRpc(
+            receiptResults: <Map<String, dynamic>?>[
+              <String, dynamic>{
+                'transactionHash': _fundingTxHash,
+                'status': '0x0',
+              },
+            ],
+          ),
+          rpcUrl: 'http://rpc.test',
+          pollInterval: Duration.zero,
+          maxAttempts: 2,
+          delay: (_) async {},
+        );
+
+        expect(
+          confirmation.status,
+          DepositWalletFundingConfirmationStatus.transactionFailed,
+        );
+        expect(confirmation.transactionConfirmed, isTrue);
+        expect(confirmation.transactionFailed, isTrue);
+        expect(confirmation.transactionAttempts, 1);
+        expect(
+          confirmation.readiness.status,
+          DepositWalletReadinessStatus.needsFunding,
+        );
+      },
+    );
   });
 }
 
@@ -310,6 +390,11 @@ HttpTransport _relayerTransport({required bool deployed}) {
 }
 
 ClobClient _clobWithBalance(String balance, {List<Uri>? capturedUrls}) {
+  return _clobWithBalances(<String>[balance], capturedUrls: capturedUrls);
+}
+
+ClobClient _clobWithBalances(List<String> balances, {List<Uri>? capturedUrls}) {
+  var index = 0;
   return ClobClient(
     transport: HttpTransport(
       config: const TransportConfig(
@@ -318,6 +403,9 @@ ClobClient _clobWithBalance(String balance, {List<Uri>? capturedUrls}) {
       ),
       inner: MockClient((req) async {
         capturedUrls?.add(req.url);
+        final balance =
+            balances[index < balances.length ? index : balances.length - 1];
+        index++;
         return http.Response(
           jsonEncode(<String, dynamic>{
             'balance': balance,
@@ -328,6 +416,40 @@ ClobClient _clobWithBalance(String balance, {List<Uri>? capturedUrls}) {
       }),
     ),
   );
+}
+
+http.Client _receiptThenApprovalRpc({
+  required List<Map<String, dynamic>?> receiptResults,
+}) {
+  var receiptIndex = 0;
+  return MockClient((req) async {
+    final body = jsonDecode(req.body) as Map<String, dynamic>;
+    final method = body['method'] as String;
+    if (method == 'eth_getTransactionReceipt') {
+      final result =
+          receiptResults[receiptIndex < receiptResults.length
+              ? receiptIndex
+              : receiptResults.length - 1];
+      receiptIndex++;
+      return http.Response(
+        jsonEncode(<String, Object?>{
+          'jsonrpc': '2.0',
+          'id': 1,
+          'result': result,
+        }),
+        200,
+      );
+    }
+
+    expect(method, 'eth_call');
+    final params = body['params'] as List<dynamic>;
+    final call = params[0] as Map<String, dynamic>;
+    final input = (call['input'] as String).toLowerCase();
+    final isAllowance = input.startsWith('0xdd62ed3e');
+    final isApprovalForAll = input.startsWith('0xe985e9c5');
+    expect(isAllowance || isApprovalForAll, isTrue);
+    return _rpcResult(_word(1));
+  });
 }
 
 http.Client _approvalRpc({Set<int> missingApprovalIndexes = const <int>{}}) {

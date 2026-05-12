@@ -102,6 +102,14 @@ read EOA-held pUSD and build the direct wallet transaction for
 to the user and submit it through the wallet provider; Polydart only returns
 the transaction request and full/partial/unavailable funding state.
 
+After the wallet provider returns a transaction hash, call
+`waitForDepositWalletFundingReadiness(...)`. It polls
+`eth_getTransactionReceipt`, then refreshes deposit-wallet readiness until CLOB
+collateral moves to `ready` or the returned
+`DepositWalletFundingConfirmationStatus` says the transaction is still pending,
+failed, or another readiness action remains. Polydart still performs no wallet
+submission and stores no private key material.
+
 Signature flows assume Polygon mainnet unless a lower-level helper documents a
 different chain. Wallet-backed signing should verify `chainId == 137` before
 asking the user to sign Polymarket payloads.

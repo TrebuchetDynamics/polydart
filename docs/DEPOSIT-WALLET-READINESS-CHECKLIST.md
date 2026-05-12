@@ -57,8 +57,6 @@ orchestration surface. It:
 Next live-readiness slices:
 
 - deposit-wallet market-order pricing and live batch/cancel parity
-- post-funding confirmation that deposit-wallet CLOB balance updated after a
-  wallet-submitted pUSD transfer
 
 ## First Public API Target
 
@@ -109,11 +107,15 @@ First funding route:
   `to = pUSD`, `data = transfer(depositWallet, amount)`, `value = 0x0`.
 - The route reports `ready`, `partial`, or `unavailable` and never submits the
   transaction. Flutter owns user approval and transaction submission.
+- `waitForDepositWalletFundingReadiness(...)` accepts the wallet-submitted
+  transaction hash, polls `eth_getTransactionReceipt`, and refreshes the same
+  readiness API until CLOB collateral is `ready` or the confirmation status
+  reports `transactionPending`, `transactionFailed`, or the remaining readiness
+  action.
 
 Future tests should add:
 
 - deposit-wallet pUSD balance
-- post-transfer CLOB collateral refresh and transaction confirmation handling
 
 No UI copy in `polydart`; Flutter owns labels, localization, and warnings.
 

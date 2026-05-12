@@ -38,6 +38,9 @@ void main() {
     expect(fundingRoute, isNull);
     expect(PusdFundingRouteStatus.ready.name, 'ready');
     expect(planEoaPusdFundingRoute, isA<Function>());
+    expect(waitForDepositWalletFundingReadiness, isA<Function>());
+    const confirmationStatus = DepositWalletFundingConfirmationStatus.ready;
+    expect(confirmationStatus.name, 'ready');
 
     const newMarket = NewMarketMessage(
       eventType: 'new_market',
@@ -129,5 +132,23 @@ void main() {
     expect(readiness.status, DepositWalletReadinessStatus.needsApproval);
     expect(readiness.fundingChecked, isTrue);
     expect(readiness.approvalChecks.single.ready, isFalse);
+
+    final confirmation = DepositWalletFundingConfirmation(
+      status: DepositWalletFundingConfirmationStatus.needsApproval,
+      ownerEoa: readiness.ownerEoa,
+      depositWallet: readiness.depositWallet,
+      transactionHash:
+          '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      transactionConfirmed: true,
+      transactionFailed: false,
+      transactionAttempts: 1,
+      readinessAttempts: 1,
+      readiness: readiness,
+    );
+    expect(confirmation.ready, isFalse);
+    expect(
+      confirmation.readiness.status,
+      DepositWalletReadinessStatus.needsApproval,
+    );
   });
 }

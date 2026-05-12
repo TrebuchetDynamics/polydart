@@ -382,9 +382,12 @@ export 'src/wallet/deposit_wallet_readiness.dart'
     show
         DepositWalletApprovalCheck,
         DepositWalletApprovalKind,
+        DepositWalletFundingConfirmation,
+        DepositWalletFundingConfirmationStatus,
         DepositWalletReadiness,
         DepositWalletReadinessService,
-        DepositWalletReadinessStatus;
+        DepositWalletReadinessStatus,
+        waitForDepositWalletFundingReadiness;
 export 'src/stream/dedup.dart' show Deduplicator, splitArray;
 export 'src/stream/market_client.dart'
     show MarketClient, WebSocketChannelFactory;

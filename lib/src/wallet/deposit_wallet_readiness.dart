@@ -39,6 +39,17 @@ enum DepositWalletReadinessStatus {
 
 enum DepositWalletApprovalKind { erc20Allowance, erc1155ApprovalForAll }
 
+enum DepositWalletFundingConfirmationStatus {
+  transactionPending,
+  transactionFailed,
+  needsDeploy,
+  needsApprovalCheck,
+  needsApproval,
+  needsFunding,
+  ready,
+  blocked,
+}
+
 @immutable
 final class DepositWalletApprovalCheck {
   const DepositWalletApprovalCheck({
@@ -93,6 +104,35 @@ final class DepositWalletReadiness {
   final List<DepositWalletApprovalCheck> approvalChecks;
   final List<String> missingApprovals;
   final List<String> requiredApprovals;
+}
+
+@immutable
+final class DepositWalletFundingConfirmation {
+  const DepositWalletFundingConfirmation({
+    required this.status,
+    required this.ownerEoa,
+    required this.depositWallet,
+    required this.transactionHash,
+    required this.transactionConfirmed,
+    required this.transactionFailed,
+    required this.transactionAttempts,
+    required this.readinessAttempts,
+    required this.readiness,
+    this.reason = '',
+  });
+
+  final DepositWalletFundingConfirmationStatus status;
+  final String ownerEoa;
+  final String depositWallet;
+  final String? transactionHash;
+  final bool transactionConfirmed;
+  final bool transactionFailed;
+  final int transactionAttempts;
+  final int readinessAttempts;
+  final DepositWalletReadiness readiness;
+  final String reason;
+
+  bool get ready => status == DepositWalletFundingConfirmationStatus.ready;
 }
 
 final class DepositWalletReadinessService {
@@ -174,6 +214,134 @@ final class DepositWalletReadinessService {
       requiredApprovals: _requiredApprovalLabels,
     );
   }
+}
+
+/// Waits for an app-submitted pUSD funding transaction, then refreshes
+/// deposit-wallet readiness until CLOB collateral is usable or action is
+/// still required.
+///
+/// The Flutter app owns wallet approval and transaction submission. This
+/// helper only polls public RPC/CLOB/relayer state.
+Future<DepositWalletFundingConfirmation> waitForDepositWalletFundingReadiness({
+  required String eoaAddress,
+  required LiveCredentialReadiness credentials,
+  required ClobClient clob,
+  String? transactionHash,
+  HttpTransport? relayerTransport,
+  String rpcUrl = rpc.polygonRpc,
+  http.Client? rpcClient,
+  int chainId = 137,
+  int maxAttempts = 20,
+  Duration pollInterval = const Duration(seconds: 3),
+  Future<void> Function(Duration duration)? delay,
+}) async {
+  if (maxAttempts < 1) {
+    throw ArgumentError.value(maxAttempts, 'maxAttempts', 'must be positive');
+  }
+  final owner = normalizeAddress(eoaAddress);
+  final depositWallet = deriveDepositWallet(owner);
+  final txHash = _normalizeOptionalTransactionHash(transactionHash);
+  final wait = delay ?? Future<void>.delayed;
+  var transactionAttempts = 0;
+  var transactionConfirmed = txHash == null;
+
+  Future<DepositWalletReadiness> refreshReadiness() {
+    return DepositWalletReadinessService.checkWithCredentials(
+      eoaAddress: owner,
+      credentials: credentials,
+      relayerTransport: relayerTransport,
+      clob: clob,
+      rpcUrl: rpcUrl,
+      rpcClient: rpcClient,
+      chainId: chainId,
+    );
+  }
+
+  if (txHash != null) {
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      transactionAttempts = attempt;
+      final receipt = await rpc.transactionReceipt(
+        txHash,
+        rpcUrl: rpcUrl,
+        client: rpcClient,
+      );
+      if (receipt == null) {
+        if (attempt < maxAttempts) await wait(pollInterval);
+        continue;
+      }
+      if (receipt.failed) {
+        final readiness = await refreshReadiness();
+        return DepositWalletFundingConfirmation(
+          status: DepositWalletFundingConfirmationStatus.transactionFailed,
+          ownerEoa: owner,
+          depositWallet: depositWallet,
+          transactionHash: txHash,
+          transactionConfirmed: true,
+          transactionFailed: true,
+          transactionAttempts: transactionAttempts,
+          readinessAttempts: 1,
+          readiness: readiness,
+          reason: 'Wallet funding transaction reverted.',
+        );
+      }
+      if (receipt.succeeded) {
+        transactionConfirmed = true;
+        break;
+      }
+      if (attempt < maxAttempts) await wait(pollInterval);
+    }
+
+    if (!transactionConfirmed) {
+      final readiness = await refreshReadiness();
+      return DepositWalletFundingConfirmation(
+        status: DepositWalletFundingConfirmationStatus.transactionPending,
+        ownerEoa: owner,
+        depositWallet: depositWallet,
+        transactionHash: txHash,
+        transactionConfirmed: false,
+        transactionFailed: false,
+        transactionAttempts: transactionAttempts,
+        readinessAttempts: 1,
+        readiness: readiness,
+        reason: 'Wallet funding transaction is still pending.',
+      );
+    }
+  }
+
+  var readinessAttempts = 0;
+  late DepositWalletReadiness readiness;
+  for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+    readinessAttempts = attempt;
+    readiness = await refreshReadiness();
+    if (readiness.status != DepositWalletReadinessStatus.needsFunding) {
+      return DepositWalletFundingConfirmation(
+        status: _fundingConfirmationStatus(readiness.status),
+        ownerEoa: owner,
+        depositWallet: depositWallet,
+        transactionHash: txHash,
+        transactionConfirmed: transactionConfirmed,
+        transactionFailed: false,
+        transactionAttempts: transactionAttempts,
+        readinessAttempts: readinessAttempts,
+        readiness: readiness,
+        reason: readiness.reason,
+      );
+    }
+    if (attempt < maxAttempts) await wait(pollInterval);
+  }
+
+  return DepositWalletFundingConfirmation(
+    status: DepositWalletFundingConfirmationStatus.needsFunding,
+    ownerEoa: owner,
+    depositWallet: depositWallet,
+    transactionHash: txHash,
+    transactionConfirmed: transactionConfirmed,
+    transactionFailed: false,
+    transactionAttempts: transactionAttempts,
+    readinessAttempts: readinessAttempts,
+    readiness: readiness,
+    reason: 'Deposit-wallet collateral is not ready yet.',
+  );
 }
 
 Future<DepositWalletReadiness> _checkApprovalAndFunding({
@@ -323,6 +491,45 @@ String _readinessReason<T>(CredentialReadiness<T> readiness) {
   return readiness.status.name;
 }
 
+String? _normalizeOptionalTransactionHash(String? transactionHash) {
+  if (transactionHash == null) return null;
+  final trimmed = transactionHash.trim();
+  if (trimmed.isEmpty) {
+    throw ArgumentError.value(
+      transactionHash,
+      'transactionHash',
+      'must not be empty when provided',
+    );
+  }
+  if (!_transactionHashPattern.hasMatch(trimmed)) {
+    throw ArgumentError.value(
+      transactionHash,
+      'transactionHash',
+      'invalid transaction hash',
+    );
+  }
+  return trimmed.toLowerCase();
+}
+
+DepositWalletFundingConfirmationStatus _fundingConfirmationStatus(
+  DepositWalletReadinessStatus status,
+) {
+  switch (status) {
+    case DepositWalletReadinessStatus.needsDeploy:
+      return DepositWalletFundingConfirmationStatus.needsDeploy;
+    case DepositWalletReadinessStatus.needsApprovalCheck:
+      return DepositWalletFundingConfirmationStatus.needsApprovalCheck;
+    case DepositWalletReadinessStatus.needsApproval:
+      return DepositWalletFundingConfirmationStatus.needsApproval;
+    case DepositWalletReadinessStatus.needsFunding:
+      return DepositWalletFundingConfirmationStatus.needsFunding;
+    case DepositWalletReadinessStatus.ready:
+      return DepositWalletFundingConfirmationStatus.ready;
+    case DepositWalletReadinessStatus.blocked:
+      return DepositWalletFundingConfirmationStatus.blocked;
+  }
+}
+
 const List<_ApprovalSpec> _approvalSpecs = <_ApprovalSpec>[
   _ApprovalSpec(
     label: 'pusd:ctfExchangeV2',
@@ -375,3 +582,5 @@ final class _ApprovalSpec {
   final String token;
   final String spender;
 }
+
+final RegExp _transactionHashPattern = RegExp(r'^0x[0-9a-fA-F]{64}$');

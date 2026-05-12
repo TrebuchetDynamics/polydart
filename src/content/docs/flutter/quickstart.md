@@ -129,3 +129,9 @@ app-owned `WalletSigner` for the ERC-7739 typed-data approval, and posts
 For a `needsFunding` result, call `planEoaPusdFundingRoute(...)`. It reads the
 EOA pUSD balance and returns the direct wallet transaction request for
 `pUSD.transfer(depositWallet, amount)` when funds are available.
+
+After your wallet provider submits that transaction, pass its hash to
+`waitForDepositWalletFundingReadiness(...)`. Polydart waits for the receipt and
+then refreshes readiness until CLOB collateral is `ready` or the confirmation
+status reports that the transaction is still pending, failed, or another
+readiness action remains.
