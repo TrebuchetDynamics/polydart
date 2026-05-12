@@ -114,3 +114,8 @@ For VM/mobile/desktop Flutter targets, `LiveCredentialService.ensure()` can
 create CLOB L2 credentials, CLOB builder-fee credentials, and Relayer V2 API
 keys through that wallet adapter. Store the returned credentials in app-owned
 secure storage through `CredentialStore`.
+
+Pass those credentials into
+`DepositWalletReadinessService.checkWithCredentials(...)` before prompting for
+deploy or approval actions. The readiness result stays machine-readable:
+`needsDeploy`, `needsApprovalCheck`, or `blocked`.

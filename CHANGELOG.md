@@ -30,6 +30,9 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
   `MemoryCredentialStore` for wallet-mediated CLOB L2 API key create/derive
   plus CLOB builder-fee key and Relayer V2 API-key creation without raw EOA
   private keys.
+- Deposit-wallet readiness can consume `LiveCredentialReadiness` directly,
+  build a Relayer V2 client from the relayer key, and return a blocked
+  machine-readable state when credentials are incomplete.
 - CI workflow: format, analyze, test (network tests opt-in).
 
 ## [0.1.0-alpha.1] — TBD

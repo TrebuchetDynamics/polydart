@@ -54,36 +54,41 @@ orchestration surface. It:
 - returns typed readiness states instead of UI copy
 - never stores credentials unless the app passes a store
 
-Next credential slices:
+Next live-readiness slices:
 
-- deposit-wallet readiness states that consume the discovered credentials
 - `signatureType=3`, maker/signer/funder separation, and approval checks
+- CLOB `balance-allowance` checks for deposit-wallet-backed live trading
 
 ## First Public API Target
 
 Start with the product-facing readiness API, while preserving low-level protocol calls:
 
 ```dart
-final readiness = await DepositWalletReadinessService(...).check(eoaAddress);
+final credentials = await LiveCredentialService(...).ensure(signer: signer);
+final readiness = await DepositWalletReadinessService.checkWithCredentials(
+  eoaAddress: signer.address,
+  credentials: credentials,
+);
 ```
 
 Initial machine-readable states:
 
 - `needsDeploy`
 - `needsApprovalCheck`
+- `blocked`
 
 Future tests should add these states only when the service can verify them:
 
 - `needsApproval`
 - `needsFunding`
 - `ready`
-- `blocked`
 
 The readiness object should include:
 
 - `ownerEoa`
 - `depositWallet`
 - deployed state
+- credential readiness provenance
 - approval-check provenance
 - required approval set
 
@@ -93,7 +98,7 @@ Future tests should add:
 - deposit-wallet pUSD balance
 - EOA pUSD balance as available-to-fund only
 - CLOB balance/allowance using `signature_type=3`
-- blocked reason, when applicable
+- missing approval set, blocked reason, and funding state as checks mature
 
 No UI copy in `polydart`; Flutter owns labels, localization, and warnings.
 

@@ -83,5 +83,16 @@ void main() {
     expect(credentials.ready, isTrue);
     expect(credentials.toString(), isNot(contains('clob-secret')));
     expect(credentials.toString(), isNot(contains('relayer-key')));
+
+    final readiness = DepositWalletReadiness(
+      status: DepositWalletReadinessStatus.blocked,
+      ownerEoa: '0x0000000000000000000000000000000000001234',
+      depositWallet: '0xfd5041047be8c192c725a66228f141196fa3cf9c',
+      deployed: false,
+      credentialsReady: false,
+      reason: 'credentials missing',
+    );
+    expect(readiness.status, DepositWalletReadinessStatus.blocked);
+    expect(readiness.credentialsReady, isFalse);
   });
 }

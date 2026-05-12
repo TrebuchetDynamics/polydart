@@ -83,6 +83,12 @@ cookie login, and Relayer V2 API-key minting. Flutter apps should back
 `CredentialStore` with secure per-EOA storage and still keep signing prompts
 inside the app-provided wallet adapter.
 
+After credentials are available, call
+`DepositWalletReadinessService.checkWithCredentials(...)`. It builds the
+Relayer V2 client from the relayer key, checks deploy state, and returns
+`blocked` with a protocol reason instead of making the app infer that missing
+credentials prevented the check.
+
 Signature flows assume Polygon mainnet unless a lower-level helper documents a
 different chain. Wallet-backed signing should verify `chainId == 137` before
 asking the user to sign Polymarket payloads.
