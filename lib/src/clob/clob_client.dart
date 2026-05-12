@@ -373,10 +373,12 @@ final class ClobClient {
     required WalletSigner signer,
     int? nowSeconds,
   }) async {
+    final ts = nowSeconds ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000);
+    final headers = await buildL1Headers(signer: signer, timestamp: ts);
     try {
-      return await createApiKey(signer: signer, nowSeconds: nowSeconds);
+      return await createApiKeyWithL1Headers(headers);
     } on TransportException {
-      return deriveApiKey(signer: signer, nowSeconds: nowSeconds);
+      return deriveApiKeyWithL1Headers(headers);
     }
   }
 
@@ -387,6 +389,15 @@ final class ClobClient {
   }) async {
     final ts = nowSeconds ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000);
     final headers = await buildL1Headers(signer: signer, timestamp: ts);
+    return createApiKeyWithL1Headers(headers);
+  }
+
+  /// Mints a new API-key triple with already-built ClobAuth L1 headers.
+  ///
+  /// This lets higher-level flows reuse the same wallet-approved ClobAuth
+  /// signature across create -> derive fallback without asking the wallet to
+  /// sign twice.
+  Future<ApiKey> createApiKeyWithL1Headers(Map<String, String> headers) async {
     final body = await _transport.postJson(
       '/auth/api-key',
       const <String, dynamic>{},
@@ -402,6 +413,12 @@ final class ClobClient {
   }) async {
     final ts = nowSeconds ?? (DateTime.now().millisecondsSinceEpoch ~/ 1000);
     final headers = await buildL1Headers(signer: signer, timestamp: ts);
+    return deriveApiKeyWithL1Headers(headers);
+  }
+
+  /// Returns the deterministic API-key triple with already-built ClobAuth L1
+  /// headers.
+  Future<ApiKey> deriveApiKeyWithL1Headers(Map<String, String> headers) async {
     final body = await _transport.getJson(
       '/auth/derive-api-key',
       headers: headers,

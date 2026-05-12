@@ -174,6 +174,17 @@ export 'src/dataapi/dataapi_types.dart'
         TotalValue,
         Trade,
         TraderLeaderboardEntry;
+export 'src/credentials/live_credentials.dart'
+    show
+        CredentialKey,
+        CredentialReadiness,
+        CredentialStore,
+        LiveCredentialAction,
+        LiveCredentialReadiness,
+        LiveCredentialService,
+        LiveCredentialStatus,
+        MemoryCredentialStore,
+        WalletSignatureRejectedException;
 export 'src/enabletrading/enable_trading.dart'
     show
         buildEnableTradingApprovalBatchTypedData,

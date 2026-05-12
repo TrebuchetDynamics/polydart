@@ -51,5 +51,25 @@ void main() {
       code: 401,
     );
     expect(relayerError.code, 401);
+
+    const credentialKey = CredentialKey(
+      eoaAddress: '0x0000000000000000000000000000000000001234',
+      chainId: 137,
+    );
+    expect(credentialKey.chainId, 137);
+
+    const clobKey = ApiKey(
+      key: 'clob-key',
+      secret: 'clob-secret',
+      passphrase: 'clob-pass',
+    );
+    const credentials = LiveCredentialReadiness(
+      clobApiKey: CredentialReadiness<ApiKey>(
+        status: LiveCredentialStatus.cached,
+        value: clobKey,
+      ),
+    );
+    expect(credentials.ready, isTrue);
+    expect(credentials.toString(), isNot(contains('clob-secret')));
   });
 }

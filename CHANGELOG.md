@@ -26,6 +26,9 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 - MarketDiscovery: Gamma + CLOB enrichment with parallel CLOB fan-out.
 - Top-level `Polydart` client with `readOnly` and `paper` factories that
   share transports across sub-clients.
+- Live credential discovery: `LiveCredentialService`, `CredentialStore`, and
+  `MemoryCredentialStore` for wallet-mediated CLOB L2 API key create/derive
+  flows without raw EOA private keys.
 - CI workflow: format, analyze, test (network tests opt-in).
 
 ## [0.1.0-alpha.1] — TBD

@@ -20,9 +20,11 @@ class _CannedSigner implements WalletSigner {
   int get chainId => 137;
 
   Map<String, dynamic>? lastTyped;
+  var signTypedDataCalls = 0;
 
   @override
   Future<Uint8List> signTypedData(Map<String, dynamic> typedData) async {
+    signTypedDataCalls++;
     lastTyped = typedData;
     return Uint8List.fromList(List<int>.filled(65, 0xab));
   }
@@ -148,11 +150,13 @@ void main() {
           200,
         );
       });
+      final signer = _CannedSigner();
       final key = await client.createOrDeriveApiKey(
-        signer: _CannedSigner(),
+        signer: signer,
         nowSeconds: 1700000002,
       );
       expect(calls, 2);
+      expect(signer.signTypedDataCalls, 1);
       expect(key.key, 'dddd3333-4444-5555-6666-777788889999');
     });
 

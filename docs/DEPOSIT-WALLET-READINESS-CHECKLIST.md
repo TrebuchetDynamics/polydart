@@ -32,7 +32,25 @@ Do not collapse the credential names:
 - CLOB builder-fee key: created via `/auth/builder-api-key`; used for fee attribution, not relayer submit.
 - Relayer API key: used by relayer-v2 `/submit`; required for deposit-wallet deploy and approval batches.
 
-The first readiness slice may assume the app passes existing pasted/imported relayer credentials into `polydart`. Automated relayer key minting is out of scope until `/login/internal` is characterized.
+Polydart owns credential discovery and creation protocol flows. CLOB L2 credentials and CLOB builder-fee keys are headless protocol work; relayer credential creation depends on `/login/internal` characterization and is a later sub-slice.
+
+## Current Credential Discovery Slice
+
+`LiveCredentialService.ensure(...)` is the first high-level credential
+orchestration surface. It:
+
+- reads an optional app-provided `CredentialStore`
+- asks the app-provided `WalletSigner` for one ClobAuth signature
+- creates CLOB L2 credentials through `/auth/api-key`
+- falls back to `/auth/derive-api-key` with the same wallet-approved signature
+- returns typed readiness states instead of UI copy
+- never stores credentials unless the app passes a store
+
+Next credential slices:
+
+- CLOB builder-fee key ensure flow
+- relayer credential discovery after `/login/internal` characterization
+- deposit-wallet readiness states that consume the discovered credentials
 
 ## First Public API Target
 
