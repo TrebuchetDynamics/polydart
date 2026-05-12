@@ -1,0 +1,4 @@
+interface:
+  display_name: "Polydart Polygolem Fidelity"
+  short_description: "Complete upstream parity work"
+  default_prompt: "Use $polydart-polygolem-fidelity to sync upstream Polygolem and complete missing Polydart features."

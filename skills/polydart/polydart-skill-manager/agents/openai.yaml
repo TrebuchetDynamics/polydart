@@ -1,0 +1,4 @@
+interface:
+  display_name: "Polydart Skill Manager"
+  short_description: "Maintain Polydart skill pack"
+  default_prompt: "Use $polydart-skill-manager to add or revise a Polydart development skill."

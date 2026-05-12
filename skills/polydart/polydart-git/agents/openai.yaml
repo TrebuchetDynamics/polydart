@@ -1,0 +1,4 @@
+interface:
+  display_name: "Polydart Git"
+  short_description: "Repo hygiene for Polydart"
+  default_prompt: "Use $polydart-git to prepare a safe Polydart branch and commit plan."

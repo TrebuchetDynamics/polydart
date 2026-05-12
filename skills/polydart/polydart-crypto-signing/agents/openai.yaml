@@ -1,0 +1,4 @@
+interface:
+  display_name: "Polydart Crypto Signing"
+  short_description: "Port Polydart signing semantics"
+  default_prompt: "Use $polydart-crypto-signing to change Polydart signing or auth behavior."

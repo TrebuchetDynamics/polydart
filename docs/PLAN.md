@@ -2,7 +2,7 @@
 
 Companion to `PRD.md`. Translates the PRD into concrete modules, ordering, and acceptance criteria.
 
-> **Reference repo:** [`TrebuchetDynamics/polygolem`](https://github.com/TrebuchetDynamics/polygolem) (commit `ad50282` after the 2026-05-07 sync, mirrored locally under `.reference/polygolem/`).
+> **Reference repo:** [`TrebuchetDynamics/polygolem`](https://github.com/TrebuchetDynamics/polygolem), mirrored locally as the `polygolem/` submodule. `.reference/polygolem/` is legacy compatibility while older docs are migrated.
 
 ---
 
@@ -11,7 +11,7 @@ Companion to `PRD.md`. Translates the PRD into concrete modules, ordering, and a
 ### AD-1 — Pure-Dart core, no Flutter dependency in `polydart`
 The PRD lists `reown_appkit`, `shared_preferences`, and `hive` as dependencies. Pulling those into the SDK forces a Flutter-only consumer story and prevents reuse from CLI tools, server agents, or pure-Dart bots.
 
-**Decision:** `polydart` is a pure-Dart package. Wallet signing, wallet-connect transport, and persistent storage are abstracted as interfaces (`WalletSigner`, `KeyValueStore`, …). During owner alpha, Arenaton Flutter provides Reown, secure-storage, and app-session adapters in app code. Adapter extraction is deferred until the live flow works. Until then no consumer is blocked: read-only, paper, and pre-built-order flows do not need a wallet.
+**Decision:** `polydart` is a pure-Dart package. Wallet signing, wallet-connect transport, and persistent storage are abstracted as interfaces (`WalletSigner`, `KeyValueStore`, …). Flutter/mobile consumers provide Reown, secure-storage, and app-session adapters in app code. Adapter extraction is deferred until the live flow works. Until then no consumer is blocked: read-only, paper, and pre-built-order flows do not need a wallet.
 
 ### AD-2 — Mirror layout, not slavish copy
 `polygolem/internal/<module>/` maps to `lib/src/<module>/`. Module **names** match exactly so the parity check is mechanical. File-level layout can diverge — Dart idioms (sealed classes, extension methods, async streams) differ from Go.
@@ -29,13 +29,14 @@ Per PRD §5. The SDK exposes a `RelayerProxyClient` that targets a user-supplied
 Polydart MAJOR.MINOR mirrors polygolem. Patch versions diverge for Dart-specific fixes. Each release notes the polygolem commit it parities against.
 
 ### AD-7 — Pull polygolem before package work
-`polydart/.reference/polygolem` is the local upstream reference. Before touching any protocol module, run:
+`polydart/polygolem` is the canonical upstream submodule. `.reference/polygolem` is legacy compatibility while older docs are migrated. Before touching any protocol module, run:
 
 ```sh
+git -C polygolem pull --ff-only origin main
 git -C .reference/polygolem pull --ff-only
 ```
 
-Use the pulled commit as the source of truth for CLOB, Gamma, Data API, deposit-wallet, relayer, signing, and safety behavior. Record the commit in the implementation notes or parity fixture update. If the pull changes a relevant upstream contract, update the Dart code and parity tests together.
+Use the pulled `polygolem/` commit as the source of truth for CLOB, Gamma, Data API, deposit-wallet, relayer, signing, and safety behavior. Record the commit in the implementation notes or parity fixture update. If the pull changes a relevant upstream contract, update the Dart code and parity tests together. Do not edit either upstream checkout directly.
 
 ---
 
@@ -136,7 +137,7 @@ Highlights:
 - `wallet/deposit_wallet.dart` — `derive`, `status`, `deploy` (delegates to `RelayerProxyClient`).
 - `orders/order_builder.dart` — fluent API matching PRD §4.6.
 - `clob/` write paths gated by `Mode.live`.
-- New `WalletSigner` interface; **no concrete Reown impl in `polydart`** — Arenaton Flutter wires Reown in app code for owner alpha.
+- New `WalletSigner` interface; **no concrete Reown impl in `polydart`** — Flutter/mobile consumers wire Reown or equivalent wallet approval in app code.
 
 Acceptance: shared parity fixtures for EIP-712 hash, POLY_1271 signature roundtrip, CREATE2 address all pass against polygolem-generated vectors.
 
@@ -158,8 +159,8 @@ Acceptance: full paper-mode loop runs offline; live-mode loop runs against stagi
 
 - `dataapi/` — positions, volume, leaderboards.
 - `bridge/` — supported assets, deposit addresses (mirrors `pkg/bridge`).
-- Arenaton Flutter app-local adapters for Reown `WalletSigner`, secure credential storage, and any persistent `KeyValueStore` wiring needed by the owner alpha.
-- `example/arenaton_demo/` — minimal Flutter app demonstrating read-only + paper + live (mock) flows.
+- Consumer app-local adapters for Reown `WalletSigner`, secure credential storage, and any persistent `KeyValueStore` wiring needed by live flows.
+- `example/flutter_demo/` — minimal Flutter app demonstrating read-only + paper + live (mock) flows.
 - Docs site (mkdocs or docusaurus, parity with polygolem `docs-site/`).
 - pub.dev publish dry-run, then real publish for `polydart` when the API is stable.
 
@@ -217,10 +218,10 @@ No secrets in repo. Builder creds checked by a CI grep step against the source t
 
 | # | PRD Question | Proposed Answer | Confidence |
 |---|--------------|-----------------|------------|
-| 1 | Reown vs WalletConnect v3 | Reown (it _is_ WalletConnect v3 rebranded; arenaton-flutter already uses `reown_appkit`). | High |
-| 2 | Optional server proxy | Defer until public-product hardening. Owner alpha uses app-local relayer credentials injected into `polydart`. | High |
+| 1 | Reown vs WalletConnect v3 | Reown (it _is_ WalletConnect v3 rebranded), while keeping the SDK boundary at `WalletSigner`. | High |
+| 2 | Optional server proxy | Defer until public SDK hardening. Initial live-readiness work uses app-local relayer credentials injected into `polydart`. | High |
 | 3 | Paper-state storage | Inject `KeyValueStore`. Default in-memory; Flutter consumers wire `hive`; CLI consumers wire file-backed. | High |
-| 4 | Flutter min version | `polydart` is pure Dart (no Flutter pin). Arenaton Flutter owns its own Flutter/Reown version pins. | High |
+| 4 | Flutter min version | `polydart` is pure Dart (no Flutter pin). Consumer apps own their own Flutter/Reown version pins. | High |
 | 5 | Null safety | Dart 3 strict mode. No legacy concerns; no migrations. | High |
 
 Pinned for review; happy to flip any of these on user input.
@@ -229,10 +230,10 @@ Pinned for review; happy to flip any of these on user input.
 
 ## 12. Out of Scope (for now)
 
-- Polymarket-style UI components (those live in `arenaton-flutter`).
+- Polymarket-style UI components (consumer app concern, not SDK).
 - Automated market-maker strategies (consumer concern, not SDK).
 - ZK-proof or alternative privacy layers.
-- iOS-specific tooling beyond what the Arenaton Flutter app already owns.
+- iOS-specific tooling beyond what consumer Flutter apps already own.
 
 ---
 
@@ -242,7 +243,7 @@ Pinned for review; happy to flip any of these on user input.
 |------|-------------------------|
 | `web3dart` lacks first-class EIP-712 | Phase 2 includes a thin internal `eip712.dart` built on `pointycastle` + manual encoding, validated against polygolem vectors. |
 | Polymarket API drift | Weekly parity job (§9) catches schema/normalization drift early. |
-| Relayer credential leak | Injected config only in `polydart`; app-local secure storage in Arenaton Flutter; no shared embedded creds; optional proxy later. |
+| Relayer credential leak | Injected config only in `polydart`; app-local secure storage in the consumer app; no shared embedded creds; optional proxy later. |
 | CREATE2 mismatch | Phase 2 acceptance gates on shared address vector. |
 
 ---
@@ -251,7 +252,7 @@ Pinned for review; happy to flip any of these on user input.
 
 The success criteria from PRD §12 hold **and**:
 - Polygolem and polydart parity suites are green for the same commit pair.
-- A Flutter consumer (arenaton-flutter or the example app) imports `polydart`, wires app-local signing/storage adapters, performs a read-only search, a paper buy, and a live-mode mock-signed order, with no Polymarket secrets in the consumer's source tree.
+- A Flutter consumer imports `polydart`, wires app-local signing/storage adapters, performs a read-only search, a paper buy, and a live-mode mock-signed order, with no Polymarket secrets in the consumer's source tree.
 
 ---
 

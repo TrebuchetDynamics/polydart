@@ -1,0 +1,4 @@
+interface:
+  display_name: "Polydart Protocol Safety"
+  short_description: "Guard live trading boundaries"
+  default_prompt: "Use $polydart-protocol-safety to review this live-write Polydart change."

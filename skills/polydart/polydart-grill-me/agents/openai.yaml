@@ -1,0 +1,4 @@
+interface:
+  display_name: "Polydart Grill Me"
+  short_description: "Stress-test Polydart plans"
+  default_prompt: "Use $polydart-grill-me to interrogate this Polydart design before implementation."

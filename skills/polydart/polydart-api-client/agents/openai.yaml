@@ -1,0 +1,4 @@
+interface:
+  display_name: "Polydart API Client"
+  short_description: "Add Polymarket API endpoints"
+  default_prompt: "Use $polydart-api-client to add this Polymarket API endpoint to Polydart."

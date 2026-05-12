@@ -9,13 +9,14 @@
 - Pull the local Go reference before protocol work:
 
 ```sh
+git -C polygolem pull --ff-only origin main
 git -C .reference/polygolem pull --ff-only
 ```
 
 - Record the pulled `polygolem` commit in parity fixture or implementation notes.
 - Implement the first slice in `polydart`, not in Flutter UI.
 - Keep `polydart` pure Dart: no Flutter, Reown, secure-storage, or app-session dependency.
-- Arenaton Flutter stores any local credentials safely, keyed by chain id and EOA.
+- Consumer Flutter apps store any local credentials safely, keyed by chain id and EOA.
 - No separate adapter package now; keep Reown and secure-storage adapters app-local until the live flow works.
 - Live trading comes before paper trading.
 - Live Polymarket uses v2 deposit wallets only: `signature_type=3`.

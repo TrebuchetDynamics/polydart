@@ -1,0 +1,4 @@
+[submodule "polygolem"]
+	path = polygolem
+	url = https://github.com/TrebuchetDynamics/polygolem.git
+	shallow = true

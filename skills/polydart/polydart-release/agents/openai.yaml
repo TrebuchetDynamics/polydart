@@ -1,0 +1,4 @@
+interface:
+  display_name: "Polydart Release"
+  short_description: "Prepare Polydart release runs"
+  default_prompt: "Use $polydart-release to prepare the next Polydart release checklist."

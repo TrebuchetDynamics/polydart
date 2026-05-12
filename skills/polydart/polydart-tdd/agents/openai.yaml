@@ -1,0 +1,4 @@
+interface:
+  display_name: "Polydart TDD"
+  short_description: "Test-first workflow for Dart"
+  default_prompt: "Use $polydart-tdd to implement this Polydart change test-first."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Polydart Parity Fixtures"
+  short_description: "Manage cross-language vectors"
+  default_prompt: "Use $polydart-parity-fixtures to update cross-language test vectors."

@@ -30,5 +30,5 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 
 ## [0.1.0-alpha.1] — TBD
 
-Tag the first alpha once arenaton-flutter has been integrated against
-this surface end-to-end.
+Tag the first alpha once a Flutter consumer has been integrated against this
+surface end-to-end.

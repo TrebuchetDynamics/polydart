@@ -59,7 +59,7 @@ polydart/
 │   ├── integration/
 │   └── fixtures/               # Shared test vectors with polygolem
 ├── example/
-│   └── arenaton_demo/          # Demo Flutter app
+│   └── flutter_demo/           # Demo Flutter app
 └── pubspec.yaml
 ```
 
@@ -106,7 +106,7 @@ polydart/
 - Nonce polling
 - Relayer authentication headers
 
-**Owner-alpha note:** relayer credentials are injected into `polydart` by the consumer. Arenaton Flutter stores per-EOA credentials in app secure storage. A minimal server proxy remains an optional public-product hardening layer, not a requirement for the first owner-alpha readiness slice.
+**Public SDK note:** relayer credentials are injected into `polydart` by the consumer. Flutter/mobile consumers are responsible for secure per-EOA credential storage. A minimal server proxy remains an optional public SDK hardening layer, not a requirement for the first live-readiness slice.
 
 ### 4.5 `wallet` — Deposit Wallet Lifecycle
 
@@ -147,7 +147,7 @@ final order = await client.orders
 | Threat | Mitigation |
 |--------|-----------|
 | Private key exposure | **Eliminated** — keys never leave MetaMask |
-| Relayer credential leak | **Minimized** — no shared embedded creds; owner-alpha storage is per EOA in app secure storage; optional proxy later |
+| Relayer credential leak | **Minimized** — no shared embedded creds; consumer-managed per-EOA secure storage; optional proxy later |
 | Man-in-the-middle | HTTPS + certificate pinning |
 | Malicious signing requests | User sees full transaction in MetaMask |
 | App compromise | Damage limited to current session orders |
@@ -168,11 +168,11 @@ Polymarket APIs (CLOB, Gamma, Relayer)
 
 ### 5.3 Optional Server Proxy
 
-For public product hardening, a tiny server proxy may later handle:
+For public SDK hardening, a tiny server proxy may later handle:
 - `POST /relay/deploy` — forwards with builder headers
 - `POST /relay/batch` — forwards with builder headers
 
-For owner alpha, this is not required. Flutter can inject app-local relayer credentials directly into `polydart`.
+For the first live-readiness slice, this is not required. Flutter/mobile consumers can inject app-local relayer credentials directly into `polydart`.
 
 ---
 
@@ -262,7 +262,7 @@ await client.clob.submit(order); // prompts MetaMask
 ### Phase 4 — Polish (v0.4.0)
 - [ ] `dataapi` — positions, volume, leaderboards
 - [ ] `bridge` — supported assets, deposit addresses
-- [ ] Example Flutter app (Arenaton demo)
+- [ ] Example Flutter app
 - [ ] Documentation site
 - [ ] CI/CD with Flutter integration tests
 
@@ -314,7 +314,7 @@ dev_dependencies:
 | `web3dart` lacks EIP-712 support | Medium | High | Contribute PR or fork; fallback to manual RLP encoding |
 | Mobile signing latency (Reown) | High | Medium | Pre-build orders, queue for batch sign |
 | Polymarket API drift | Medium | High | Automated contract tests against live API weekly |
-| Relayer credential leak | Low | Critical | Per-EOA secure storage in app; never embed shared creds; redact logs; optional proxy later |
+| Relayer credential leak | Low | Critical | Per-EOA secure storage in the consumer app; never embed shared creds; redact logs; optional proxy later |
 | CREATE2 derivation mismatch | Low | Critical | Cross-validate every address against polygolem Go impl |
 
 ---
@@ -324,7 +324,7 @@ dev_dependencies:
 - [ ] All polygolem `pkg/` APIs have polydart equivalents
 - [ ] All polygolem `internal/` modules have Dart mirrors
 - [ ] Shared test vectors pass in both repos
-- [ ] Example app (Arenaton demo) runs with zero server for read-only and local readiness checks when relayer credentials are injected
+- [ ] Example app runs with zero server for read-only and local readiness checks when relayer credentials are injected
 - [ ] Optional server proxy remains < 100 LOC if introduced for deploy/batch
 - [ ] CI passes: Dart analysis, tests, integration tests
 - [ ] pub.dev package published
@@ -334,7 +334,7 @@ dev_dependencies:
 ## 13. Open Questions
 
 1. **Reown vs WalletConnect v3:** Which library is more stable for production?
-2. **Optional server proxy:** defer until public-product hardening, or add immediately for relayer credential isolation?
+2. **Optional server proxy:** defer until public SDK hardening, or add immediately for relayer credential isolation?
 3. **Paper state storage:** `shared_preferences` vs `hive` vs `drift`?
 4. **Flutter minimum version:** 3.16+ or 3.19+?
 5. **Null safety:** Dart 3 strict mode — any legacy concerns?
