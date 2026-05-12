@@ -68,6 +68,10 @@ void main() {
         status: LiveCredentialStatus.cached,
         value: clobKey,
       ),
+      builderFeeKey: CredentialReadiness<ApiKey>(
+        status: LiveCredentialStatus.created,
+        value: clobKey,
+      ),
     );
     expect(credentials.ready, isTrue);
     expect(credentials.toString(), isNot(contains('clob-secret')));

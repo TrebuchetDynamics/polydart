@@ -43,12 +43,14 @@ orchestration surface. It:
 - asks the app-provided `WalletSigner` for one ClobAuth signature
 - creates CLOB L2 credentials through `/auth/api-key`
 - falls back to `/auth/derive-api-key` with the same wallet-approved signature
+- creates CLOB builder-fee credentials through `/auth/builder-api-key`
+- preserves partial success when CLOB credentials are ready but builder-fee
+  creation is blocked
 - returns typed readiness states instead of UI copy
 - never stores credentials unless the app passes a store
 
 Next credential slices:
 
-- CLOB builder-fee key ensure flow
 - relayer credential discovery after `/login/internal` characterization
 - deposit-wallet readiness states that consume the discovered credentials
 

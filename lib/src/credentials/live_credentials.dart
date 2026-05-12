@@ -42,10 +42,15 @@ abstract interface class CredentialStore {
   Future<ApiKey?> readClobApiKey(CredentialKey key);
 
   Future<void> writeClobApiKey(CredentialKey key, ApiKey value);
+
+  Future<ApiKey?> readBuilderFeeKey(CredentialKey key);
+
+  Future<void> writeBuilderFeeKey(CredentialKey key, ApiKey value);
 }
 
 final class MemoryCredentialStore implements CredentialStore {
   final Map<CredentialKey, ApiKey> _clobApiKeys = <CredentialKey, ApiKey>{};
+  final Map<CredentialKey, ApiKey> _builderFeeKeys = <CredentialKey, ApiKey>{};
 
   @override
   Future<ApiKey?> readClobApiKey(CredentialKey key) async {
@@ -56,6 +61,17 @@ final class MemoryCredentialStore implements CredentialStore {
   Future<void> writeClobApiKey(CredentialKey key, ApiKey value) async {
     value.validate();
     _clobApiKeys[key] = value;
+  }
+
+  @override
+  Future<ApiKey?> readBuilderFeeKey(CredentialKey key) async {
+    return _builderFeeKeys[key];
+  }
+
+  @override
+  Future<void> writeBuilderFeeKey(CredentialKey key, ApiKey value) async {
+    value.validate();
+    _builderFeeKeys[key] = value;
   }
 }
 
@@ -106,14 +122,20 @@ final class CredentialReadiness<T> {
 
 @immutable
 final class LiveCredentialReadiness {
-  const LiveCredentialReadiness({required this.clobApiKey});
+  const LiveCredentialReadiness({
+    required this.clobApiKey,
+    required this.builderFeeKey,
+  });
 
   final CredentialReadiness<ApiKey> clobApiKey;
+  final CredentialReadiness<ApiKey> builderFeeKey;
 
-  bool get ready => clobApiKey.isReady;
+  bool get ready => clobApiKey.isReady && builderFeeKey.isReady;
 
   @override
-  String toString() => 'LiveCredentialReadiness(clobApiKey=$clobApiKey)';
+  String toString() {
+    return 'LiveCredentialReadiness(clobApiKey=$clobApiKey, builderFeeKey=$builderFeeKey)';
+  }
 }
 
 final class LiveCredentialService {
@@ -142,12 +164,22 @@ final class LiveCredentialService {
       final cached = await _credentialStore?.readClobApiKey(key);
       if (cached != null) {
         cached.validate();
-        return LiveCredentialReadiness(
-          clobApiKey: CredentialReadiness<ApiKey>(
-            status: LiveCredentialStatus.cached,
-            value: cached,
-          ),
+        final clobReadiness = CredentialReadiness<ApiKey>(
+          status: LiveCredentialStatus.cached,
+          value: cached,
         );
+        final cachedBuilder = await _credentialStore?.readBuilderFeeKey(key);
+        if (cachedBuilder != null) {
+          cachedBuilder.validate();
+          return LiveCredentialReadiness(
+            clobApiKey: clobReadiness,
+            builderFeeKey: CredentialReadiness<ApiKey>(
+              status: LiveCredentialStatus.cached,
+              value: cachedBuilder,
+            ),
+          );
+        }
+        return _ensureBuilderFeeKey(key: key, clobApiKey: clobReadiness);
       }
     }
 
@@ -163,6 +195,7 @@ final class LiveCredentialService {
           action: LiveCredentialAction.requestSignature,
           reason: e.message,
         ),
+        builderFeeKey: _blockedBuilderFeeKey,
       );
     } on AuthException catch (e) {
       if (e.code == ErrorCode.unauthorized ||
@@ -173,6 +206,7 @@ final class LiveCredentialService {
             action: LiveCredentialAction.requestSignature,
             reason: e.message,
           ),
+          builderFeeKey: _blockedBuilderFeeKey,
         );
       }
       rethrow;
@@ -181,7 +215,8 @@ final class LiveCredentialService {
     try {
       final created = await _clob.createApiKeyWithL1Headers(l1Headers);
       await _credentialStore?.writeClobApiKey(key, created);
-      return LiveCredentialReadiness(
+      return _ensureBuilderFeeKey(
+        key: key,
         clobApiKey: CredentialReadiness<ApiKey>(
           status: LiveCredentialStatus.created,
           value: created,
@@ -191,7 +226,8 @@ final class LiveCredentialService {
       try {
         final derived = await _clob.deriveApiKeyWithL1Headers(l1Headers);
         await _credentialStore?.writeClobApiKey(key, derived);
-        return LiveCredentialReadiness(
+        return _ensureBuilderFeeKey(
+          key: key,
           clobApiKey: CredentialReadiness<ApiKey>(
             status: LiveCredentialStatus.derived,
             value: derived,
@@ -204,8 +240,50 @@ final class LiveCredentialService {
             action: LiveCredentialAction.retry,
             reason: e.message,
           ),
+          builderFeeKey: _blockedBuilderFeeKey,
         );
       }
     }
   }
+
+  Future<LiveCredentialReadiness> _ensureBuilderFeeKey({
+    required CredentialKey key,
+    required CredentialReadiness<ApiKey> clobApiKey,
+  }) async {
+    final apiKey = clobApiKey.value;
+    if (apiKey == null) {
+      return LiveCredentialReadiness(
+        clobApiKey: clobApiKey,
+        builderFeeKey: _blockedBuilderFeeKey,
+      );
+    }
+
+    try {
+      final builderFeeKey = await _clob.createBuilderFeeKey(apiKey: apiKey);
+      await _credentialStore?.writeBuilderFeeKey(key, builderFeeKey);
+      return LiveCredentialReadiness(
+        clobApiKey: clobApiKey,
+        builderFeeKey: CredentialReadiness<ApiKey>(
+          status: LiveCredentialStatus.created,
+          value: builderFeeKey,
+        ),
+      );
+    } on TransportException catch (e) {
+      return LiveCredentialReadiness(
+        clobApiKey: clobApiKey,
+        builderFeeKey: CredentialReadiness<ApiKey>(
+          status: LiveCredentialStatus.blocked,
+          action: LiveCredentialAction.retry,
+          reason: e.message,
+        ),
+      );
+    }
+  }
 }
+
+const CredentialReadiness<ApiKey> _blockedBuilderFeeKey =
+    CredentialReadiness<ApiKey>(
+      status: LiveCredentialStatus.blocked,
+      action: LiveCredentialAction.retry,
+      reason: 'CLOB API key is not ready',
+    );

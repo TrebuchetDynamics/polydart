@@ -8,45 +8,63 @@ import 'package:test/test.dart';
 
 const _address = '0x0000000000000000000000000000000000001234';
 const _cacheKey = CredentialKey(eoaAddress: _address, chainId: 137);
+const _cachedClobKey = ApiKey(
+  key: 'cached-clob-key',
+  secret: 'cached-clob-secret',
+  passphrase: 'cached-clob-pass',
+);
+const _cachedBuilderFeeKey = ApiKey(
+  key: 'cached-builder-key',
+  secret: 'cached-builder-secret',
+  passphrase: 'cached-builder-pass',
+);
 
 void main() {
   group('LiveCredentialService.ensure', () {
-    test('returns cached CLOB key without signing or HTTP', () async {
-      const cached = ApiKey(
-        key: 'cached-key',
-        secret: 'cached-secret',
-        passphrase: 'cached-pass',
-      );
-      final store = MemoryCredentialStore();
-      await store.writeClobApiKey(_cacheKey, cached);
-      final signer = _CannedSigner();
-      final client = _client((_) async => fail('HTTP should not be called'));
+    test(
+      'returns cached CLOB and builder keys without signing or HTTP',
+      () async {
+        final store = MemoryCredentialStore();
+        await store.writeClobApiKey(_cacheKey, _cachedClobKey);
+        await store.writeBuilderFeeKey(_cacheKey, _cachedBuilderFeeKey);
+        final signer = _CannedSigner();
+        final client = _client((_) async => fail('HTTP should not be called'));
 
-      final result = await LiveCredentialService(
-        clob: client,
-        credentialStore: store,
-        nowSeconds: () => 1700000000,
-      ).ensure(signer: signer);
+        final result = await LiveCredentialService(
+          clob: client,
+          credentialStore: store,
+          nowSeconds: () => 1700000000,
+        ).ensure(signer: signer);
 
-      expect(result.clobApiKey.status, LiveCredentialStatus.cached);
-      expect(result.clobApiKey.value, same(cached));
-      expect(result.clobApiKey.isReady, isTrue);
-      expect(result.ready, isTrue);
-      expect(signer.signTypedDataCalls, 0);
-      expect(result.toString(), isNot(contains('cached-secret')));
-      expect(result.toString(), isNot(contains('cached-pass')));
-    });
+        expect(result.clobApiKey.status, LiveCredentialStatus.cached);
+        expect(result.clobApiKey.value, same(_cachedClobKey));
+        expect(result.builderFeeKey.status, LiveCredentialStatus.cached);
+        expect(result.builderFeeKey.value, same(_cachedBuilderFeeKey));
+        expect(result.clobApiKey.isReady, isTrue);
+        expect(result.ready, isTrue);
+        expect(signer.signTypedDataCalls, 0);
+        expect(result.toString(), isNot(contains('cached-clob-secret')));
+        expect(result.toString(), isNot(contains('cached-builder-secret')));
+      },
+    );
 
-    test('signs ClobAuth once, creates CLOB key, and stores it', () async {
-      Map<String, dynamic>? request;
+    test('creates CLOB and builder-fee keys and stores both', () async {
+      final requests = <Map<String, dynamic>>[];
       final store = MemoryCredentialStore();
       final signer = _CannedSigner();
       final client = _client((req) async {
-        request = _request(req);
+        requests.add(_request(req));
+        if (req.url.path == '/auth/builder-api-key') {
+          return _apiKeyResponse(
+            key: 'created-builder-key',
+            secret: 'created-builder-secret',
+            passphrase: 'created-builder-pass',
+          );
+        }
         return _apiKeyResponse(
-          key: 'created-key',
-          secret: 'created-secret',
-          passphrase: 'created-pass',
+          key: 'created-clob-key',
+          secret: 'created-clob-secret',
+          passphrase: 'created-clob-pass',
         );
       });
 
@@ -56,22 +74,67 @@ void main() {
         nowSeconds: () => 1700000001,
       ).ensure(signer: signer);
 
-      expect(request!['method'], 'POST');
-      expect(request!['path'], '/auth/api-key');
-      final headers = request!['headers'] as Map<String, String>;
+      expect(
+        requests.map((r) => '${r['method']} ${r['path']}').toList(),
+        <String>['POST /auth/api-key', 'POST /auth/builder-api-key'],
+      );
+      final headers = requests[0]['headers'] as Map<String, String>;
       expect(headers['POLY_ADDRESS'], _address);
       expect(headers['POLY_TIMESTAMP'], '1700000001');
       expect(headers['POLY_NONCE'], '0');
       expect(headers['POLY_SIGNATURE'], startsWith('0x'));
+      final builderHeaders = requests[1]['headers'] as Map<String, String>;
+      expect(builderHeaders['POLY_API_KEY'], 'created-clob-key');
+      expect(builderHeaders['POLY_PASSPHRASE'], 'created-clob-pass');
+      expect(builderHeaders['POLY_SIGNATURE'], isNotNull);
       expect(signer.signTypedDataCalls, 1);
       expect(signer.lastTypedData!['primaryType'], 'ClobAuth');
       expect(result.clobApiKey.status, LiveCredentialStatus.created);
-      expect(result.clobApiKey.value!.key, 'created-key');
+      expect(result.clobApiKey.value!.key, 'created-clob-key');
+      expect(result.builderFeeKey.status, LiveCredentialStatus.created);
+      expect(result.builderFeeKey.value!.key, 'created-builder-key');
 
-      final stored = await store.readClobApiKey(_cacheKey);
-      expect(stored!.key, 'created-key');
-      expect(stored.secret, 'created-secret');
+      final storedClob = await store.readClobApiKey(_cacheKey);
+      expect(storedClob!.key, 'created-clob-key');
+      expect(storedClob.secret, 'created-clob-secret');
+      final storedBuilder = await store.readBuilderFeeKey(_cacheKey);
+      expect(storedBuilder!.key, 'created-builder-key');
+      expect(storedBuilder.secret, 'created-builder-secret');
     });
+
+    test(
+      'uses cached CLOB key when creating a missing builder-fee key',
+      () async {
+        final store = MemoryCredentialStore();
+        await store.writeClobApiKey(_cacheKey, _cachedClobKey);
+        final signer = _CannedSigner();
+        Map<String, dynamic>? request;
+        final client = _client((req) async {
+          request = _request(req);
+          return _apiKeyResponse(
+            key: 'new-builder-key',
+            secret: 'new-builder-secret',
+            passphrase: 'new-builder-pass',
+          );
+        });
+
+        final result = await LiveCredentialService(
+          clob: client,
+          credentialStore: store,
+          nowSeconds: () => 1700000006,
+        ).ensure(signer: signer);
+
+        expect(request!['method'], 'POST');
+        expect(request!['path'], '/auth/builder-api-key');
+        final headers = request!['headers'] as Map<String, String>;
+        expect(headers['POLY_API_KEY'], _cachedClobKey.key);
+        expect(headers['POLY_PASSPHRASE'], _cachedClobKey.passphrase);
+        expect(signer.signTypedDataCalls, 0);
+        expect(result.clobApiKey.status, LiveCredentialStatus.cached);
+        expect(result.builderFeeKey.status, LiveCredentialStatus.created);
+        expect(result.builderFeeKey.value!.key, 'new-builder-key');
+      },
+    );
 
     test('derives with the same L1 signature after create conflict', () async {
       final signer = _CannedSigner();
@@ -79,13 +142,20 @@ void main() {
       final client = _client((req) async {
         final request = _request(req);
         seen.add(request);
+        if (req.url.path == '/auth/builder-api-key') {
+          return _apiKeyResponse(
+            key: 'builder-after-derived',
+            secret: 'builder-secret',
+            passphrase: 'builder-pass',
+          );
+        }
         if (req.method == 'POST') {
           return http.Response('already exists', 409);
         }
         return _apiKeyResponse(
-          key: 'derived-key',
-          secret: 'derived-secret',
-          passphrase: 'derived-pass',
+          key: 'derived-clob-key',
+          secret: 'derived-clob-secret',
+          passphrase: 'derived-clob-pass',
         );
       });
 
@@ -97,13 +167,16 @@ void main() {
       expect(seen.map((r) => '${r['method']} ${r['path']}').toList(), <String>[
         'POST /auth/api-key',
         'GET /auth/derive-api-key',
+        'POST /auth/builder-api-key',
       ]);
       final createHeaders = seen[0]['headers'] as Map<String, String>;
       final deriveHeaders = seen[1]['headers'] as Map<String, String>;
       expect(deriveHeaders['POLY_SIGNATURE'], createHeaders['POLY_SIGNATURE']);
       expect(signer.signTypedDataCalls, 1);
       expect(result.clobApiKey.status, LiveCredentialStatus.derived);
-      expect(result.clobApiKey.value!.key, 'derived-key');
+      expect(result.clobApiKey.value!.key, 'derived-clob-key');
+      expect(result.builderFeeKey.status, LiveCredentialStatus.created);
+      expect(result.builderFeeKey.value!.key, 'builder-after-derived');
     });
 
     test('returns userRejected when the wallet signer rejects', () async {
@@ -117,6 +190,8 @@ void main() {
       expect(result.clobApiKey.status, LiveCredentialStatus.userRejected);
       expect(result.clobApiKey.value, isNull);
       expect(result.clobApiKey.action, LiveCredentialAction.requestSignature);
+      expect(result.builderFeeKey.status, LiveCredentialStatus.blocked);
+      expect(result.builderFeeKey.action, LiveCredentialAction.retry);
       expect(result.ready, isFalse);
     });
 
@@ -136,6 +211,32 @@ void main() {
         expect(result.clobApiKey.status, LiveCredentialStatus.blocked);
         expect(result.clobApiKey.action, LiveCredentialAction.retry);
         expect(result.clobApiKey.value, isNull);
+        expect(result.builderFeeKey.status, LiveCredentialStatus.blocked);
+        expect(result.ready, isFalse);
+      },
+    );
+
+    test(
+      'returns partial success when builder-fee key creation fails',
+      () async {
+        final store = MemoryCredentialStore();
+        await store.writeClobApiKey(_cacheKey, _cachedClobKey);
+        final client = _client((req) async {
+          expect(req.url.path, '/auth/builder-api-key');
+          return http.Response('builder unavailable', 503);
+        });
+
+        final result = await LiveCredentialService(
+          clob: client,
+          credentialStore: store,
+          nowSeconds: () => 1700000007,
+        ).ensure(signer: _CannedSigner());
+
+        expect(result.clobApiKey.status, LiveCredentialStatus.cached);
+        expect(result.clobApiKey.value, same(_cachedClobKey));
+        expect(result.builderFeeKey.status, LiveCredentialStatus.blocked);
+        expect(result.builderFeeKey.action, LiveCredentialAction.retry);
+        expect(result.builderFeeKey.value, isNull);
         expect(result.ready, isFalse);
       },
     );

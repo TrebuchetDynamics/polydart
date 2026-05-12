@@ -28,7 +28,7 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
   share transports across sub-clients.
 - Live credential discovery: `LiveCredentialService`, `CredentialStore`, and
   `MemoryCredentialStore` for wallet-mediated CLOB L2 API key create/derive
-  flows without raw EOA private keys.
+  plus CLOB builder-fee key creation without raw EOA private keys.
 - CI workflow: format, analyze, test (network tests opt-in).
 
 ## [0.1.0-alpha.1] — TBD

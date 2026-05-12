@@ -21,7 +21,7 @@ all accounted for.
 | Feature | Polygolem Path | Polydart Path | Status | Tests/Fixtures | Safety Review | Upstream Commit | Next Action |
 |---|---|---|---|---|---|---|---|
 | Wallet-mediated EOA custody | internal/auth, internal/wallet | lib/src/auth, lib/src/wallet | intentional Dart divergence | test/auth, test/wallet | required | 2b7cde7 | Enforce ADR 0001 in signing and wallet work |
-| Deposit-wallet live semantics | internal/wallet, internal/relayer, internal/clob | lib/src/wallet, lib/src/relayer, lib/src/clob, lib/src/credentials | partial | test/wallet, test/relayer, test/clob, test/credentials | required | 2b7cde7 | Wallet-mediated CLOB L2 credential ensure flow covered; continue builder-fee key, relayer credential discovery, `signatureType=3`, maker/signer/funder separation, and pUSD routing |
+| Deposit-wallet live semantics | internal/wallet, internal/relayer, internal/clob | lib/src/wallet, lib/src/relayer, lib/src/clob, lib/src/credentials | partial | test/wallet, test/relayer, test/clob, test/credentials | required | 2b7cde7 | Wallet-mediated CLOB L2 and builder-fee credential ensure flow covered; continue relayer credential discovery, `signatureType=3`, maker/signer/funder separation, and pUSD routing |
 | EIP-712 / ERC-7739 / POLY_1271 signing | internal/auth, internal/clob/orders.go | lib/src/auth, lib/src/orders | partial | test/auth, test/orders | required | 2b7cde7 | Expand byte-level parity vectors |
 | Relayer and enable-trading surfaces | pkg/relayer, pkg/enabletrading, internal/enabletrading | lib/src/relayer, lib/src/enabletrading | partial | test/relayer, test/enabletrading | required | 2b7cde7 | Relayer V2 API-key headers, transaction object/list responses, poll defaults, and allowlist classification covered; continue live submission UX docs |
 | CLOB write responses and order results | internal/clob, pkg/orderresults | lib/src/clob, lib/src/orders, lib/src/orderresults | partial | test/clob, test/orders, test/orderresults | required | 2b7cde7 | Order response casing, batch create, cancel body casing, heartbeat, and order-results report builder covered; continue live error DTO fields |
@@ -33,7 +33,7 @@ all accounted for.
 |---|---|---|---|---|---|---|---|
 | pkg/bridge | polygolem/pkg/bridge | lib/src/bridge | implemented | test/bridge | not_required | 2b7cde7 | HTTP-only bridge client covered |
 | pkg/builder | polygolem/pkg/builder | lib/src/builder | implemented | test/builder | not_required | 2b7cde7 | Local and remote builder signer surfaces covered |
-| pkg/clob | polygolem/pkg/clob | lib/src/clob, lib/src/credentials | partial | test/clob, test/credentials | required | 2b7cde7 | Wallet-mediated CLOB L2 credential create/derive orchestration covered; continue builder-fee and authenticated write parity |
+| pkg/clob | polygolem/pkg/clob | lib/src/clob, lib/src/credentials | partial | test/clob, test/credentials | required | 2b7cde7 | Wallet-mediated CLOB L2 create/derive and builder-fee key orchestration covered; continue authenticated write parity |
 | pkg/contracts | polygolem/pkg/contracts | lib/src/contracts | implemented | test/contracts | not_required | 2b7cde7 | Contract registry and eth_getCode readiness covered |
 | pkg/ctf | polygolem/pkg/ctf | lib/src/ctf | implemented | test/ctf | not_required | 2b7cde7 | CTF calldata and ID helpers covered |
 | pkg/data | polygolem/pkg/data | lib/src/dataapi | partial | test/dataapi | not_required | 2b7cde7 | Map public Data API wrapper |
@@ -54,7 +54,7 @@ all accounted for.
 | pkg/universal | polygolem/pkg/universal | lib/src/universal | partial | test/universal | not_required | 2b7cde7 | Read-only universal facade covered; authenticated raw-key write methods intentionally excluded from default public surface |
 | pkg/wallet | polygolem/pkg/wallet | lib/src/wallet | partial | test/wallet | required | 2b7cde7 | Port protocol behavior without raw EOA keys |
 | internal/auth | polygolem/internal/auth | lib/src/auth | partial | test/auth | required | 2b7cde7 | Expand signing parity vectors |
-| internal/clob | polygolem/internal/clob | lib/src/clob, lib/src/credentials | partial | test/clob, test/credentials | required | 2b7cde7 | CLOB L2 credential create/derive reuses one wallet-approved ClobAuth signature across fallback; continue order placement, cancellation, responses |
+| internal/clob | polygolem/internal/clob | lib/src/clob, lib/src/credentials | partial | test/clob, test/credentials | required | 2b7cde7 | CLOB L2 credential create/derive reuses one wallet-approved ClobAuth signature across fallback; builder-fee key creation preserves partial readiness; continue order placement, cancellation, responses |
 | internal/config | polygolem/internal/config | lib/src/config | partial | test/config | not_required | 2b7cde7 | Verify redaction and env mapping |
 | internal/dataapi | polygolem/internal/dataapi | lib/src/dataapi | partial | test/dataapi | not_required | 2b7cde7 | Current-position, closed-position, trade, holder, open-interest, volume, and aggregate object/list fields covered; continue order results |
 | internal/enabletrading | polygolem/internal/enabletrading | lib/src/enabletrading | partial | test/enabletrading | required | 2b7cde7 | Wallet-mediated typed-data builders covered; no raw EOA key submission surface |
