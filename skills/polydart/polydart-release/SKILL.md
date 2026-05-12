@@ -14,7 +14,7 @@ Collect:
 
 - Current Polydart version from `pubspec.yaml`.
 - Current Polydart commit.
-- Current Polygolem commit from `polygolem` or `.reference/polygolem`.
+- Current Polygolem commit from `polygolem`.
 - Polygolem changelog entries since the last recorded parity commit.
 - Intended release type: alpha patch, parity minor, or breaking major.
 - Current status of `docs/POLYDART-POLYGOLEM-COVERAGE.md`.

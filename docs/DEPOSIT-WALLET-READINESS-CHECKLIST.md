@@ -10,7 +10,6 @@
 
 ```sh
 git -C polygolem pull --ff-only origin main
-git -C .reference/polygolem pull --ff-only
 ```
 
 - Record the pulled `polygolem` commit in parity fixture or implementation notes.

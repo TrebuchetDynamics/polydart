@@ -19,9 +19,6 @@ dist/
 .vscode/
 *.iml
 
-# Local reference clones (not part of polydart sources)
-.reference/
-
 # OS
 .DS_Store
 Thumbs.db

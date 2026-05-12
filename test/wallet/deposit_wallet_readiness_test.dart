@@ -11,7 +11,7 @@ const _builder = BuilderConfig(
   passphrase: 'pass',
 );
 
-// Parity vector: polygolem .reference commit dca956a, matching
+// Parity vector: polygolem commit dca956a, matching
 // internal/clob/orders_test.go's canonical EOA/deposit-wallet pair.
 const _eoa = '0x2c7536E3605D9C16a7a3D7b1898e529396a65c23';
 const _depositWallet = '0xfd5041047be8c192c725a66228f141196fa3cf9c';

@@ -17,19 +17,17 @@ commit or offline comparison:
 
 ```sh
 git -C polygolem pull --ff-only origin main
-git -C .reference/polygolem pull --ff-only
 ```
 
-Record both sides after syncing:
+Record local and upstream commits after syncing:
 
 ```sh
 git rev-parse --short HEAD
-git -C .reference/polygolem rev-parse --short HEAD
 git -C polygolem rev-parse --short HEAD
 ```
 
-If either pull fails, stop and report the failure before doing fidelity work.
-Never edit, patch, or commit inside `polygolem/` or `.reference/polygolem/`.
+If the pull fails, stop and report the failure before doing fidelity work.
+Never edit, patch, or commit inside `polygolem/`.
 
 ## Completion Mandate
 

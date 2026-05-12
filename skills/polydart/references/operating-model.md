@@ -14,19 +14,16 @@ signing`.
 ## Upstream Sources
 
 - `polygolem/` is the canonical upstream submodule.
-- `.reference/polygolem/` is legacy compatibility while older docs are
-  migrated.
-- Both upstream checkouts are read-only references.
+- The upstream checkout is a read-only reference.
 - Allowed operations: read files, run tests/tools, `git fetch`, and
   `git pull --ff-only`.
 - Forbidden operations: edit files, apply patches, commit, or locally "fix"
-  upstream behavior in either checkout.
+  upstream behavior in the checkout.
 
 Before fidelity work:
 
 ```sh
 git -C polygolem pull --ff-only origin main
-git -C .reference/polygolem pull --ff-only
 ```
 
 If upstream code and docs disagree, prefer code/tests, then changelog and live
@@ -44,7 +41,7 @@ divergences.
 | Hash, typed data, HMAC, SIWE, CREATE2, or signature gap | `polydart-crypto-signing` + `polydart-parity-fixtures` + `polydart-tdd` |
 | Live write, wallet, relayer, order, approval, funding, bridge | `polydart-protocol-safety` first |
 | Version, changelog, pub.dev, release readiness | `polydart-release` |
-| Submodule, reference, staging, commit slicing | `polydart-git` |
+| Submodule, staging, commit slicing | `polydart-git` |
 | Skill-pack changes | `polydart-skill-manager` |
 
 ## Coverage Matrix

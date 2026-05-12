@@ -85,14 +85,13 @@ npm run build
 
 Polygolem is the reference. Every protocol module, signing scheme, and API client in polygolem has a Dart twin here. Versions track in lockstep.
 
-Before any protocol-package work, refresh the upstream references:
+Before any protocol-package work, refresh the upstream reference:
 
 ```sh
 git -C polygolem pull --ff-only origin main
-git -C .reference/polygolem pull --ff-only
 ```
 
-Then port from that fresh `polygolem` commit into Dart and update parity tests/fixtures with the commit hash used. Do not develop live CLOB, deposit-wallet, relayer, or signing behavior from memory or stale docs. Treat both Polygolem checkouts as read-only upstream references.
+Then port from that fresh `polygolem` commit into Dart and update parity tests/fixtures with the commit hash used. Do not develop live CLOB, deposit-wallet, relayer, or signing behavior from memory or stale docs. Treat `polygolem/` as a read-only upstream reference.
 
 ## License
 

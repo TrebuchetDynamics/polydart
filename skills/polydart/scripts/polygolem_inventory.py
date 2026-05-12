@@ -84,7 +84,6 @@ def add_row(rows: list[dict[str, str]], root: Path, feature: str, source_path: s
 def build_inventory(root: Path) -> dict[str, object]:
     root = root.resolve()
     polygolem = root / "polygolem"
-    legacy_reference = root / ".reference" / "polygolem"
     rows: list[dict[str, str]] = []
 
     for parent, prefix in [
@@ -116,17 +115,11 @@ def build_inventory(root: Path) -> dict[str, object]:
             )
 
     polygolem_commit = git_commit(polygolem)
-    legacy_commit = git_commit(legacy_reference) if legacy_reference.exists() else ""
     warnings: list[str] = []
-    if legacy_commit and polygolem_commit and legacy_commit != polygolem_commit:
-        warnings.append(
-            ".reference/polygolem differs from canonical polygolem; run the fidelity sync step."
-        )
 
     return {
         "source": "polygolem",
         "polygolem_commit": polygolem_commit,
-        "legacy_reference_commit": legacy_commit,
         "warnings": warnings,
         "rows": rows,
     }
@@ -138,7 +131,6 @@ def markdown_table(inventory: dict[str, object]) -> str:
         "# Polydart-Polygolem Inventory Scaffold",
         "",
         f"- Polygolem commit: `{inventory['polygolem_commit'] or 'unknown'}`",
-        f"- Legacy reference commit: `{inventory['legacy_reference_commit'] or 'not present'}`",
         "",
     ]
     warnings = inventory["warnings"]

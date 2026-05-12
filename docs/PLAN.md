@@ -2,7 +2,7 @@
 
 Companion to `PRD.md`. Translates the PRD into concrete modules, ordering, and acceptance criteria.
 
-> **Reference repo:** [`TrebuchetDynamics/polygolem`](https://github.com/TrebuchetDynamics/polygolem), mirrored locally as the `polygolem/` submodule. `.reference/polygolem/` is legacy compatibility while older docs are migrated.
+> **Reference repo:** [`TrebuchetDynamics/polygolem`](https://github.com/TrebuchetDynamics/polygolem), mirrored locally as the read-only `polygolem/` submodule.
 
 ---
 
@@ -29,14 +29,13 @@ Per PRD §5. The SDK exposes a `RelayerProxyClient` that targets a user-supplied
 Polydart MAJOR.MINOR mirrors polygolem. Patch versions diverge for Dart-specific fixes. Each release notes the polygolem commit it parities against.
 
 ### AD-7 — Pull polygolem before package work
-`polydart/polygolem` is the canonical upstream submodule. `.reference/polygolem` is legacy compatibility while older docs are migrated. Before touching any protocol module, run:
+`polydart/polygolem` is the canonical upstream submodule. Before touching any protocol module, run:
 
 ```sh
 git -C polygolem pull --ff-only origin main
-git -C .reference/polygolem pull --ff-only
 ```
 
-Use the pulled `polygolem/` commit as the source of truth for CLOB, Gamma, Data API, deposit-wallet, relayer, signing, and safety behavior. Record the commit in the implementation notes or parity fixture update. If the pull changes a relevant upstream contract, update the Dart code and parity tests together. Do not edit either upstream checkout directly.
+Use the pulled `polygolem/` commit as the source of truth for CLOB, Gamma, Data API, deposit-wallet, relayer, signing, and safety behavior. Record the commit in the implementation notes or parity fixture update. If the pull changes a relevant upstream contract, update the Dart code and parity tests together. Do not edit the upstream checkout directly.
 
 ---
 

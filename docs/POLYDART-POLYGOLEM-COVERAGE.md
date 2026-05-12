@@ -7,7 +7,6 @@ custody architecture as described in `docs/adr/0001-wallet-mediated-eoa-signing.
 - Canonical upstream source: `polygolem/`
 - Last scaffolded Polygolem commit: `2b7cde7`
 - Last fidelity sync commit: `2b7cde7`
-- Legacy reference commit at scaffold time: `2b7cde7`
 - Scaffold command: `python3 skills/polydart/scripts/polygolem_inventory.py --root .`
 
 Status values: `implemented`, `partial`, `missing`, `intentional Dart
@@ -82,4 +81,4 @@ all accounted for.
 
 | Item | Status | Next Action |
 |---|---|---|
-| Retire legacy `.reference/polygolem` compatibility | partial | Keep pulling both during transition; remove legacy references only after setup docs and workflows no longer need them |
+| Retire legacy extra Polygolem checkout compatibility | implemented | Canonical upstream is the read-only `polygolem/` submodule |
