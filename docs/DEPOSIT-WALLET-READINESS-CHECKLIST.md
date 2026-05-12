@@ -32,7 +32,10 @@ Do not collapse the credential names:
 - CLOB builder-fee key: created via `/auth/builder-api-key`; used for fee attribution, not relayer submit.
 - Relayer API key: used by relayer-v2 `/submit`; required for deposit-wallet deploy and approval batches.
 
-Polydart owns credential discovery and creation protocol flows. CLOB L2 credentials and CLOB builder-fee keys are headless protocol work; relayer credential creation depends on `/login/internal` characterization and is a later sub-slice.
+Polydart owns credential discovery and creation protocol flows. CLOB L2
+credentials, CLOB builder-fee keys, and Relayer V2 API keys are headless
+protocol work in non-web Dart runtimes. Consumer apps still own secure
+per-EOA storage through `CredentialStore`.
 
 ## Current Credential Discovery Slice
 
@@ -44,15 +47,17 @@ orchestration surface. It:
 - creates CLOB L2 credentials through `/auth/api-key`
 - falls back to `/auth/derive-api-key` with the same wallet-approved signature
 - creates CLOB builder-fee credentials through `/auth/builder-api-key`
+- asks for SIWE `personal_sign`, captures Gamma cookies, and mints Relayer V2
+  credentials through `/relayer/api/auth`
 - preserves partial success when CLOB credentials are ready but builder-fee
-  creation is blocked
+  or relayer credential creation is blocked
 - returns typed readiness states instead of UI copy
 - never stores credentials unless the app passes a store
 
 Next credential slices:
 
-- relayer credential discovery after `/login/internal` characterization
 - deposit-wallet readiness states that consume the discovered credentials
+- `signatureType=3`, maker/signer/funder separation, and approval checks
 
 ## First Public API Target
 
@@ -111,7 +116,6 @@ Only after that passes, add the next behavior.
 
 - Live order placement.
 - EOA to deposit-wallet pUSD transfer.
-- Automated relayer key creation.
 - Flutter readiness panel.
 - Paper trading.
 - Server Trader Intel or AI analysis.

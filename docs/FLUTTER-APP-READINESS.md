@@ -77,6 +77,12 @@ do not allow arbitrary `Cookie` request headers. Use those flows from
 VM/mobile/desktop runtimes where the HTTP client can manage headers directly,
 or place a backend/proxy boundary in front of them for Flutter Web.
 
+`LiveCredentialService.ensure()` now covers the VM/mobile/desktop flow end to
+end: CLOB L2 credential create/derive, CLOB builder-fee key creation, SIWE
+cookie login, and Relayer V2 API-key minting. Flutter apps should back
+`CredentialStore` with secure per-EOA storage and still keep signing prompts
+inside the app-provided wallet adapter.
+
 Signature flows assume Polygon mainnet unless a lower-level helper documents a
 different chain. Wallet-backed signing should verify `chainId == 137` before
 asking the user to sign Polymarket payloads.

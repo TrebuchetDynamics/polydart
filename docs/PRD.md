@@ -106,7 +106,7 @@ polydart/
 - Nonce polling
 - Relayer authentication headers
 
-**Public SDK note:** relayer credentials are injected into `polydart` by the consumer. Flutter/mobile consumers are responsible for secure per-EOA credential storage. A minimal server proxy remains an optional public SDK hardening layer, not a requirement for the first live-readiness slice.
+**Public SDK note:** relayer credentials can be injected into `polydart` by the consumer or minted by `LiveCredentialService.ensure()` in runtimes that can handle SIWE cookies. Flutter/mobile consumers are responsible for secure per-EOA credential storage. A minimal server proxy remains an optional public SDK hardening layer, not a requirement for the first live-readiness slice.
 
 ### 4.5 `wallet` — Deposit Wallet Lifecycle
 
@@ -172,7 +172,7 @@ For public SDK hardening, a tiny server proxy may later handle:
 - `POST /relay/deploy` — forwards with builder headers
 - `POST /relay/batch` — forwards with builder headers
 
-For the first live-readiness slice, this is not required. Flutter/mobile consumers can inject app-local relayer credentials directly into `polydart`.
+For the first live-readiness slice, this is not required. Flutter/mobile consumers can inject app-local relayer credentials directly into `polydart` or mint them through `LiveCredentialService.ensure()` when the runtime can capture and forward cookies.
 
 ---
 
@@ -322,7 +322,7 @@ dev_dependencies:
 - [ ] All polygolem `pkg/` APIs have polydart equivalents
 - [ ] All polygolem `internal/` modules have Dart mirrors
 - [ ] Shared test vectors pass in both repos
-- [ ] Example app runs with zero server for read-only and local readiness checks when relayer credentials are injected
+- [ ] Example app runs with zero server for read-only and local readiness checks when relayer credentials are injected or minted locally
 - [ ] Optional server proxy remains < 100 LOC if introduced for deploy/batch
 - [ ] CI passes: Dart analysis, tests, integration tests
 - [ ] pub.dev package published

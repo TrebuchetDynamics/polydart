@@ -72,8 +72,16 @@ void main() {
         status: LiveCredentialStatus.created,
         value: clobKey,
       ),
+      relayerApiKey: CredentialReadiness<V2APIKey>(
+        status: LiveCredentialStatus.created,
+        value: V2APIKey(
+          key: 'relayer-key',
+          address: '0x0000000000000000000000000000000000001234',
+        ),
+      ),
     );
     expect(credentials.ready, isTrue);
     expect(credentials.toString(), isNot(contains('clob-secret')));
+    expect(credentials.toString(), isNot(contains('relayer-key')));
   });
 }

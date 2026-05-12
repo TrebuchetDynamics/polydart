@@ -4,13 +4,16 @@
 /// credential persistence application-owned.
 library;
 
+import 'package:http/http.dart' as http;
 import 'package:meta/meta.dart';
 
 import '../auth/clob_auth.dart';
 import '../auth/l2.dart';
+import '../auth/siwe_login.dart';
 import '../auth/wallet_signer.dart';
 import '../clob/clob_client.dart';
 import '../errors/errors.dart';
+import '../relayer/v2_auth.dart';
 
 enum LiveCredentialStatus { cached, created, derived, userRejected, blocked }
 
@@ -46,11 +49,17 @@ abstract interface class CredentialStore {
   Future<ApiKey?> readBuilderFeeKey(CredentialKey key);
 
   Future<void> writeBuilderFeeKey(CredentialKey key, ApiKey value);
+
+  Future<V2APIKey?> readRelayerApiKey(CredentialKey key);
+
+  Future<void> writeRelayerApiKey(CredentialKey key, V2APIKey value);
 }
 
 final class MemoryCredentialStore implements CredentialStore {
   final Map<CredentialKey, ApiKey> _clobApiKeys = <CredentialKey, ApiKey>{};
   final Map<CredentialKey, ApiKey> _builderFeeKeys = <CredentialKey, ApiKey>{};
+  final Map<CredentialKey, V2APIKey> _relayerApiKeys =
+      <CredentialKey, V2APIKey>{};
 
   @override
   Future<ApiKey?> readClobApiKey(CredentialKey key) async {
@@ -72,6 +81,17 @@ final class MemoryCredentialStore implements CredentialStore {
   Future<void> writeBuilderFeeKey(CredentialKey key, ApiKey value) async {
     value.validate();
     _builderFeeKeys[key] = value;
+  }
+
+  @override
+  Future<V2APIKey?> readRelayerApiKey(CredentialKey key) async {
+    return _relayerApiKeys[key];
+  }
+
+  @override
+  Future<void> writeRelayerApiKey(CredentialKey key, V2APIKey value) async {
+    _validateRelayerApiKey(value);
+    _relayerApiKeys[key] = value;
   }
 }
 
@@ -125,16 +145,19 @@ final class LiveCredentialReadiness {
   const LiveCredentialReadiness({
     required this.clobApiKey,
     required this.builderFeeKey,
+    required this.relayerApiKey,
   });
 
   final CredentialReadiness<ApiKey> clobApiKey;
   final CredentialReadiness<ApiKey> builderFeeKey;
+  final CredentialReadiness<V2APIKey> relayerApiKey;
 
-  bool get ready => clobApiKey.isReady && builderFeeKey.isReady;
+  bool get ready =>
+      clobApiKey.isReady && builderFeeKey.isReady && relayerApiKey.isReady;
 
   @override
   String toString() {
-    return 'LiveCredentialReadiness(clobApiKey=$clobApiKey, builderFeeKey=$builderFeeKey)';
+    return 'LiveCredentialReadiness(clobApiKey=$clobApiKey, builderFeeKey=$builderFeeKey, relayerApiKey=$relayerApiKey)';
   }
 }
 
@@ -143,13 +166,22 @@ final class LiveCredentialService {
     required ClobClient clob,
     CredentialStore? credentialStore,
     int Function()? nowSeconds,
+    http.Client? authHttpClient,
+    String gammaBaseUrl = SIWESession.defaultGammaBaseUrl,
+    String relayerBaseUrl = defaultRelayerV2BaseUrl,
   }) : _clob = clob,
        _credentialStore = credentialStore,
-       _nowSeconds = nowSeconds;
+       _nowSeconds = nowSeconds,
+       _authHttpClient = authHttpClient,
+       _gammaBaseUrl = gammaBaseUrl,
+       _relayerBaseUrl = relayerBaseUrl;
 
   final ClobClient _clob;
   final CredentialStore? _credentialStore;
   final int Function()? _nowSeconds;
+  final http.Client? _authHttpClient;
+  final String _gammaBaseUrl;
+  final String _relayerBaseUrl;
 
   Future<LiveCredentialReadiness> ensure({
     required WalletSigner signer,
@@ -171,15 +203,36 @@ final class LiveCredentialService {
         final cachedBuilder = await _credentialStore?.readBuilderFeeKey(key);
         if (cachedBuilder != null) {
           cachedBuilder.validate();
-          return LiveCredentialReadiness(
+          final builderReadiness = CredentialReadiness<ApiKey>(
+            status: LiveCredentialStatus.cached,
+            value: cachedBuilder,
+          );
+          final cachedRelayer = await _credentialStore?.readRelayerApiKey(key);
+          if (cachedRelayer != null) {
+            _validateRelayerApiKey(cachedRelayer);
+            return LiveCredentialReadiness(
+              clobApiKey: clobReadiness,
+              builderFeeKey: builderReadiness,
+              relayerApiKey: CredentialReadiness<V2APIKey>(
+                status: LiveCredentialStatus.cached,
+                value: cachedRelayer,
+              ),
+            );
+          }
+          return _withRelayerApiKey(
+            key: key,
             clobApiKey: clobReadiness,
-            builderFeeKey: CredentialReadiness<ApiKey>(
-              status: LiveCredentialStatus.cached,
-              value: cachedBuilder,
-            ),
+            builderFeeKey: builderReadiness,
+            signer: signer,
+            forceRefresh: forceRefresh,
           );
         }
-        return _ensureBuilderFeeKey(key: key, clobApiKey: clobReadiness);
+        return _ensureBuilderFeeKey(
+          key: key,
+          clobApiKey: clobReadiness,
+          signer: signer,
+          forceRefresh: forceRefresh,
+        );
       }
     }
 
@@ -196,6 +249,7 @@ final class LiveCredentialService {
           reason: e.message,
         ),
         builderFeeKey: _blockedBuilderFeeKey,
+        relayerApiKey: _blockedRelayerApiKey,
       );
     } on AuthException catch (e) {
       if (e.code == ErrorCode.unauthorized ||
@@ -207,6 +261,7 @@ final class LiveCredentialService {
             reason: e.message,
           ),
           builderFeeKey: _blockedBuilderFeeKey,
+          relayerApiKey: _blockedRelayerApiKey,
         );
       }
       rethrow;
@@ -221,6 +276,8 @@ final class LiveCredentialService {
           status: LiveCredentialStatus.created,
           value: created,
         ),
+        signer: signer,
+        forceRefresh: forceRefresh,
       );
     } on TransportException {
       try {
@@ -232,6 +289,8 @@ final class LiveCredentialService {
             status: LiveCredentialStatus.derived,
             value: derived,
           ),
+          signer: signer,
+          forceRefresh: forceRefresh,
         );
       } on TransportException catch (e) {
         return LiveCredentialReadiness(
@@ -241,6 +300,7 @@ final class LiveCredentialService {
             reason: e.message,
           ),
           builderFeeKey: _blockedBuilderFeeKey,
+          relayerApiKey: _blockedRelayerApiKey,
         );
       }
     }
@@ -249,24 +309,30 @@ final class LiveCredentialService {
   Future<LiveCredentialReadiness> _ensureBuilderFeeKey({
     required CredentialKey key,
     required CredentialReadiness<ApiKey> clobApiKey,
+    required WalletSigner signer,
+    required bool forceRefresh,
   }) async {
     final apiKey = clobApiKey.value;
     if (apiKey == null) {
       return LiveCredentialReadiness(
         clobApiKey: clobApiKey,
         builderFeeKey: _blockedBuilderFeeKey,
+        relayerApiKey: _blockedRelayerApiKey,
       );
     }
 
     try {
       final builderFeeKey = await _clob.createBuilderFeeKey(apiKey: apiKey);
       await _credentialStore?.writeBuilderFeeKey(key, builderFeeKey);
-      return LiveCredentialReadiness(
+      return _withRelayerApiKey(
+        key: key,
         clobApiKey: clobApiKey,
         builderFeeKey: CredentialReadiness<ApiKey>(
           status: LiveCredentialStatus.created,
           value: builderFeeKey,
         ),
+        signer: signer,
+        forceRefresh: forceRefresh,
       );
     } on TransportException catch (e) {
       return LiveCredentialReadiness(
@@ -276,7 +342,108 @@ final class LiveCredentialService {
           action: LiveCredentialAction.retry,
           reason: e.message,
         ),
+        relayerApiKey: _blockedRelayerApiKey,
       );
+    }
+  }
+
+  Future<LiveCredentialReadiness> _withRelayerApiKey({
+    required CredentialKey key,
+    required CredentialReadiness<ApiKey> clobApiKey,
+    required CredentialReadiness<ApiKey> builderFeeKey,
+    required WalletSigner signer,
+    required bool forceRefresh,
+  }) async {
+    if (!clobApiKey.isReady || !builderFeeKey.isReady) {
+      return LiveCredentialReadiness(
+        clobApiKey: clobApiKey,
+        builderFeeKey: builderFeeKey,
+        relayerApiKey: _blockedRelayerApiKey,
+      );
+    }
+
+    if (!forceRefresh) {
+      final cached = await _credentialStore?.readRelayerApiKey(key);
+      if (cached != null) {
+        _validateRelayerApiKey(cached);
+        return LiveCredentialReadiness(
+          clobApiKey: clobApiKey,
+          builderFeeKey: builderFeeKey,
+          relayerApiKey: CredentialReadiness<V2APIKey>(
+            status: LiveCredentialStatus.cached,
+            value: cached,
+          ),
+        );
+      }
+    }
+
+    final session = SIWESession(
+      signer: signer,
+      gammaBaseUrl: _gammaBaseUrl,
+      httpClient: _authHttpClient,
+    );
+    final ownsSessionClient = _authHttpClient == null;
+    try {
+      await session.login();
+      final relayerApiKey = await mintV2APIKey(
+        session: session,
+        relayerBaseUrl: _relayerBaseUrl,
+        httpClient: _authHttpClient,
+      );
+      _validateRelayerApiKey(relayerApiKey);
+      await _credentialStore?.writeRelayerApiKey(key, relayerApiKey);
+      return LiveCredentialReadiness(
+        clobApiKey: clobApiKey,
+        builderFeeKey: builderFeeKey,
+        relayerApiKey: CredentialReadiness<V2APIKey>(
+          status: LiveCredentialStatus.created,
+          value: relayerApiKey,
+        ),
+      );
+    } on WalletSignatureRejectedException catch (e) {
+      return LiveCredentialReadiness(
+        clobApiKey: clobApiKey,
+        builderFeeKey: builderFeeKey,
+        relayerApiKey: CredentialReadiness<V2APIKey>(
+          status: LiveCredentialStatus.userRejected,
+          action: LiveCredentialAction.requestSignature,
+          reason: e.message,
+        ),
+      );
+    } on AuthException catch (e) {
+      if (e.code == ErrorCode.unauthorized ||
+          e.code == ErrorCode.notAuthorized) {
+        return LiveCredentialReadiness(
+          clobApiKey: clobApiKey,
+          builderFeeKey: builderFeeKey,
+          relayerApiKey: CredentialReadiness<V2APIKey>(
+            status: LiveCredentialStatus.userRejected,
+            action: LiveCredentialAction.requestSignature,
+            reason: e.message,
+          ),
+        );
+      }
+      return LiveCredentialReadiness(
+        clobApiKey: clobApiKey,
+        builderFeeKey: builderFeeKey,
+        relayerApiKey: CredentialReadiness<V2APIKey>(
+          status: LiveCredentialStatus.blocked,
+          action: LiveCredentialAction.retry,
+          reason: e.message,
+        ),
+      );
+    } on TransportException catch (e) {
+      return LiveCredentialReadiness(
+        clobApiKey: clobApiKey,
+        builderFeeKey: builderFeeKey,
+        relayerApiKey: CredentialReadiness<V2APIKey>(
+          status: LiveCredentialStatus.blocked,
+          action: LiveCredentialAction.retry,
+          reason: e.message,
+        ),
+      );
+    } finally {
+      if (ownsSessionClient) session.close();
     }
   }
 }
@@ -287,3 +454,19 @@ const CredentialReadiness<ApiKey> _blockedBuilderFeeKey =
       action: LiveCredentialAction.retry,
       reason: 'CLOB API key is not ready',
     );
+
+const CredentialReadiness<V2APIKey> _blockedRelayerApiKey =
+    CredentialReadiness<V2APIKey>(
+      status: LiveCredentialStatus.blocked,
+      action: LiveCredentialAction.retry,
+      reason: 'CLOB builder-fee key is not ready',
+    );
+
+void _validateRelayerApiKey(V2APIKey value) {
+  if (value.key.trim().isEmpty || value.address.trim().isEmpty) {
+    throw const AuthException(
+      code: ErrorCode.missingCreds,
+      message: 'Relayer API key requires both key and address',
+    );
+  }
+}

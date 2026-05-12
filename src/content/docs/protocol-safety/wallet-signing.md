@@ -100,6 +100,11 @@ for Dart VM, mobile, desktop, tests, and backend/proxy code that can read
 same API shape because browsers hide `Set-Cookie` from JavaScript and block
 manual `Cookie` headers.
 
+`LiveCredentialService.ensure()` uses those same primitives when a Relayer V2
+API key is missing: it asks the app-provided `WalletSigner` for SIWE
+`personal_sign`, captures the session cookie, mints the relayer key, and stores
+it only through the app-provided `CredentialStore`.
+
 For Flutter Web, keep wallet signature prompts in the app and put any
 cookie-backed SIWE or relayer-key minting behind a backend/proxy boundary unless
 you have a browser-native credential flow with the upstream service.

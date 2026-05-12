@@ -109,3 +109,8 @@ Flutter Web can use the read-only client and wallet-mediated signing prompts,
 but cookie-backed SIWE login and Relayer V2 API-key minting require a
 VM/mobile/desktop runtime or an application backend/proxy because browsers do
 not expose `Set-Cookie` or permit custom `Cookie` request headers.
+
+For VM/mobile/desktop Flutter targets, `LiveCredentialService.ensure()` can
+create CLOB L2 credentials, CLOB builder-fee credentials, and Relayer V2 API
+keys through that wallet adapter. Store the returned credentials in app-owned
+secure storage through `CredentialStore`.

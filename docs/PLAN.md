@@ -218,7 +218,7 @@ No secrets in repo. Builder creds checked by a CI grep step against the source t
 | # | PRD Question | Proposed Answer | Confidence |
 |---|--------------|-----------------|------------|
 | 1 | Reown vs WalletConnect v3 | Reown (it _is_ WalletConnect v3 rebranded), while keeping the SDK boundary at `WalletSigner`. | High |
-| 2 | Optional server proxy | Defer until public SDK hardening. Initial live-readiness work uses app-local relayer credentials injected into `polydart`. | High |
+| 2 | Optional server proxy | Defer until public SDK hardening. Initial live-readiness work uses app-local relayer credentials injected into `polydart` or minted by `LiveCredentialService.ensure()` in cookie-capable runtimes. | High |
 | 3 | Paper-state storage | Inject `KeyValueStore`. Default in-memory; Flutter consumers wire `hive`; CLI consumers wire file-backed. | High |
 | 4 | Flutter min version | `polydart` is pure Dart (no Flutter pin). Consumer apps own their own Flutter/Reown version pins. | High |
 | 5 | Null safety | Dart 3 strict mode. No legacy concerns; no migrations. | High |
@@ -242,7 +242,7 @@ Pinned for review; happy to flip any of these on user input.
 |------|-------------------------|
 | EIP-712 encoding mismatch | Internal `eip712.dart` uses manual encoding plus `pointycastle` Keccak, validated against polygolem vectors. |
 | Polymarket API drift | Weekly parity job (§9) catches schema/normalization drift early. |
-| Relayer credential leak | Injected config only in `polydart`; app-local secure storage in the consumer app; no shared embedded creds; optional proxy later. |
+| Relayer credential leak | Injected or locally minted credentials only in `polydart`; app-local secure storage in the consumer app; no shared embedded creds; optional proxy later. |
 | CREATE2 mismatch | Phase 2 acceptance gates on shared address vector. |
 
 ---

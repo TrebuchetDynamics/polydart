@@ -18,15 +18,21 @@ const _cachedBuilderFeeKey = ApiKey(
   secret: 'cached-builder-secret',
   passphrase: 'cached-builder-pass',
 );
+const _cachedRelayerKey = V2APIKey(
+  key: 'cached-relayer-key',
+  address: _address,
+  createdAt: '2026-05-08T00:00:00Z',
+);
 
 void main() {
   group('LiveCredentialService.ensure', () {
     test(
-      'returns cached CLOB and builder keys without signing or HTTP',
+      'returns cached CLOB, builder, and relayer keys without signing or HTTP',
       () async {
         final store = MemoryCredentialStore();
         await store.writeClobApiKey(_cacheKey, _cachedClobKey);
         await store.writeBuilderFeeKey(_cacheKey, _cachedBuilderFeeKey);
+        await store.writeRelayerApiKey(_cacheKey, _cachedRelayerKey);
         final signer = _CannedSigner();
         final client = _client((_) async => fail('HTTP should not be called'));
 
@@ -40,73 +46,127 @@ void main() {
         expect(result.clobApiKey.value, same(_cachedClobKey));
         expect(result.builderFeeKey.status, LiveCredentialStatus.cached);
         expect(result.builderFeeKey.value, same(_cachedBuilderFeeKey));
+        expect(result.relayerApiKey.status, LiveCredentialStatus.cached);
+        expect(result.relayerApiKey.value, same(_cachedRelayerKey));
         expect(result.clobApiKey.isReady, isTrue);
         expect(result.ready, isTrue);
         expect(signer.signTypedDataCalls, 0);
+        expect(signer.personalSignCalls, 0);
         expect(result.toString(), isNot(contains('cached-clob-secret')));
         expect(result.toString(), isNot(contains('cached-builder-secret')));
+        expect(result.toString(), isNot(contains('cached-relayer-key')));
       },
     );
 
-    test('creates CLOB and builder-fee keys and stores both', () async {
-      final requests = <Map<String, dynamic>>[];
-      final store = MemoryCredentialStore();
-      final signer = _CannedSigner();
-      final client = _client((req) async {
-        requests.add(_request(req));
-        if (req.url.path == '/auth/builder-api-key') {
-          return _apiKeyResponse(
-            key: 'created-builder-key',
-            secret: 'created-builder-secret',
-            passphrase: 'created-builder-pass',
-          );
-        }
-        return _apiKeyResponse(
-          key: 'created-clob-key',
-          secret: 'created-clob-secret',
-          passphrase: 'created-clob-pass',
+    test(
+      'creates CLOB, builder-fee, and relayer keys and stores all',
+      () async {
+        final requests = <Map<String, dynamic>>[];
+        final store = MemoryCredentialStore();
+        final signer = _CannedSigner();
+        final httpClient = MockClient((req) async {
+          requests.add(_request(req));
+          switch (req.url.path) {
+            case '/auth/api-key':
+              return _apiKeyResponse(
+                key: 'created-clob-key',
+                secret: 'created-clob-secret',
+                passphrase: 'created-clob-pass',
+              );
+            case '/auth/builder-api-key':
+              return _apiKeyResponse(
+                key: 'created-builder-key',
+                secret: 'created-builder-secret',
+                passphrase: 'created-builder-pass',
+              );
+            case '/nonce':
+              return http.Response(
+                jsonEncode(<String, dynamic>{'nonce': 'siwe-nonce'}),
+                200,
+                headers: <String, String>{
+                  'set-cookie': 'polymarketnonce=NONCE; Path=/',
+                },
+              );
+            case '/login':
+              return http.Response(
+                '{}',
+                200,
+                headers: <String, String>{
+                  'set-cookie': 'polymarketsession=SESSION; Path=/',
+                },
+              );
+            case '/relayer/api/auth':
+              expect(
+                req.headers['Cookie'] ?? req.headers['cookie'],
+                contains('polymarketsession=SESSION'),
+              );
+              expect(req.body, '{}');
+              return _relayerKeyResponse(
+                key: 'created-relayer-key',
+                address: _address,
+              );
+            default:
+              return http.Response('not found', 404);
+          }
+        });
+        final client = _clientWith(httpClient);
+
+        final result = await LiveCredentialService(
+          clob: client,
+          credentialStore: store,
+          authHttpClient: httpClient,
+          gammaBaseUrl: 'https://gamma-api.example.com',
+          relayerBaseUrl: 'https://relayer-v2.example.com',
+          nowSeconds: () => 1700000001,
+        ).ensure(signer: signer);
+
+        expect(
+          requests.map((r) => '${r['method']} ${r['path']}').toList(),
+          <String>[
+            'POST /auth/api-key',
+            'POST /auth/builder-api-key',
+            'GET /nonce',
+            'GET /login',
+            'POST /relayer/api/auth',
+          ],
         );
-      });
+        final headers = requests[0]['headers'] as Map<String, String>;
+        expect(headers['POLY_ADDRESS'], _address);
+        expect(headers['POLY_TIMESTAMP'], '1700000001');
+        expect(headers['POLY_NONCE'], '0');
+        expect(headers['POLY_SIGNATURE'], startsWith('0x'));
+        final builderHeaders = requests[1]['headers'] as Map<String, String>;
+        expect(builderHeaders['POLY_API_KEY'], 'created-clob-key');
+        expect(builderHeaders['POLY_PASSPHRASE'], 'created-clob-pass');
+        expect(builderHeaders['POLY_SIGNATURE'], isNotNull);
+        expect(signer.signTypedDataCalls, 1);
+        expect(signer.personalSignCalls, 1);
+        expect(signer.lastTypedData!['primaryType'], 'ClobAuth');
+        expect(result.clobApiKey.status, LiveCredentialStatus.created);
+        expect(result.clobApiKey.value!.key, 'created-clob-key');
+        expect(result.builderFeeKey.status, LiveCredentialStatus.created);
+        expect(result.builderFeeKey.value!.key, 'created-builder-key');
+        expect(result.relayerApiKey.status, LiveCredentialStatus.created);
+        expect(result.relayerApiKey.value!.key, 'created-relayer-key');
 
-      final result = await LiveCredentialService(
-        clob: client,
-        credentialStore: store,
-        nowSeconds: () => 1700000001,
-      ).ensure(signer: signer);
-
-      expect(
-        requests.map((r) => '${r['method']} ${r['path']}').toList(),
-        <String>['POST /auth/api-key', 'POST /auth/builder-api-key'],
-      );
-      final headers = requests[0]['headers'] as Map<String, String>;
-      expect(headers['POLY_ADDRESS'], _address);
-      expect(headers['POLY_TIMESTAMP'], '1700000001');
-      expect(headers['POLY_NONCE'], '0');
-      expect(headers['POLY_SIGNATURE'], startsWith('0x'));
-      final builderHeaders = requests[1]['headers'] as Map<String, String>;
-      expect(builderHeaders['POLY_API_KEY'], 'created-clob-key');
-      expect(builderHeaders['POLY_PASSPHRASE'], 'created-clob-pass');
-      expect(builderHeaders['POLY_SIGNATURE'], isNotNull);
-      expect(signer.signTypedDataCalls, 1);
-      expect(signer.lastTypedData!['primaryType'], 'ClobAuth');
-      expect(result.clobApiKey.status, LiveCredentialStatus.created);
-      expect(result.clobApiKey.value!.key, 'created-clob-key');
-      expect(result.builderFeeKey.status, LiveCredentialStatus.created);
-      expect(result.builderFeeKey.value!.key, 'created-builder-key');
-
-      final storedClob = await store.readClobApiKey(_cacheKey);
-      expect(storedClob!.key, 'created-clob-key');
-      expect(storedClob.secret, 'created-clob-secret');
-      final storedBuilder = await store.readBuilderFeeKey(_cacheKey);
-      expect(storedBuilder!.key, 'created-builder-key');
-      expect(storedBuilder.secret, 'created-builder-secret');
-    });
+        final storedClob = await store.readClobApiKey(_cacheKey);
+        expect(storedClob!.key, 'created-clob-key');
+        expect(storedClob.secret, 'created-clob-secret');
+        final storedBuilder = await store.readBuilderFeeKey(_cacheKey);
+        expect(storedBuilder!.key, 'created-builder-key');
+        expect(storedBuilder.secret, 'created-builder-secret');
+        final storedRelayer = await store.readRelayerApiKey(_cacheKey);
+        expect(storedRelayer!.key, 'created-relayer-key');
+        expect(storedRelayer.address, _address);
+      },
+    );
 
     test(
       'uses cached CLOB key when creating a missing builder-fee key',
       () async {
         final store = MemoryCredentialStore();
         await store.writeClobApiKey(_cacheKey, _cachedClobKey);
+        await store.writeRelayerApiKey(_cacheKey, _cachedRelayerKey);
         final signer = _CannedSigner();
         Map<String, dynamic>? request;
         final client = _client((req) async {
@@ -133,10 +193,75 @@ void main() {
         expect(result.clobApiKey.status, LiveCredentialStatus.cached);
         expect(result.builderFeeKey.status, LiveCredentialStatus.created);
         expect(result.builderFeeKey.value!.key, 'new-builder-key');
+        expect(result.relayerApiKey.status, LiveCredentialStatus.cached);
       },
     );
 
+    test('mints a missing relayer key from SIWE cookies', () async {
+      final requests = <Map<String, dynamic>>[];
+      final store = MemoryCredentialStore();
+      await store.writeClobApiKey(_cacheKey, _cachedClobKey);
+      await store.writeBuilderFeeKey(_cacheKey, _cachedBuilderFeeKey);
+      final signer = _CannedSigner();
+      final httpClient = MockClient((req) async {
+        requests.add(_request(req));
+        switch (req.url.path) {
+          case '/nonce':
+            return http.Response(
+              jsonEncode(<String, dynamic>{'nonce': 'siwe-nonce'}),
+              200,
+              headers: <String, String>{
+                'set-cookie': 'polymarketnonce=NONCE; Path=/',
+              },
+            );
+          case '/login':
+            return http.Response(
+              '{}',
+              200,
+              headers: <String, String>{
+                'set-cookie': 'polymarketsession=SESSION; Path=/',
+              },
+            );
+          case '/relayer/api/auth':
+            expect(
+              req.headers['Cookie'] ?? req.headers['cookie'],
+              contains('polymarketsession=SESSION'),
+            );
+            return _relayerKeyResponse(
+              key: 'new-relayer-key',
+              address: _address,
+            );
+          default:
+            fail('unexpected HTTP ${req.method} ${req.url}');
+        }
+      });
+      final client = _clientWith(httpClient);
+
+      final result = await LiveCredentialService(
+        clob: client,
+        credentialStore: store,
+        authHttpClient: httpClient,
+        gammaBaseUrl: 'https://gamma-api.example.com',
+        relayerBaseUrl: 'https://relayer-v2.example.com',
+      ).ensure(signer: signer);
+
+      expect(
+        requests.map((r) => '${r['method']} ${r['path']}').toList(),
+        <String>['GET /nonce', 'GET /login', 'POST /relayer/api/auth'],
+      );
+      expect(signer.signTypedDataCalls, 0);
+      expect(signer.personalSignCalls, 1);
+      expect(result.clobApiKey.status, LiveCredentialStatus.cached);
+      expect(result.builderFeeKey.status, LiveCredentialStatus.cached);
+      expect(result.relayerApiKey.status, LiveCredentialStatus.created);
+      expect(result.relayerApiKey.value!.key, 'new-relayer-key');
+      final stored = await store.readRelayerApiKey(_cacheKey);
+      expect(stored!.key, 'new-relayer-key');
+    });
+
     test('derives with the same L1 signature after create conflict', () async {
+      final store = MemoryCredentialStore();
+      await store.writeRelayerApiKey(_cacheKey, _cachedRelayerKey);
       final signer = _CannedSigner();
       final seen = <Map<String, dynamic>>[];
       final client = _client((req) async {
@@ -161,6 +286,7 @@ void main() {
 
       final result = await LiveCredentialService(
         clob: client,
+        credentialStore: store,
         nowSeconds: () => 1700000002,
       ).ensure(signer: signer);
 
@@ -177,6 +303,7 @@ void main() {
       expect(result.clobApiKey.value!.key, 'derived-clob-key');
       expect(result.builderFeeKey.status, LiveCredentialStatus.created);
       expect(result.builderFeeKey.value!.key, 'builder-after-derived');
+      expect(result.relayerApiKey.status, LiveCredentialStatus.cached);
     });
 
     test('returns userRejected when the wallet signer rejects', () async {
@@ -192,6 +319,7 @@ void main() {
       expect(result.clobApiKey.action, LiveCredentialAction.requestSignature);
       expect(result.builderFeeKey.status, LiveCredentialStatus.blocked);
       expect(result.builderFeeKey.action, LiveCredentialAction.retry);
+      expect(result.relayerApiKey.status, LiveCredentialStatus.blocked);
       expect(result.ready, isFalse);
     });
 
@@ -212,6 +340,7 @@ void main() {
         expect(result.clobApiKey.action, LiveCredentialAction.retry);
         expect(result.clobApiKey.value, isNull);
         expect(result.builderFeeKey.status, LiveCredentialStatus.blocked);
+        expect(result.relayerApiKey.status, LiveCredentialStatus.blocked);
         expect(result.ready, isFalse);
       },
     );
@@ -237,6 +366,95 @@ void main() {
         expect(result.builderFeeKey.status, LiveCredentialStatus.blocked);
         expect(result.builderFeeKey.action, LiveCredentialAction.retry);
         expect(result.builderFeeKey.value, isNull);
+        expect(result.relayerApiKey.status, LiveCredentialStatus.blocked);
+        expect(result.relayerApiKey.action, LiveCredentialAction.retry);
+        expect(result.relayerApiKey.value, isNull);
+        expect(result.ready, isFalse);
+      },
+    );
+
+    test('returns partial success when relayer key minting fails', () async {
+      final store = MemoryCredentialStore();
+      await store.writeClobApiKey(_cacheKey, _cachedClobKey);
+      await store.writeBuilderFeeKey(_cacheKey, _cachedBuilderFeeKey);
+      final httpClient = MockClient((req) async {
+        switch (req.url.path) {
+          case '/nonce':
+            return http.Response(
+              jsonEncode(<String, dynamic>{'nonce': 'siwe-nonce'}),
+              200,
+              headers: <String, String>{
+                'set-cookie': 'polymarketnonce=NONCE; Path=/',
+              },
+            );
+          case '/login':
+            return http.Response(
+              '{}',
+              200,
+              headers: <String, String>{
+                'set-cookie': 'polymarketsession=SESSION; Path=/',
+              },
+            );
+          case '/relayer/api/auth':
+            return http.Response('relayer unavailable', 503);
+          default:
+            fail('unexpected HTTP ${req.method} ${req.url}');
+        }
+      });
+
+      final result = await LiveCredentialService(
+        clob: _clientWith(httpClient),
+        credentialStore: store,
+        authHttpClient: httpClient,
+        gammaBaseUrl: 'https://gamma-api.example.com',
+        relayerBaseUrl: 'https://relayer-v2.example.com',
+      ).ensure(signer: _CannedSigner());
+
+      expect(result.clobApiKey.status, LiveCredentialStatus.cached);
+      expect(result.builderFeeKey.status, LiveCredentialStatus.cached);
+      expect(result.relayerApiKey.status, LiveCredentialStatus.blocked);
+      expect(result.relayerApiKey.action, LiveCredentialAction.retry);
+      expect(result.relayerApiKey.value, isNull);
+      expect(result.ready, isFalse);
+    });
+
+    test(
+      'returns userRejected when relayer SIWE signing is rejected',
+      () async {
+        final store = MemoryCredentialStore();
+        await store.writeClobApiKey(_cacheKey, _cachedClobKey);
+        await store.writeBuilderFeeKey(_cacheKey, _cachedBuilderFeeKey);
+        final requests = <Map<String, dynamic>>[];
+        final httpClient = MockClient((req) async {
+          requests.add(_request(req));
+          if (req.url.path == '/nonce') {
+            return http.Response(
+              jsonEncode(<String, dynamic>{'nonce': 'siwe-nonce'}),
+              200,
+            );
+          }
+          fail('unexpected HTTP ${req.method} ${req.url}');
+        });
+
+        final result = await LiveCredentialService(
+          clob: _clientWith(httpClient),
+          credentialStore: store,
+          authHttpClient: httpClient,
+          gammaBaseUrl: 'https://gamma-api.example.com',
+          relayerBaseUrl: 'https://relayer-v2.example.com',
+        ).ensure(signer: _RejectingPersonalSigner());
+
+        expect(
+          requests.map((r) => '${r['method']} ${r['path']}').toList(),
+          <String>['GET /nonce'],
+        );
+        expect(result.clobApiKey.status, LiveCredentialStatus.cached);
+        expect(result.builderFeeKey.status, LiveCredentialStatus.cached);
+        expect(result.relayerApiKey.status, LiveCredentialStatus.userRejected);
+        expect(
+          result.relayerApiKey.action,
+          LiveCredentialAction.requestSignature,
+        );
         expect(result.ready, isFalse);
       },
     );
@@ -258,13 +476,17 @@ void main() {
 }
 
 ClobClient _client(Future<http.Response> Function(http.BaseRequest) handler) {
+  return _clientWith(MockClient(handler));
+}
+
+ClobClient _clientWith(http.Client inner) {
   return ClobClient(
     transport: HttpTransport(
       config: const TransportConfig(
         baseUrl: ClobClient.defaultBaseUrl,
         retryMax: 0,
       ),
-      inner: MockClient(handler),
+      inner: inner,
     ),
   );
 }
@@ -279,6 +501,20 @@ http.Response _apiKeyResponse({
       'apiKey': key,
       'secret': secret,
       'passphrase': passphrase,
+    }),
+    200,
+  );
+}
+
+http.Response _relayerKeyResponse({
+  required String key,
+  required String address,
+}) {
+  return http.Response(
+    jsonEncode(<String, dynamic>{
+      'apiKey': key,
+      'address': address,
+      'createdAt': '2026-05-08T00:00:00Z',
     }),
     200,
   );
@@ -300,6 +536,7 @@ class _CannedSigner implements WalletSigner {
   int get chainId => 137;
 
   var signTypedDataCalls = 0;
+  var personalSignCalls = 0;
   Map<String, dynamic>? lastTypedData;
 
   @override
@@ -311,6 +548,7 @@ class _CannedSigner implements WalletSigner {
 
   @override
   Future<Uint8List> personalSign(Uint8List message) async {
+    personalSignCalls++;
     return Uint8List.fromList(List<int>.filled(65, 0xcd));
   }
 }
@@ -319,5 +557,12 @@ final class _RejectingSigner extends _CannedSigner {
   @override
   Future<Uint8List> signTypedData(Map<String, dynamic> typedData) async {
     throw const WalletSignatureRejectedException('user rejected ClobAuth');
+  }
+}
+
+final class _RejectingPersonalSigner extends _CannedSigner {
+  @override
+  Future<Uint8List> personalSign(Uint8List message) async {
+    throw const WalletSignatureRejectedException('user rejected SIWE');
   }
 }

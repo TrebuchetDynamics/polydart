@@ -143,6 +143,10 @@ identifies the wallet purely from the session cookie.
 
 ### Cookie gate — `/login/internal`
 
+Historical note: this section is superseded by the 2026-05-08 addendum below.
+The addendum found that `/login/internal` is not the browser login gate; the
+replicable path is Gamma SIWE login followed by Relayer V2 API-key minting.
+
 The session cookie is acquired from `/login/internal`, characterized by
 the frontend agent as a "browser-mediated wallet challenge." We have **not**
 yet characterized exactly what that challenge looks like:
@@ -166,8 +170,8 @@ recommended next step.
 
 The relayer client already in `polygolem/internal/relayer` and the
 `lib/src/relayer/relayer_client.dart` in polydart can both **use** an
-existing Relayer API Key triple, but cannot **mint** one without first
-acquiring the cookie.
+existing Relayer API Key triple. The addendum below documents the cookie path;
+Polydart now mints this key through `LiveCredentialService.ensure()`.
 
 ## Recommendations
 
@@ -304,9 +308,9 @@ Zero browser interactions. The work to wire it is bounded:
 - Polygolem: SIWE message builder + viem-equivalent EIP-4361 spec, base64
   bearer token, transport that holds a cookie jar across `gamma-api/nonce`,
   `gamma-api/login`, and `relayer-v2/relayer/api/auth`.
-- Polydart: same shape, with `package:dio` or hand-rolled cookie handling
-  (the existing `HttpTransport` is stateless — would either need a
-  cookie-jar layer or a stateful sub-client).
+- Polydart: `SIWESession.login()`, `mintV2APIKey()`, and
+  `LiveCredentialService.ensure()` now cover the headless credential path with
+  hand-rolled cookie handling and app-owned credential storage.
 
 ### Anchored evidence
 
