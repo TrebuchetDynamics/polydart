@@ -6,6 +6,7 @@ const String polygonRpc = 'https://polygon-bor-rpc.publicnode.com';
 
 const String _isApprovedForAllSelector = 'e985e9c5';
 const String _erc20AllowanceSelector = 'dd62ed3e';
+const String _erc20BalanceOfSelector = '70a08231';
 
 /// Checks Polygon `eth_getCode` for non-empty bytecode.
 Future<bool> hasCode(
@@ -85,6 +86,28 @@ Future<BigInt> erc20Allowance(
   );
 
   final word = _decodeHexWord(result, 'allowance');
+  return BigInt.parse(_bytesToHex(word), radix: 16);
+}
+
+/// Calls ERC-20 `balanceOf(account)` via `eth_call`.
+Future<BigInt> erc20BalanceOf(
+  String tokenAddress,
+  String account, {
+  String rpcUrl = polygonRpc,
+  http.Client? client,
+}) async {
+  final normalizedToken = _requireHexAddress(tokenAddress, 'tokenAddress');
+  final callData = _callData(_erc20BalanceOfSelector, <String>[
+    _requireHexAddress(account, 'account'),
+  ]);
+  final result = await _ethCall(
+    normalizedToken,
+    callData,
+    rpcUrl: rpcUrl,
+    client: client,
+  );
+
+  final word = _decodeHexWord(result, 'balanceOf');
   return BigInt.parse(_bytesToHex(word), radix: 16);
 }
 

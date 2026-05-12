@@ -178,6 +178,36 @@ void main() {
       );
     });
   });
+
+  group('erc20BalanceOf', () {
+    test('calls eth_call with the ERC-20 balanceOf selector', () async {
+      final client = MockClient((request) async {
+        final body = _jsonBody(request);
+
+        expect(body['method'], 'eth_call');
+        final params = body['params'] as List<Object?>;
+        expect(params[1], 'latest');
+        final call = params[0] as Map<String, dynamic>;
+        expect(call['to'], '0xc011a7e12a19f7b1f670d46f03b03f3342e82dfb');
+        expect(
+          call['input'],
+          '0x70a08231'
+          '00000000000000000000000021999a074344610057c9b2b362332388a44502d4',
+        );
+
+        return _rpcResult(_word(2500000));
+      });
+
+      final balance = await erc20BalanceOf(
+        '0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB',
+        '0x21999a074344610057c9b2B362332388a44502D4',
+        rpcUrl: 'http://rpc.test',
+        client: client,
+      );
+
+      expect(balance, BigInt.from(2500000));
+    });
+  });
 }
 
 Map<String, dynamic> _jsonBody(http.Request request) {

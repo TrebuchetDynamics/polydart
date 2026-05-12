@@ -57,7 +57,8 @@ orchestration surface. It:
 Next live-readiness slices:
 
 - deposit-wallet market-order pricing and live batch/cancel parity
-- pUSD routing from EOA available balance into the deposit wallet
+- post-funding confirmation that deposit-wallet CLOB balance updated after a
+  wallet-submitted pUSD transfer
 
 ## First Public API Target
 
@@ -100,11 +101,19 @@ First live order path:
   `maker == signer == depositWallet`.
 - CLOB HMAC headers stay EOA-bound through `POLY_ADDRESS`.
 
+First funding route:
+
+- `planEoaPusdFundingRoute(...)` reads the owner's pUSD balance with
+  `balanceOf(ownerEoa)`.
+- `buildEoaPusdTransferPlan(...)` builds a direct wallet transaction:
+  `to = pUSD`, `data = transfer(depositWallet, amount)`, `value = 0x0`.
+- The route reports `ready`, `partial`, or `unavailable` and never submits the
+  transaction. Flutter owns user approval and transaction submission.
+
 Future tests should add:
 
 - deposit-wallet pUSD balance
-- EOA pUSD balance as available-to-fund only
-- funding source recommendations as checks mature
+- post-transfer CLOB collateral refresh and transaction confirmation handling
 
 No UI copy in `polydart`; Flutter owns labels, localization, and warnings.
 
@@ -123,7 +132,7 @@ Use:
 
 Only after that passes, add the next behavior.
 
-## Out Of Scope For This Slice
+## Out Of Scope For First Readiness Tracer Bullet
 
 - Live order placement.
 - EOA to deposit-wallet pUSD transfer.

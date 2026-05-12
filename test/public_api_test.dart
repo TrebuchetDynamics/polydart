@@ -27,6 +27,18 @@ void main() {
     expect(createDepositWalletLimitOrder, isA<Function>());
     expect(signDepositWalletOrderV2, isA<Function>());
 
+    final fundingPlan = buildEoaPusdTransferPlan(
+      ownerEoa: '0x2c7536E3605D9C16a7a3D7b1898e529396a65c23',
+      depositWallet: '0x21999a074344610057c9b2B362332388a44502D4',
+      amountBaseUnits: BigInt.from(1000000),
+    );
+    expect(fundingPlan, isA<EoaPusdTransferPlan>());
+    expect(fundingPlan.value, '0x0');
+    PusdFundingRoutePlan? fundingRoute;
+    expect(fundingRoute, isNull);
+    expect(PusdFundingRouteStatus.ready.name, 'ready');
+    expect(planEoaPusdFundingRoute, isA<Function>());
+
     const newMarket = NewMarketMessage(
       eventType: 'new_market',
       id: 'M-1',

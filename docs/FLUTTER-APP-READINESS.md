@@ -96,6 +96,12 @@ live limit orders. The helper derives the deposit wallet from `signer.address`,
 asks the app-owned `WalletSigner` to approve the ERC-7739 `TypedDataSign`
 payload, posts `signatureType=3`, and leaves raw private keys outside Polydart.
 
+When readiness returns `needsFunding`, use `planEoaPusdFundingRoute(...)` to
+read EOA-held pUSD and build the direct wallet transaction for
+`pUSD.transfer(depositWallet, amount)`. The app must present that transaction
+to the user and submit it through the wallet provider; Polydart only returns
+the transaction request and full/partial/unavailable funding state.
+
 Signature flows assume Polygon mainnet unless a lower-level helper documents a
 different chain. Wallet-backed signing should verify `chainId == 137` before
 asking the user to sign Polymarket payloads.

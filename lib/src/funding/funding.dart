@@ -1,16 +1,18 @@
 /// Wallet-mediated pUSD funding call planners.
 ///
-/// This module builds local call plans only. It performs no network I/O,
-/// signing, relayer submission, or live transfer execution.
+/// This module builds local transaction/call plans and can read balances via
+/// RPC. It performs no signing, relayer submission, or live transfer execution.
 library;
 
 import 'package:meta/meta.dart';
+import 'package:http/http.dart' as http;
 
 import '../auth/eth_hex.dart'
     show bytesToHex, hexToBytes, leftPadBytes, uint256BigEndian;
 import '../contracts/contracts.dart' as contracts;
 import '../errors/errors.dart';
 import '../relayer/relayer_types.dart';
+import '../rpc/rpc.dart' as rpc;
 import '../wallet/deposit_wallet_signing.dart' as wallet;
 
 /// Polygon mainnet chain id used by the pUSD funding helpers.
@@ -21,7 +23,90 @@ const String pusdTransferSelector = 'a9059cbb';
 
 final BigInt _maxUint256 = (BigInt.one << 256) - BigInt.one;
 
-/// A wallet-mediated pUSD transfer plan.
+enum PusdFundingRouteStatus { unavailable, partial, ready }
+
+/// EOA wallet transaction request for pUSD funding.
+///
+/// This is a direct ERC-20 `transfer(depositWallet, amount)` from the EOA to
+/// the pUSD contract. It is a local plan only; the Flutter app owns user
+/// approval and transaction submission through its wallet provider.
+@immutable
+final class EoaPusdTransferPlan {
+  const EoaPusdTransferPlan._({
+    required this.fromAddress,
+    required this.depositWallet,
+    required this.amountBaseUnits,
+    required this.chainId,
+    required this.data,
+  });
+
+  /// Lowercase 0x-prefixed EOA address.
+  final String fromAddress;
+
+  /// Lowercase 0x-prefixed deposit-wallet recipient.
+  final String depositWallet;
+
+  /// Raw pUSD base-unit amount.
+  final BigInt amountBaseUnits;
+
+  /// Chain id where the transaction must be sent.
+  final int chainId;
+
+  /// ERC-20 transfer calldata.
+  final String data;
+
+  /// pUSD contract address targeted by the wallet transaction.
+  String get tokenAddress => contracts.PUSD;
+
+  /// Native token value. pUSD funding sends no POL with the call.
+  String get value => '0x0';
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'from': fromAddress,
+    'to': tokenAddress,
+    'value': value,
+    'data': data,
+    'chainId': _quantityHex(chainId),
+  };
+}
+
+/// RPC-backed funding route from EOA-held pUSD into a deposit wallet.
+@immutable
+final class PusdFundingRoutePlan {
+  const PusdFundingRoutePlan._({
+    required this.ownerEoa,
+    required this.depositWallet,
+    required this.eoaPusdBalance,
+    required this.requestedAmountBaseUnits,
+    required this.transferAmountBaseUnits,
+    required this.status,
+    required this.transfer,
+  });
+
+  final String ownerEoa;
+  final String depositWallet;
+  final BigInt eoaPusdBalance;
+  final BigInt requestedAmountBaseUnits;
+  final BigInt transferAmountBaseUnits;
+  final PusdFundingRouteStatus status;
+  final EoaPusdTransferPlan? transfer;
+
+  bool get canTransfer => transfer != null;
+
+  bool get fullyFunded => status == PusdFundingRouteStatus.ready;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'ownerEoa': ownerEoa,
+    'depositWallet': depositWallet,
+    'eoaPusdBalance': eoaPusdBalance.toString(),
+    'requestedAmountBaseUnits': requestedAmountBaseUnits.toString(),
+    'transferAmountBaseUnits': transferAmountBaseUnits.toString(),
+    'status': status.name,
+    'transfer': transfer?.toJson(),
+  };
+}
+
+/// A deposit-wallet batch pUSD transfer plan.
 ///
 /// [amountBaseUnits] is the raw ERC-20 base-unit amount and is never converted
 /// through decimal floating-point math.
@@ -39,7 +124,7 @@ final class PusdTransferCallPlan {
   /// Raw pUSD base-unit amount.
   final BigInt amountBaseUnits;
 
-  /// Deposit-wallet call that transfers pUSD when submitted by a wallet flow.
+  /// Deposit-wallet call that transfers pUSD when submitted by a batch flow.
   final DepositWalletCall call;
 
   /// pUSD contract address targeted by [call].
@@ -56,7 +141,7 @@ final class PusdTransferCallPlan {
   };
 }
 
-/// Builds a pUSD transfer call plan for wallet-mediated submission.
+/// Builds a pUSD transfer call plan for deposit-wallet batch submission.
 PusdTransferCallPlan buildPusdTransferCallPlan({
   required String toAddress,
   required BigInt amountBaseUnits,
@@ -77,6 +162,87 @@ PusdTransferCallPlan buildPusdTransferCallPlan({
     toAddress: recipient,
     amountBaseUnits: amountBaseUnits,
     call: call,
+  );
+}
+
+/// Builds the direct EOA wallet transaction that funds a deposit wallet with
+/// pUSD.
+EoaPusdTransferPlan buildEoaPusdTransferPlan({
+  required String ownerEoa,
+  required String depositWallet,
+  required BigInt amountBaseUnits,
+  int chainId = polygonChainId,
+}) {
+  _requirePolygon(chainId);
+  final owner = _requireHexAddress(ownerEoa, 'ownerEoa');
+  final wallet = _requireHexAddress(depositWallet, 'depositWallet');
+  _requirePositiveUint256(amountBaseUnits, 'amountBaseUnits');
+
+  return EoaPusdTransferPlan._(
+    fromAddress: owner,
+    depositWallet: wallet,
+    amountBaseUnits: amountBaseUnits,
+    chainId: chainId,
+    data: _erc20TransferData(
+      toAddress: wallet,
+      amountBaseUnits: amountBaseUnits,
+    ),
+  );
+}
+
+/// Reads EOA pUSD and plans the available transfer into the deposit wallet.
+///
+/// If the EOA balance is lower than [requestedAmountBaseUnits], the returned
+/// route is `partial` and transfers only the available amount. If the balance
+/// is zero, no transaction is produced.
+Future<PusdFundingRoutePlan> planEoaPusdFundingRoute({
+  required String ownerEoa,
+  required String depositWallet,
+  required BigInt requestedAmountBaseUnits,
+  String rpcUrl = rpc.polygonRpc,
+  http.Client? rpcClient,
+}) async {
+  final owner = _requireHexAddress(ownerEoa, 'ownerEoa');
+  final wallet = _requireHexAddress(depositWallet, 'depositWallet');
+  _requirePositiveUint256(requestedAmountBaseUnits, 'requestedAmountBaseUnits');
+
+  final balance = await rpc.erc20BalanceOf(
+    contracts.PUSD,
+    owner,
+    rpcUrl: rpcUrl,
+    client: rpcClient,
+  );
+
+  final transferAmount = balance < requestedAmountBaseUnits
+      ? balance
+      : requestedAmountBaseUnits;
+  if (transferAmount == BigInt.zero) {
+    return PusdFundingRoutePlan._(
+      ownerEoa: owner,
+      depositWallet: wallet,
+      eoaPusdBalance: balance,
+      requestedAmountBaseUnits: requestedAmountBaseUnits,
+      transferAmountBaseUnits: BigInt.zero,
+      status: PusdFundingRouteStatus.unavailable,
+      transfer: null,
+    );
+  }
+
+  final status = transferAmount == requestedAmountBaseUnits
+      ? PusdFundingRouteStatus.ready
+      : PusdFundingRouteStatus.partial;
+  return PusdFundingRoutePlan._(
+    ownerEoa: owner,
+    depositWallet: wallet,
+    eoaPusdBalance: balance,
+    requestedAmountBaseUnits: requestedAmountBaseUnits,
+    transferAmountBaseUnits: transferAmount,
+    status: status,
+    transfer: buildEoaPusdTransferPlan(
+      ownerEoa: owner,
+      depositWallet: wallet,
+      amountBaseUnits: transferAmount,
+    ),
   );
 }
 
@@ -137,6 +303,16 @@ String _erc20TransferData({
   );
   final amount = bytesToHex(uint256BigEndian(amountBaseUnits));
   return '0x$pusdTransferSelector$recipient$amount';
+}
+
+String _quantityHex(int value) {
+  if (value < 0) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'quantity must be non-negative',
+    );
+  }
+  return '0x${value.toRadixString(16)}';
 }
 
 String _requireHexAddress(String address, String field) {

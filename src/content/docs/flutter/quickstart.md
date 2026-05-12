@@ -125,3 +125,7 @@ After a `ready` result, use `createDepositWalletLimitOrder(...)` for live limit
 orders. It derives the deposit wallet from the connected EOA, prompts the
 app-owned `WalletSigner` for the ERC-7739 typed-data approval, and posts
 `signatureType=3`.
+
+For a `needsFunding` result, call `planEoaPusdFundingRoute(...)`. It reads the
+EOA pUSD balance and returns the direct wallet transaction request for
+`pUSD.transfer(depositWallet, amount)` when funds are available.

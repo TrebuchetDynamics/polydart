@@ -199,7 +199,12 @@ export 'src/config/config.dart';
 export 'src/errors/errors.dart';
 export 'src/funding/funding.dart'
     show
+        EoaPusdTransferPlan,
+        PusdFundingRoutePlan,
+        PusdFundingRouteStatus,
         PusdTransferCallPlan,
+        buildEoaPusdTransferPlan,
+        planEoaPusdFundingRoute,
         buildPusdTransferBatchTypedData,
         buildPusdTransferCall,
         buildPusdTransferCallPlan,

@@ -91,7 +91,8 @@ configuration plus safety gates.
 | --- | --- |
 | `CTF`, `positionId`, `collectionId`, `splitPositionData`, `mergePositionsData`, `redeemPositionsData` | Conditional Tokens helpers and calldata builders. |
 | `contractDeployed`, `depositWalletDeployed`, `redeemAdapterFor` | Contract registry and readiness helpers. |
-| `buildPusdTransferCallPlan`, `buildPusdTransferBatchTypedData` | Wallet-mediated pUSD funding call planning. |
+| `planEoaPusdFundingRoute`, `buildEoaPusdTransferPlan` | EOA-held pUSD balance routing and direct wallet transaction planning for deposit-wallet funding. |
+| `buildPusdTransferCallPlan`, `buildPusdTransferBatchTypedData` | Deposit-wallet batch pUSD transfer call planning. |
 | `findRedeemable`, `checkReadiness`, `buildRedeemCall` | Settlement discovery and redeem call planning. |
 | `DepositWalletReadinessService`, `DepositWalletReadiness`, `DepositWalletApprovalCheck` | Live deposit-wallet deploy, approval, and funding readiness state. |
 | `RelayerClient`, `RelayerError`, `mintV2APIKey`, `buildApprovalCalls` | Relayer and approval primitives for explicitly gated application flows. |
