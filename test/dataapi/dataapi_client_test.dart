@@ -8,7 +8,9 @@ import 'package:polydart/src/transport/http_transport.dart';
 import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
 
-DataApiClient _client(Future<http.Response> Function(http.BaseRequest) handler) {
+DataApiClient _client(
+  Future<http.Response> Function(http.BaseRequest) handler,
+) {
   return DataApiClient(
     transport: HttpTransport(
       config: const TransportConfig(
@@ -73,6 +75,68 @@ void main() {
       await client.currentPositions('0xuser', limit: 25);
       expect(captured!.queryParameters['limit'], '25');
     });
+
+    test('decodes Polygolem V2 camelCase position fields', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode([
+            <String, dynamic>{
+              'asset': 'asset-1',
+              'conditionId': 'condition-1',
+              'eventId': 'event-1',
+              'proxyWallet': '0xproxy',
+              'size': '12.5',
+              'avgPrice': '0.42',
+              'initialValue': '5.25',
+              'currentValue': '7.50',
+              'curPrice': '0.60',
+              'cashPnl': '2.25',
+              'percentPnl': '0.428571',
+              'totalBought': '10.0',
+              'realizedPnl': '1.50',
+              'percentRealizedPnl': '0.12',
+              'redeemable': true,
+              'mergeable': false,
+              'negativeRisk': true,
+              'outcome': 'Yes',
+              'outcomeIndex': 1,
+              'oppositeOutcome': 'No',
+              'oppositeAsset': 'asset-2',
+              'endDate': '2026-06-01T00:00:00Z',
+              'title': 'Will this decode?',
+              'slug': 'will-this-decode',
+              'eventSlug': 'decode-event',
+              'icon': 'https://example.com/icon.png',
+            },
+          ]),
+          200,
+        );
+      });
+
+      final position = (await client.currentPositions('0xuser')).single;
+      expect(position.tokenId, 'asset-1');
+      expect(position.conditionId, 'condition-1');
+      expect(position.eventId, 'event-1');
+      expect(position.proxyWallet, '0xproxy');
+      expect(position.avgPrice, 0.42);
+      expect(position.currentPrice, 0.60);
+      expect(position.cashPnl, 2.25);
+      expect(position.percentPnl, 0.428571);
+      expect(position.realizedPnl, 1.50);
+      expect(position.percentRealized, 0.12);
+      expect(position.redeemable, isTrue);
+      expect(position.mergeable, isFalse);
+      expect(position.negativeRisk, isTrue);
+      expect(position.outcome, 'Yes');
+      expect(position.outcomeIndex, 1);
+      expect(position.oppositeOutcome, 'No');
+      expect(position.oppositeAsset, 'asset-2');
+      expect(position.endDate, '2026-06-01T00:00:00Z');
+      expect(position.title, 'Will this decode?');
+      expect(position.slug, 'will-this-decode');
+      expect(position.eventSlug, 'decode-event');
+      expect(position.icon, 'https://example.com/icon.png');
+    });
   });
 
   group('closedPositions', () {
@@ -102,6 +166,54 @@ void main() {
       expect(captured!.queryParameters['limit'], '10');
       expect(closed.first.avgPriceBuy, 0.3);
       expect(closed.first.realizedPnl, 20.0);
+    });
+
+    test('decodes Polygolem V2 camelCase closed position fields', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode([
+            <String, dynamic>{
+              'asset': 'asset-closed',
+              'conditionId': 'condition-closed',
+              'proxyWallet': '0xproxy',
+              'avgPrice': '0.45',
+              'size': '20',
+              'totalBought': '20',
+              'realizedPnl': '3.50',
+              'curPrice': '0.62',
+              'timestamp': 1714000000,
+              'title': 'Closed market',
+              'slug': 'closed-market',
+              'icon': 'https://example.com/closed.png',
+              'eventSlug': 'closed-event',
+              'outcome': 'No',
+              'outcomeIndex': 0,
+              'oppositeOutcome': 'Yes',
+              'oppositeAsset': 'asset-open',
+              'endDate': '2026-07-01T00:00:00Z',
+            },
+          ]),
+          200,
+        );
+      });
+
+      final closed = (await client.closedPositions('0xuser')).single;
+      expect(closed.tokenId, 'asset-closed');
+      expect(closed.conditionId, 'condition-closed');
+      expect(closed.proxyWallet, '0xproxy');
+      expect(closed.avgPrice, 0.45);
+      expect(closed.size, 20);
+      expect(closed.realizedPnl, 3.50);
+      expect(closed.currentPrice, 0.62);
+      expect(closed.timestamp, '1714000000');
+      expect(closed.title, 'Closed market');
+      expect(closed.slug, 'closed-market');
+      expect(closed.eventSlug, 'closed-event');
+      expect(closed.outcome, 'No');
+      expect(closed.outcomeIndex, 0);
+      expect(closed.oppositeOutcome, 'Yes');
+      expect(closed.oppositeAsset, 'asset-open');
+      expect(closed.endDate, '2026-07-01T00:00:00Z');
     });
   });
 
@@ -133,6 +245,55 @@ void main() {
       expect(trades.first.id, 'trade-1');
       expect(trades.first.feeRateBps, 30);
       expect(trades.first.price, 0.55);
+    });
+
+    test('decodes Polygolem V2 camelCase trade fields', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode([
+            <String, dynamic>{
+              'id': 'trade-v2',
+              'conditionId': 'condition-trade',
+              'asset': 'asset-trade',
+              'proxyWallet': '0xproxy',
+              'side': 'BUY',
+              'price': '0.55',
+              'size': '12.5',
+              'feeRateBps': '25',
+              'outcome': 'Yes',
+              'outcomeIndex': 1,
+              'title': 'Trade market',
+              'slug': 'trade-market',
+              'eventSlug': 'trade-event',
+              'icon': 'https://example.com/trade.png',
+              'status': 'MATCHED',
+              'transactionHash': '0xhash',
+              'takerOrderId': 'taker-1',
+              'traderSide': 'TAKER',
+              'timestamp': 1714001234,
+            },
+          ]),
+          200,
+        );
+      });
+
+      final trade = (await client.trades('0xuser')).single;
+      expect(trade.id, 'trade-v2');
+      expect(trade.market, 'condition-trade');
+      expect(trade.assetId, 'asset-trade');
+      expect(trade.proxyWallet, '0xproxy');
+      expect(trade.feeRateBps, 25);
+      expect(trade.outcome, 'Yes');
+      expect(trade.outcomeIndex, 1);
+      expect(trade.title, 'Trade market');
+      expect(trade.slug, 'trade-market');
+      expect(trade.eventSlug, 'trade-event');
+      expect(trade.icon, 'https://example.com/trade.png');
+      expect(trade.status, 'MATCHED');
+      expect(trade.transactionHash, '0xhash');
+      expect(trade.takerOrderId, 'taker-1');
+      expect(trade.traderSide, 'TAKER');
+      expect(trade.createdAt, '1714001234');
     });
   });
 
@@ -221,10 +382,7 @@ void main() {
       final client = _client((req) async {
         captured = req.url;
         return http.Response(
-          jsonEncode(<String, dynamic>{
-            'user': '0xuser',
-            'markets_traded': 42,
-          }),
+          jsonEncode(<String, dynamic>{'user': '0xuser', 'markets_traded': 42}),
           200,
         );
       });

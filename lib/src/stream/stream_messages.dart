@@ -1,8 +1,9 @@
 /// Typed Polymarket CLOB market WebSocket events.
 ///
-/// Mirrors `internal/stream/client.go` (`BookMessage`, `PriceLevel`,
-/// `PriceChangeMessage`, `PriceChangeEntry`, `LastTradeMessage`). JSON tags
-/// match polygolem verbatim so the same wire payloads decode in both SDKs.
+/// Mirrors `pkg/stream/client.go` (`BookMessage`, `PriceLevel`,
+/// `PriceChangeMessage`, `PriceChangeEntry`, `LastTradeMessage`,
+/// `BestBidAskMessage`, `TickSizeChangeMessage`). JSON tags match polygolem
+/// verbatim so the same wire payloads decode in both SDKs.
 library;
 
 import 'package:meta/meta.dart';
@@ -14,9 +15,7 @@ List<PriceLevel> _levels(Object? raw) {
   return raw
       .whereType<Map<dynamic, dynamic>>()
       .map(
-        (m) => PriceLevel.fromJson(
-          m.map((k, v) => MapEntry(k.toString(), v)),
-        ),
+        (m) => PriceLevel.fromJson(m.map((k, v) => MapEntry(k.toString(), v))),
       )
       .toList(growable: false);
 }
@@ -74,6 +73,8 @@ final class PriceChangeEntry {
     required this.side,
     required this.size,
     required this.hash,
+    this.bestBid = '',
+    this.bestAsk = '',
   });
 
   factory PriceChangeEntry.fromJson(Map<String, dynamic> json) =>
@@ -83,6 +84,8 @@ final class PriceChangeEntry {
         side: _str(json['side']),
         size: _str(json['size']),
         hash: _str(json['hash']),
+        bestBid: _str(json['best_bid']),
+        bestAsk: _str(json['best_ask']),
       );
 
   final String assetId;
@@ -90,6 +93,8 @@ final class PriceChangeEntry {
   final String side;
   final String size;
   final String hash;
+  final String bestBid;
+  final String bestAsk;
 }
 
 /// Incremental book mutation (`event_type: "price_change"`).
@@ -140,6 +145,7 @@ final class LastTradeMessage {
     required this.size,
     required this.feeRateBps,
     required this.timestamp,
+    this.transactionHash = '',
   });
 
   factory LastTradeMessage.fromJson(Map<String, dynamic> json) =>
@@ -152,6 +158,7 @@ final class LastTradeMessage {
         size: _str(json['size']),
         feeRateBps: _str(json['fee_rate_bps']),
         timestamp: _str(json['timestamp']),
+        transactionHash: _str(json['transaction_hash']),
       );
 
   final String eventType;
@@ -161,5 +168,69 @@ final class LastTradeMessage {
   final String side;
   final String size;
   final String feeRateBps;
+  final String timestamp;
+  final String transactionHash;
+}
+
+/// Top-of-book update (`event_type: "best_bid_ask"`).
+@immutable
+final class BestBidAskMessage {
+  const BestBidAskMessage({
+    required this.eventType,
+    required this.assetId,
+    required this.market,
+    required this.bestBid,
+    required this.bestAsk,
+    required this.spread,
+    required this.timestamp,
+  });
+
+  factory BestBidAskMessage.fromJson(Map<String, dynamic> json) =>
+      BestBidAskMessage(
+        eventType: _str(json['event_type']),
+        assetId: _str(json['asset_id']),
+        market: _str(json['market']),
+        bestBid: _str(json['best_bid']),
+        bestAsk: _str(json['best_ask']),
+        spread: _str(json['spread']),
+        timestamp: _str(json['timestamp']),
+      );
+
+  final String eventType;
+  final String assetId;
+  final String market;
+  final String bestBid;
+  final String bestAsk;
+  final String spread;
+  final String timestamp;
+}
+
+/// Tick-size update (`event_type: "tick_size_change"`).
+@immutable
+final class TickSizeChangeMessage {
+  const TickSizeChangeMessage({
+    required this.eventType,
+    required this.assetId,
+    required this.market,
+    required this.oldTickSize,
+    required this.newTickSize,
+    required this.timestamp,
+  });
+
+  factory TickSizeChangeMessage.fromJson(Map<String, dynamic> json) =>
+      TickSizeChangeMessage(
+        eventType: _str(json['event_type']),
+        assetId: _str(json['asset_id']),
+        market: _str(json['market']),
+        oldTickSize: _str(json['old_tick_size']),
+        newTickSize: _str(json['new_tick_size']),
+        timestamp: _str(json['timestamp']),
+      );
+
+  final String eventType;
+  final String assetId;
+  final String market;
+  final String oldTickSize;
+  final String newTickSize;
   final String timestamp;
 }

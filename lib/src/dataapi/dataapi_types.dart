@@ -3,8 +3,8 @@
 /// Mirrors the `Position`, `Trade`, `Activity`, `MetaHolder`, `TotalValue`,
 /// `TotalMarketsTraded`, `OpenInterest`, `TraderLeaderboardEntry`,
 /// `LiveVolumeEntry`, and `LiveVolumeResponse` structs declared in
-/// `internal/dataapi/client.go`. JSON tags match the Go struct tags
-/// exactly so payloads round-trip without a translation layer.
+/// `internal/dataapi/client.go`. Decoders accept both older snake_case fields
+/// and current Polymarket V2 camelCase fields where polygolem does the same.
 library;
 
 import 'package:meta/meta.dart';
@@ -20,17 +20,59 @@ final class Position {
     required this.size,
     required this.currentPrice,
     required this.unrealizedPnl,
+    this.eventId = '',
+    this.proxyWallet = '',
+    this.initialValue = 0,
+    this.currentValue = 0,
+    this.cashPnl = 0,
+    this.percentPnl = 0,
+    this.totalBought = 0,
+    this.realizedPnl = 0,
+    this.percentRealized = 0,
+    this.redeemable = false,
+    this.mergeable = false,
+    this.negativeRisk = false,
+    this.outcome = '',
+    this.outcomeIndex = 0,
+    this.oppositeOutcome = '',
+    this.oppositeAsset = '',
+    this.endDate = '',
+    this.title = '',
+    this.slug = '',
+    this.eventSlug = '',
+    this.icon = '',
   });
 
   factory Position.fromJson(Map<String, dynamic> json) => Position(
-    tokenId: json['token_id']?.toString() ?? '',
-    conditionId: json['condition_id']?.toString() ?? '',
-    marketId: json['market_id']?.toString() ?? '',
+    tokenId: _string(json, 'asset', 'token_id'),
+    conditionId: _string(json, 'conditionId', 'condition_id'),
+    marketId: _string(json, 'market_id', 'market'),
     side: json['side']?.toString() ?? '',
-    avgPrice: _double(json['avg_price']),
+    avgPrice: _double(_first(json, 'avgPrice', 'avg_price')),
     size: _double(json['size']),
-    currentPrice: _double(json['current_price']),
-    unrealizedPnl: _double(json['unrealized_pnl']),
+    currentPrice: _double(_first(json, 'curPrice', 'current_price')),
+    unrealizedPnl: _double(_first(json, 'unrealizedPnl', 'unrealized_pnl')),
+    eventId: _string(json, 'eventId'),
+    proxyWallet: _string(json, 'proxyWallet'),
+    initialValue: _double(json['initialValue']),
+    currentValue: _double(json['currentValue']),
+    cashPnl: _double(json['cashPnl']),
+    percentPnl: _double(json['percentPnl']),
+    totalBought: _double(json['totalBought']),
+    realizedPnl: _double(json['realizedPnl']),
+    percentRealized: _double(json['percentRealizedPnl']),
+    redeemable: _bool(json['redeemable']),
+    mergeable: _bool(json['mergeable']),
+    negativeRisk: _bool(json['negativeRisk']),
+    outcome: _string(json, 'outcome'),
+    outcomeIndex: _int(json['outcomeIndex']),
+    oppositeOutcome: _string(json, 'oppositeOutcome'),
+    oppositeAsset: _string(json, 'oppositeAsset'),
+    endDate: _string(json, 'endDate'),
+    title: _string(json, 'title'),
+    slug: _string(json, 'slug'),
+    eventSlug: _string(json, 'eventSlug'),
+    icon: _string(json, 'icon'),
   );
 
   final String tokenId;
@@ -41,6 +83,27 @@ final class Position {
   final double size;
   final double currentPrice;
   final double unrealizedPnl;
+  final String eventId;
+  final String proxyWallet;
+  final double initialValue;
+  final double currentValue;
+  final double cashPnl;
+  final double percentPnl;
+  final double totalBought;
+  final double realizedPnl;
+  final double percentRealized;
+  final bool redeemable;
+  final bool mergeable;
+  final bool negativeRisk;
+  final String outcome;
+  final int outcomeIndex;
+  final String oppositeOutcome;
+  final String oppositeAsset;
+  final String endDate;
+  final String title;
+  final String slug;
+  final String eventSlug;
+  final String icon;
 }
 
 @immutable
@@ -54,18 +117,49 @@ final class ClosedPosition {
     required this.avgPriceSell,
     required this.size,
     required this.realizedPnl,
+    this.proxyWallet = '',
+    this.avgPrice = 0,
+    this.totalBought = 0,
+    this.currentPrice = 0,
+    this.timestamp = '',
+    this.title = '',
+    this.slug = '',
+    this.icon = '',
+    this.eventSlug = '',
+    this.outcome = '',
+    this.outcomeIndex = 0,
+    this.oppositeOutcome = '',
+    this.oppositeAsset = '',
+    this.endDate = '',
   });
 
-  factory ClosedPosition.fromJson(Map<String, dynamic> json) => ClosedPosition(
-    tokenId: json['token_id']?.toString() ?? '',
-    conditionId: json['condition_id']?.toString() ?? '',
-    marketId: json['market_id']?.toString() ?? '',
-    side: json['side']?.toString() ?? '',
-    avgPriceBuy: _double(json['avg_price_buy']),
-    avgPriceSell: _double(json['avg_price_sell']),
-    size: _double(json['size']),
-    realizedPnl: _double(json['realized_pnl']),
-  );
+  factory ClosedPosition.fromJson(Map<String, dynamic> json) {
+    final avgPrice = _double(json['avgPrice']);
+    return ClosedPosition(
+      tokenId: _string(json, 'asset', 'token_id'),
+      conditionId: _string(json, 'conditionId', 'condition_id'),
+      marketId: _string(json, 'market_id'),
+      side: _string(json, 'side'),
+      avgPrice: avgPrice,
+      avgPriceBuy: _double(_firstOf(json, const ['avg_price_buy', 'avgPrice'])),
+      avgPriceSell: _double(json['avg_price_sell']),
+      size: _double(_firstOf(json, const ['size', 'totalBought'])),
+      totalBought: _double(json['totalBought']),
+      realizedPnl: _double(_first(json, 'realizedPnl', 'realized_pnl')),
+      proxyWallet: _string(json, 'proxyWallet'),
+      currentPrice: _double(json['curPrice']),
+      timestamp: _string(json, 'timestamp'),
+      title: _string(json, 'title'),
+      slug: _string(json, 'slug'),
+      icon: _string(json, 'icon'),
+      eventSlug: _string(json, 'eventSlug'),
+      outcome: _string(json, 'outcome'),
+      outcomeIndex: _int(json['outcomeIndex']),
+      oppositeOutcome: _string(json, 'oppositeOutcome'),
+      oppositeAsset: _string(json, 'oppositeAsset'),
+      endDate: _string(json, 'endDate'),
+    );
+  }
 
   final String tokenId;
   final String conditionId;
@@ -75,6 +169,20 @@ final class ClosedPosition {
   final double avgPriceSell;
   final double size;
   final double realizedPnl;
+  final String proxyWallet;
+  final double avgPrice;
+  final double totalBought;
+  final double currentPrice;
+  final String timestamp;
+  final String title;
+  final String slug;
+  final String icon;
+  final String eventSlug;
+  final String outcome;
+  final int outcomeIndex;
+  final String oppositeOutcome;
+  final String oppositeAsset;
+  final String endDate;
 }
 
 @immutable
@@ -88,17 +196,39 @@ final class Trade {
     required this.size,
     required this.feeRateBps,
     required this.createdAt,
+    this.proxyWallet = '',
+    this.outcome = '',
+    this.outcomeIndex = 0,
+    this.title = '',
+    this.slug = '',
+    this.eventSlug = '',
+    this.icon = '',
+    this.status = '',
+    this.transactionHash = '',
+    this.takerOrderId = '',
+    this.traderSide = '',
   });
 
   factory Trade.fromJson(Map<String, dynamic> json) => Trade(
-    id: json['id']?.toString() ?? '',
-    market: json['market']?.toString() ?? '',
-    assetId: json['asset_id']?.toString() ?? '',
-    side: json['side']?.toString() ?? '',
+    id: _string(json, 'id'),
+    market: _string(json, 'market', 'conditionId'),
+    assetId: _stringOf(json, const ['asset_id', 'assetId', 'asset']),
+    side: _string(json, 'side'),
     price: _double(json['price']),
     size: _double(json['size']),
-    feeRateBps: _int(json['fee_rate_bps']),
-    createdAt: json['created_at']?.toString() ?? '',
+    feeRateBps: _int(_first(json, 'fee_rate_bps', 'feeRateBps')),
+    createdAt: _stringOf(json, const ['created_at', 'timestamp', 'match_time']),
+    proxyWallet: _string(json, 'proxyWallet'),
+    outcome: _string(json, 'outcome'),
+    outcomeIndex: _int(json['outcomeIndex']),
+    title: _string(json, 'title'),
+    slug: _string(json, 'slug'),
+    eventSlug: _string(json, 'eventSlug'),
+    icon: _string(json, 'icon'),
+    status: _string(json, 'status'),
+    transactionHash: _string(json, 'transaction_hash', 'transactionHash'),
+    takerOrderId: _string(json, 'taker_order_id', 'takerOrderId'),
+    traderSide: _string(json, 'trader_side', 'traderSide'),
   );
 
   final String id;
@@ -109,6 +239,17 @@ final class Trade {
   final double size;
   final int feeRateBps;
   final String createdAt;
+  final String proxyWallet;
+  final String outcome;
+  final int outcomeIndex;
+  final String title;
+  final String slug;
+  final String eventSlug;
+  final String icon;
+  final String status;
+  final String transactionHash;
+  final String takerOrderId;
+  final String traderSide;
 }
 
 /// One on-chain or off-chain user activity event.
@@ -285,6 +426,28 @@ final class LiveVolumeResponse {
 
 // ---- helpers ----
 
+Object? _first(Map<String, dynamic> json, String first, String second) {
+  return _firstOf(json, [first, second]);
+}
+
+Object? _firstOf(Map<String, dynamic> json, Iterable<String> keys) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value == null) continue;
+    if (value is String && value.isEmpty) continue;
+    return value;
+  }
+  return null;
+}
+
+String _string(Map<String, dynamic> json, String first, [String? second]) {
+  return _stringOf(json, second == null ? [first] : [first, second]);
+}
+
+String _stringOf(Map<String, dynamic> json, Iterable<String> keys) {
+  return _firstOf(json, keys)?.toString() ?? '';
+}
+
 double _double(Object? raw) {
   if (raw is num) return raw.toDouble();
   if (raw is String) return double.tryParse(raw) ?? 0;
@@ -296,6 +459,12 @@ int _int(Object? raw) {
   if (raw is num) return raw.toInt();
   if (raw is String) return int.tryParse(raw) ?? 0;
   return 0;
+}
+
+bool _bool(Object? raw) {
+  if (raw is bool) return raw;
+  if (raw is String) return raw.toLowerCase() == 'true';
+  return false;
 }
 
 List<LiveVolumeEntry> _liveVolumeEntries(Object? raw) {

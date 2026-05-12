@@ -51,44 +51,46 @@ Future<SIWESession> _loggedInSession() async {
 
 void main() {
   group('mintV2APIKey', () {
-    test('POSTs /relayer/api/auth with cookie + parses {apiKey, address}',
-        () async {
-      final session = await _loggedInSession();
+    test(
+      'POSTs /relayer/api/auth with cookie + parses {apiKey, address}',
+      () async {
+        final session = await _loggedInSession();
 
-      String? sawCookie;
-      String? sawBody;
-      String? sawMethod;
-      String? sawPath;
-      final mock = MockClient((req) async {
-        sawMethod = req.method;
-        sawPath = req.url.path;
-        sawCookie = req.headers['Cookie'] ?? req.headers['cookie'];
-        if (req is http.Request) sawBody = req.body;
-        return http.Response(
-          jsonEncode({
-            'apiKey': '019e0650-uuid',
-            'address': '0xabc',
-            'createdAt': '2026-05-08T00:00:00Z',
-          }),
-          200,
+        String? sawCookie;
+        String? sawBody;
+        String? sawMethod;
+        String? sawPath;
+        final mock = MockClient((req) async {
+          sawMethod = req.method;
+          sawPath = req.url.path;
+          sawCookie = req.headers['Cookie'] ?? req.headers['cookie'];
+          sawBody = req.body;
+          return http.Response(
+            jsonEncode({
+              'apiKey': '019e0650-uuid',
+              'address': '0xabc',
+              'createdAt': '2026-05-08T00:00:00Z',
+            }),
+            200,
+          );
+        });
+
+        final key = await mintV2APIKey(
+          session: session,
+          relayerBaseUrl: 'https://relayer-v2.example.com',
+          httpClient: mock,
         );
-      });
 
-      final key = await mintV2APIKey(
-        session: session,
-        relayerBaseUrl: 'https://relayer-v2.example.com',
-        httpClient: mock,
-      );
+        expect(sawMethod, 'POST');
+        expect(sawPath, '/relayer/api/auth');
+        expect(sawBody, '{}');
+        expect(sawCookie, contains('polymarketsession=SESSION'));
 
-      expect(sawMethod, 'POST');
-      expect(sawPath, '/relayer/api/auth');
-      expect(sawBody, '{}');
-      expect(sawCookie, contains('polymarketsession=SESSION'));
-
-      expect(key.key, '019e0650-uuid');
-      expect(key.address, '0xabc');
-      expect(key.createdAt, '2026-05-08T00:00:00Z');
-    });
+        expect(key.key, '019e0650-uuid');
+        expect(key.address, '0xabc');
+        expect(key.createdAt, '2026-05-08T00:00:00Z');
+      },
+    );
 
     test('throws when SIWESession has no cookies', () async {
       final session = SIWESession(
@@ -115,10 +117,8 @@ void main() {
     test('throws on incomplete response', () async {
       final session = await _loggedInSession();
       final mock = MockClient(
-        (req) async => http.Response(
-          jsonEncode({'apiKey': '', 'address': ''}),
-          200,
-        ),
+        (req) async =>
+            http.Response(jsonEncode({'apiKey': '', 'address': ''}), 200),
       );
       expect(
         () => mintV2APIKey(session: session, httpClient: mock),

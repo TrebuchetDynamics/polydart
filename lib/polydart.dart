@@ -72,6 +72,33 @@ export 'src/auth/siwe.dart'
 export 'src/auth/siwe_login.dart' show SIWESession;
 export 'src/auth/wallet_signer.dart' show WalletSigner;
 export 'src/bookreader/bookreader.dart' show BookReader;
+export 'src/bridge/bridge_client.dart'
+    show
+        BridgeClient,
+        CreateDepositAddressResponse,
+        DepositAddress,
+        DepositStatusResponse,
+        DepositTransaction,
+        FeeBreakdown,
+        QuoteRequest,
+        QuoteResponse,
+        SupportedAsset,
+        SupportedAssetsResponse,
+        TokenInfo,
+        defaultBridgeBaseUrl;
+export 'src/builder/builder.dart'
+    show
+        BuilderSigner,
+        LocalBuilderSigner,
+        LocalBuilderSignerConfig,
+        RemoteBuilderSigner,
+        RemoteBuilderSignerConfig,
+        RemoteBuilderSignerException,
+        genSignature,
+        polyBuilderApiKeyHeader,
+        polyBuilderPassphraseHeader,
+        polyBuilderSignatureHeader,
+        polyBuilderTimestampHeader;
 export 'src/clob/clob_analytics_types.dart'
     show
         RawRewards,
@@ -93,6 +120,40 @@ export 'src/clob/clob_client.dart' show ClobClient;
 export 'src/clob/clob_params.dart' show BookParams, PriceHistoryParams;
 export 'src/clob/clob_writes.dart'
     show CancelResponse, ClobWrites, CreateOrderRequest;
+export 'src/contracts/contracts.dart'
+    show
+        CTF,
+        CTFExchangeV2,
+        CollateralOfframp,
+        CollateralOnramp,
+        CtfCollateralAdapter,
+        DepositWalletFactory,
+        DeploymentStatus,
+        GnosisSafeFactory,
+        NegRiskAdapterV2,
+        NegRiskCtfCollateralAdapter,
+        NegRiskExchangeV2,
+        PUSD,
+        PermissionedRamp,
+        PolygonChainID,
+        PolygonRPC,
+        ProxyFactory,
+        Registry,
+        USDCE,
+        contractDeployed,
+        depositWalletDeployed,
+        polygonMainnet,
+        redeemAdapterFor;
+export 'src/ctf/ctf.dart'
+    show
+        collectionId,
+        conditionalTokensAddress,
+        mergePositionsData,
+        negRiskAdapterAddress,
+        positionId,
+        redeemPositionsData,
+        splitPositionData,
+        usdcAddress;
 export 'src/dataapi/dataapi_client.dart' show DataApiClient;
 export 'src/dataapi/dataapi_types.dart'
     show
@@ -107,6 +168,16 @@ export 'src/dataapi/dataapi_types.dart'
         TotalValue,
         Trade,
         TraderLeaderboardEntry;
+export 'src/enabletrading/enable_trading.dart'
+    show
+        buildEnableTradingApprovalBatchTypedData,
+        buildEnableTradingApprovalCalls,
+        buildEnableTradingClobAuthTypedData,
+        clobAuthControlMessage,
+        polygonChainId,
+        signEnableTradingApprovalBatchTypedData,
+        signEnableTradingClobAuthTypedData,
+        validateEnableTradingApprovalCalls;
 export 'src/config/config.dart';
 export 'src/errors/errors.dart';
 export 'src/gamma/gamma_client.dart' show GammaClient, KeysetPage;
@@ -123,6 +194,8 @@ export 'src/gamma/gamma_params.dart'
 export 'src/logging/logger.dart';
 export 'src/marketdiscovery/market_discovery.dart'
     show EnrichedMarket, MarketDiscovery;
+export 'src/marketdata/marketdata_tracker.dart'
+    show Level, MarketDataTracker, Snapshot;
 export 'src/marketresolver/market_resolver.dart'
     show MarketResolver, ResolvedMarket, parseClobTokenIds;
 export 'src/modes/modes.dart';
@@ -161,8 +234,70 @@ export 'src/orders/order_signing.dart'
         signOrderV2;
 export 'src/orders/order_intent.dart'
     show LifecycleState, OrderIntent, OrderResponse, SignedOrder;
+export 'src/orderresults/orderresults.dart'
+    show
+        ClobOrderResultsReader,
+        DataApiOrderResultsReader,
+        OrderResultsClobReader,
+        OrderResultsDataReader,
+        OrderResultsOptions,
+        OrderResultsOrderSummary,
+        OrderResultsReport,
+        OrderResultsRow,
+        OrderResultsSummary,
+        OrderResultsTradeSummary,
+        buildReport,
+        orderResultSourceClob,
+        orderResultSourceData,
+        orderResultStatusClosed,
+        orderResultStatusLost,
+        orderResultStatusOpen,
+        orderResultStatusUnknown,
+        orderResultStatusWon;
+export 'src/paper/paper.dart'
+    show PaperFill, PaperOrder, PaperPosition, PaperState;
 export 'src/pagination/pagination.dart'
     show CursorPage, CursorPager, OffsetPager;
+export 'src/plugins/plugins.dart'
+    show MarketDataPlugin, PluginOrder, RiskPlugin;
+export 'src/preflight/preflight.dart'
+    show
+        PreflightCheck,
+        PreflightCheckResult,
+        PreflightResult,
+        Probe,
+        runPreflight;
+export 'src/risk/breaker.dart'
+    show
+        Breaker,
+        Policy,
+        RiskStatus,
+        TripReason,
+        defaultPolicy,
+        tripReasonFromString;
+export 'src/rpc/rpc.dart'
+    show erc20Allowance, hasCode, isApprovedForAll, polygonRpc;
+export 'src/settlement/settlement.dart'
+    show
+        DataApiSettlementReader,
+        RedeemResult,
+        RedeemablePosition,
+        SettlementAdapterApproval,
+        SettlementDataReader,
+        SettlementReadiness,
+        buildRedeemCall,
+        checkReadiness,
+        chunkRedeemPositionsByCondition,
+        dedupeRedeemPositionsByCondition,
+        defaultBatchLimit,
+        findRedeemable,
+        requiredSettlementAdapters,
+        settlementStatusDataApiUnavailable,
+        settlementStatusDepositWalletNotDeployed,
+        settlementStatusMissingAdapterApproval,
+        settlementStatusMissingRelayerCredentials,
+        settlementStatusReady,
+        settlementStatusRpcError;
 export 'src/transport/circuit_breaker.dart'
     show CircuitBreaker, CircuitBreakerConfig, CircuitState;
 export 'src/transport/http_transport.dart' show HttpTransport;
@@ -196,11 +331,13 @@ export 'src/stream/market_client.dart'
 export 'src/stream/stream_config.dart' show StreamConfig, defaultStreamUrl;
 export 'src/stream/stream_messages.dart'
     show
+        BestBidAskMessage,
         BookMessage,
         LastTradeMessage,
         PriceChangeEntry,
         PriceChangeMessage,
-        PriceLevel;
+        PriceLevel,
+        TickSizeChangeMessage;
 export 'src/relayer/relayer_client.dart'
     show RelayerClient, defaultRelayerBaseUrl, depositWalletFactoryAddr;
 export 'src/relayer/v2_auth.dart'

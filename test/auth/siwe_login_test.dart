@@ -10,11 +10,8 @@ import 'package:polydart/src/errors/errors.dart';
 import 'package:test/test.dart';
 
 class _FakeSigner implements WalletSigner {
-  _FakeSigner({this.addr = '0x9d8a62f656a8d1615c1294fd71e9cfb3e4855a4f'});
-  final String addr;
-
   @override
-  String get address => addr;
+  String get address => '0x9d8a62f656a8d1615c1294fd71e9cfb3e4855a4f';
 
   @override
   int get chainId => 137;
@@ -53,12 +50,14 @@ void main() {
             );
           case '/login':
             expect(req.method, 'GET');
-            loginAuthHeader = req.headers['Authorization'] ?? req.headers['authorization'];
+            loginAuthHeader =
+                req.headers['Authorization'] ?? req.headers['authorization'];
             return http.Response(
               jsonEncode({'type': 'EOA', 'address': '0x9d8A...'}),
               200,
               headers: {
-                'set-cookie': 'polymarketsession=SESSION-VALUE; Path=/, '
+                'set-cookie':
+                    'polymarketsession=SESSION-VALUE; Path=/, '
                     'polymarketauthtype=metamask; Path=/',
                 'content-type': 'application/json',
               },
@@ -80,8 +79,14 @@ void main() {
 
       expect(session.hasSession, isTrue);
       // The Cookie header must include the session cookie pair.
-      expect(session.cookieHeader().contains('polymarketsession=SESSION-VALUE'), isTrue);
-      expect(session.cookieHeader().contains('polymarketauthtype=metamask'), isTrue);
+      expect(
+        session.cookieHeader().contains('polymarketsession=SESSION-VALUE'),
+        isTrue,
+      );
+      expect(
+        session.cookieHeader().contains('polymarketauthtype=metamask'),
+        isTrue,
+      );
       expect(session.cookieHeader().contains('polymarketnonce=ABC123'), isTrue);
 
       // The /login Authorization header must carry the SIWE bearer.
@@ -95,7 +100,10 @@ void main() {
       // Signer should have been asked to personal-sign the SIWE blob.
       expect(signer.lastSignedMessage, isNotNull);
       final signedText = utf8.decode(signer.lastSignedMessage!);
-      expect(signedText.contains('Welcome to Polymarket! Sign to connect.'), isTrue);
+      expect(
+        signedText.contains('Welcome to Polymarket! Sign to connect.'),
+        isTrue,
+      );
     });
 
     test('throws TransportException when /nonce returns 500', () async {
