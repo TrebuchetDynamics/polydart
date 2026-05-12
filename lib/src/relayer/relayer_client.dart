@@ -13,6 +13,7 @@ import '../auth/l2.dart';
 import '../errors/errors.dart';
 import '../transport/http_transport.dart';
 import '../transport/transport_config.dart';
+import 'relayer_errors.dart';
 import 'relayer_types.dart';
 
 /// Polymarket DepositWallet factory address — the canonical `to:` for
@@ -94,11 +95,12 @@ final class RelayerClient {
       path: '/submit',
       body: compact,
     );
-    final resp = await _transport.postJson(
-      '/submit',
-      body,
-      headers: headers,
-    );
+    final Map<String, dynamic> resp;
+    try {
+      resp = await _transport.postJson('/submit', body, headers: headers);
+    } catch (e) {
+      throw classifyRelayerAllowlistError(e) ?? e;
+    }
     return RelayerTransaction.fromJson(resp);
   }
 
@@ -144,11 +146,12 @@ final class RelayerClient {
       path: '/submit',
       body: compact,
     );
-    final resp = await _transport.postJson(
-      '/submit',
-      body,
-      headers: headers,
-    );
+    final Map<String, dynamic> resp;
+    try {
+      resp = await _transport.postJson('/submit', body, headers: headers);
+    } catch (e) {
+      throw classifyRelayerAllowlistError(e) ?? e;
+    }
     return RelayerTransaction.fromJson(resp);
   }
 

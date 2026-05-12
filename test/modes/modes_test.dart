@@ -4,6 +4,11 @@ import 'package:test/test.dart';
 
 void main() {
   group('PolydartMode.parse', () {
+    test('empty defaults to read-only', () {
+      expect(PolydartMode.parse(''), PolydartMode.readOnly);
+      expect(PolydartMode.parse('   '), PolydartMode.readOnly);
+    });
+
     test('canonical labels', () {
       expect(PolydartMode.parse('read-only'), PolydartMode.readOnly);
       expect(PolydartMode.parse('paper'), PolydartMode.paper);
@@ -65,6 +70,57 @@ void main() {
         () => requirePaperOrLive(PolydartMode.readOnly),
         throwsA(isA<SafetyException>()),
       );
+    });
+  });
+
+  group('validateLiveGates', () {
+    test('requires env, config, confirmation, and preflight gates', () {
+      final result = validateLiveGates(
+        const LiveGateInput(
+          envEnabled: true,
+          configEnabled: true,
+          confirmLive: false,
+          preflightOk: true,
+        ),
+      );
+
+      expect(result.allowed, isFalse);
+      expect(result.failures, hasLength(1));
+      expect(result.failures.single.code, 'cli_confirmation_required');
+      expect(result.failures.single.message, '--confirm-live is required');
+    });
+
+    test('returns all missing gate failures in upstream order', () {
+      final result = validateLiveGates(
+        const LiveGateInput(
+          envEnabled: false,
+          configEnabled: false,
+          confirmLive: false,
+          preflightOk: false,
+        ),
+      );
+
+      expect(result.allowed, isFalse);
+      expect(result.failures.map((f) => f.code), <String>[
+        'env_gate_required',
+        'config_gate_required',
+        'cli_confirmation_required',
+        'preflight_required',
+      ]);
+    });
+
+    test('allows live mode only when every gate is present', () {
+      final result = validateLiveGates(
+        const LiveGateInput(
+          envEnabled: true,
+          configEnabled: true,
+          confirmLive: true,
+          preflightOk: true,
+        ),
+      );
+
+      expect(result.allowed, isTrue);
+      expect(result.failures, isEmpty);
     });
   });
 }

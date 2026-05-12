@@ -180,6 +180,13 @@ export 'src/enabletrading/enable_trading.dart'
         validateEnableTradingApprovalCalls;
 export 'src/config/config.dart';
 export 'src/errors/errors.dart';
+export 'src/funding/funding.dart'
+    show
+        PusdTransferCallPlan,
+        buildPusdTransferBatchTypedData,
+        buildPusdTransferCall,
+        buildPusdTransferCallPlan,
+        pusdTransferSelector;
 export 'src/gamma/gamma_client.dart' show GammaClient, KeysetPage;
 export 'src/gamma/gamma_params.dart'
     show
@@ -191,6 +198,18 @@ export 'src/gamma/gamma_params.dart'
         GetTeamsParams,
         KeysetParams,
         SearchParams;
+export 'src/gamma/gamma_profile.dart'
+    show
+        CreateProfileRequest,
+        CreateProfileResponse,
+        CreateProfileUser,
+        GammaProfileException,
+        createProfile,
+        defaultAppNotificationPreferences,
+        defaultEmailNotificationPreferences,
+        defaultPreferencesBlock,
+        defaultWalletPreferencesBlock,
+        newCreateProfileRequest;
 export 'src/logging/logger.dart';
 export 'src/marketdiscovery/market_discovery.dart'
     show EnrichedMarket, MarketDiscovery;
@@ -257,7 +276,20 @@ export 'src/orderresults/orderresults.dart'
 export 'src/paper/paper.dart'
     show PaperFill, PaperOrder, PaperPosition, PaperState;
 export 'src/pagination/pagination.dart'
-    show CursorPage, CursorPager, OffsetPager;
+    show
+        CursorPage,
+        CursorPager,
+        ItemResult,
+        OffsetPage,
+        OffsetPageResult,
+        OffsetPager,
+        Page,
+        StreamResult,
+        batch,
+        collectAll,
+        collectOffset,
+        streamItems,
+        streamPages;
 export 'src/plugins/plugins.dart'
     show MarketDataPlugin, PluginOrder, RiskPlugin;
 export 'src/preflight/preflight.dart'
@@ -338,8 +370,15 @@ export 'src/stream/stream_messages.dart'
         PriceChangeMessage,
         PriceLevel,
         TickSizeChangeMessage;
+export 'src/telemetry/telemetry.dart'
+    show RedactableValue, TelemetryLogger, redactTelemetryValue;
 export 'src/relayer/relayer_client.dart'
     show RelayerClient, defaultRelayerBaseUrl, depositWalletFactoryAddr;
+export 'src/relayer/relayer_errors.dart'
+    show
+        RelayerAllowlistBlockedException,
+        classifyRelayerAllowlistError,
+        relayerAllowlistBlockedCode;
 export 'src/relayer/v2_auth.dart'
     show V2APIKey, defaultRelayerV2BaseUrl, mintV2APIKey;
 export 'src/relayer/relayer_types.dart'
@@ -357,6 +396,13 @@ export 'src/relayer/approvals.dart'
         negRiskAdapterV2,
         negRiskExchangeV2,
         pusdAddress;
+export 'src/universal/universal_client.dart'
+    show
+        UniversalClient,
+        UniversalClobReadClient,
+        UniversalConfig,
+        UniversalHealthException,
+        UniversalHealthSummary;
 
 import 'src/clob/clob_client.dart';
 import 'src/config/config.dart';

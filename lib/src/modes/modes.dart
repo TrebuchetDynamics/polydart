@@ -18,6 +18,7 @@ enum PolydartMode {
   static PolydartMode parse(String raw) {
     final s = raw.trim().toLowerCase();
     switch (s) {
+      case '':
       case 'read-only':
       case 'readonly':
       case 'read_only':
@@ -34,6 +35,89 @@ enum PolydartMode {
       field: 'mode',
     );
   }
+}
+
+/// One failed live-mode gate.
+final class LiveGateFailure {
+  const LiveGateFailure({required this.code, required this.message});
+
+  final String code;
+  final String message;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'code': code,
+    'message': message,
+  };
+}
+
+/// Inputs that must all be true before a consumer can enter live mode.
+final class LiveGateInput {
+  const LiveGateInput({
+    required this.envEnabled,
+    required this.configEnabled,
+    required this.confirmLive,
+    required this.preflightOk,
+  });
+
+  final bool envEnabled;
+  final bool configEnabled;
+  final bool confirmLive;
+  final bool preflightOk;
+}
+
+/// Result of evaluating live-mode gates.
+final class LiveGateResult {
+  const LiveGateResult({required this.allowed, required this.failures});
+
+  final bool allowed;
+  final List<LiveGateFailure> failures;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'allowed': allowed,
+    'failures': failures.map((f) => f.toJson()).toList(growable: false),
+  };
+}
+
+/// Mirrors Polygolem's four live gates: environment, config, confirmation,
+/// and preflight. The public SDK does not infer these from process state.
+LiveGateResult validateLiveGates(LiveGateInput input) {
+  final failures = <LiveGateFailure>[];
+  if (!input.envEnabled) {
+    failures.add(
+      const LiveGateFailure(
+        code: 'env_gate_required',
+        message: 'POLYMARKET_LIVE_PROFILE must be on',
+      ),
+    );
+  }
+  if (!input.configEnabled) {
+    failures.add(
+      const LiveGateFailure(
+        code: 'config_gate_required',
+        message: 'live_trading_enabled must be true',
+      ),
+    );
+  }
+  if (!input.confirmLive) {
+    failures.add(
+      const LiveGateFailure(
+        code: 'cli_confirmation_required',
+        message: '--confirm-live is required',
+      ),
+    );
+  }
+  if (!input.preflightOk) {
+    failures.add(
+      const LiveGateFailure(
+        code: 'preflight_required',
+        message: 'preflight must pass',
+      ),
+    );
+  }
+  return LiveGateResult(
+    allowed: failures.isEmpty,
+    failures: List<LiveGateFailure>.unmodifiable(failures),
+  );
 }
 
 /// Throws [SafetyException] if the current [mode] does not allow live writes.
