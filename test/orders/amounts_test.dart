@@ -28,6 +28,17 @@ void main() {
       // 5 * 0.45 = 2.25 USDC = 2_250_000 micro-USDC
       expect(amts.takerAmount, BigInt.from(2250000));
     });
+
+    test('market BUY truncates USDC budget and taker size like polygolem', () {
+      final intent = OrderBuilder(
+        tokenId: 'tok-1',
+        side: Side.buy,
+      ).price('0.120000').amountUsdc('1.011700').tickSize('0.01').build();
+      final amts = computeAmounts(intent);
+
+      expect(amts.makerAmount, BigInt.from(1010000));
+      expect(amts.takerAmount, BigInt.from(8416600));
+    });
   });
 
   group('roundToTick', () {

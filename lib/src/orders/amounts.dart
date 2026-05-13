@@ -25,12 +25,63 @@ typedef OrderAmounts = ({BigInt makerAmount, BigInt takerAmount});
 /// BUY:  maker = size * price * 1e6 (USDC out), taker = size * 1e6 (tokens in)
 /// SELL: maker = size * 1e6           (tokens out), taker = size * price * 1e6 (USDC in)
 OrderAmounts computeAmounts(OrderIntent intent) {
+  if (intent.amountUsdc != null && !intent.amountUsdc!.isZero) {
+    return _computeMarketBuyAmounts(intent);
+  }
   final price = intent.price.toDouble();
   final size = intent.size.toDouble();
   if (intent.side == Side.buy) {
     return (makerAmount: _toFixed(size * price), takerAmount: _toFixed(size));
   }
   return (makerAmount: _toFixed(size), takerAmount: _toFixed(size * price));
+}
+
+OrderAmounts _computeMarketBuyAmounts(OrderIntent intent) {
+  if (intent.side != Side.buy) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'market-order amount is currently supported for BUY only',
+    );
+  }
+  if (intent.price.isZero) {
+    throw const ValidationException(
+      code: ErrorCode.missingField,
+      message: 'price required for market-order amount computation',
+      field: 'price',
+    );
+  }
+
+  final makerCents = _decimalUnitsAtScale(intent.amountUsdc!.raw, 2);
+  final makerAmount = makerCents * _pow10(usdcDecimals - 2);
+  if (makerAmount <= BigInt.zero) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'amount must be at least 0.01 for market buy orders',
+      field: 'amount',
+    );
+  }
+
+  final price = _decimalRatio(intent.price.raw);
+  if (price.numerator <= BigInt.zero) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'price must be positive',
+      field: 'price',
+    );
+  }
+
+  final tickRaw = intent.tickSize.tickSize.isNotEmpty
+      ? intent.tickSize.tickSize
+      : intent.tickSize.minimumTickSize;
+  final targetDecimals = _minInt(_decimalsOf(tickRaw) + 2, usdcDecimals);
+  final targetScale = _pow10(targetDecimals);
+  final fixedScale = _pow10(usdcDecimals);
+  final targetTaker =
+      (makerAmount * price.denominator * targetScale) ~/
+      (fixedScale * price.numerator);
+  final takerAmount = targetTaker * _pow10(usdcDecimals - targetDecimals);
+
+  return (makerAmount: makerAmount, takerAmount: takerAmount);
 }
 
 BigInt _toFixed(double value) {
@@ -61,8 +112,43 @@ String roundToTick(String value, String tickSize) {
 int _decimalsOf(String s) {
   final dot = s.indexOf('.');
   if (dot < 0) return 0;
-  return s.length - dot - 1;
+  return s.substring(dot + 1).replaceFirst(RegExp(r'0+$'), '').length;
 }
+
+({BigInt numerator, BigInt denominator}) _decimalRatio(String raw) {
+  final value = raw.trim();
+  final negative = value.startsWith('-');
+  final body = negative ? value.substring(1) : value;
+  final dot = body.indexOf('.');
+  final whole = dot < 0 ? body : body.substring(0, dot);
+  final fractional = dot < 0 ? '' : body.substring(dot + 1);
+  final digits = whole + fractional;
+  final numerator = BigInt.parse(digits.isEmpty ? '0' : digits);
+  final signedNumerator = negative ? -numerator : numerator;
+  return (numerator: signedNumerator, denominator: _pow10(fractional.length));
+}
+
+BigInt _decimalUnitsAtScale(String raw, int scale) {
+  final ratio = _decimalRatio(raw);
+  if (ratio.numerator < BigInt.zero) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'amount must be non-negative',
+      field: 'amount',
+    );
+  }
+  return (ratio.numerator * _pow10(scale)) ~/ ratio.denominator;
+}
+
+BigInt _pow10(int exponent) {
+  var out = BigInt.one;
+  for (var i = 0; i < exponent; i++) {
+    out *= BigInt.from(10);
+  }
+  return out;
+}
+
+int _minInt(int a, int b) => a < b ? a : b;
 
 /// Throws [ValidationException] when [price] is outside `[tickSize, 1 - tickSize]`.
 void validatePriceAgainstTick(String price, String tickSize) {
