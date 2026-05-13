@@ -452,7 +452,7 @@ import 'src/modes/modes.dart';
 import 'src/transport/http_transport.dart';
 import 'src/transport/transport_config.dart';
 
-const String polydartVersion = '0.1.0-alpha.1';
+const String polydartVersion = '0.1.0-alpha.2';
 
 /// Top-level polydart client.
 ///

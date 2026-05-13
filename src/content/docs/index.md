@@ -15,7 +15,7 @@ Use the hosted alpha release once it is published:
 
 ```yaml
 dependencies:
-  polydart: ^0.1.0-alpha.1
+  polydart: ^0.1.0-alpha.2
 ```
 
 For source-pinned consumers, use the public repository tag:
@@ -25,7 +25,7 @@ dependencies:
   polydart:
     git:
       url: https://github.com/TrebuchetDynamics/polydart.git
-      ref: v0.1.0-alpha.1
+      ref: v0.1.0-alpha.2
 ```
 
 Then import the public SDK surface:

@@ -6,6 +6,23 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 
 No unreleased changes yet.
 
+## [0.1.0-alpha.2] — 2026-05-13
+
+Polygolem parity commit:
+`07145d557738d576d2fb16bfa6a45fa5dffeea5d`.
+
+### Changed
+
+- Updated the Polygolem reference to a small upstream `.gitignore` cleanup so
+  tracked reference files are no longer reported as gitignored during Dart
+  package validation.
+- Kept the hosted package archive filtered to the Dart SDK surface while
+  preserving `lib/src/**` implementation files.
+
+### Verified
+
+- `dart pub publish --dry-run` now validates with 0 warnings.
+
 ## [0.1.0-alpha.1] — 2026-05-13
 
 Polygolem parity commit:
