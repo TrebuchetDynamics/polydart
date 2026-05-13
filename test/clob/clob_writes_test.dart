@@ -156,6 +156,66 @@ void main() {
         expect(resp.tradeIds, ['trade-1']);
       },
     );
+
+    test('throws structured ClobException for live CLOB error body', () async {
+      final c = _liveClient((req) async {
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'type': 'validation',
+            'code': 'order_invalid',
+            'error':
+                'maker address not allowed, please use the deposit wallet flow',
+          }),
+          400,
+        );
+      });
+
+      await expectLater(
+        c.writes.createOrder(
+          order: _sampleSignedOrder(),
+          owner: 'owner-1',
+          apiKey: _apiKey,
+        ),
+        throwsA(
+          isA<ClobException>()
+              .having((e) => e.code, 'code', ErrorCode.invalidOrder)
+              .having((e) => e.httpStatus, 'httpStatus', 400)
+              .having((e) => e.upstream?.type, 'upstream.type', 'validation')
+              .having((e) => e.upstream?.code, 'upstream.code', 'order_invalid')
+              .having(
+                (e) => e.upstream?.message,
+                'upstream.message',
+                contains('deposit wallet flow'),
+              ),
+        ),
+      );
+    });
+
+    test('classifies insufficient funds CLOB errors', () async {
+      final c = _liveClient((req) async {
+        return http.Response(
+          jsonEncode(<String, dynamic>{'error': 'insufficient balance'}),
+          400,
+        );
+      });
+
+      await expectLater(
+        c.writes.createOrder(
+          order: _sampleSignedOrder(),
+          owner: 'owner-1',
+          apiKey: _apiKey,
+        ),
+        throwsA(
+          isA<ClobException>()
+              .having((e) => e.code, 'code', ErrorCode.insufficientFunds)
+              .having(
+                (e) => e.upstream?.message,
+                'upstream.message',
+                'insufficient balance',
+              ),
+        ),
+      );
+    });
   });
 
   group('createOrders', () {

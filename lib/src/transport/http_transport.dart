@@ -174,10 +174,11 @@ final class HttpTransport {
       try {
         final resp = await _attempt(method, url, body, headers);
         if (resp.statusCode == 429) {
-          throw const TransportException(
+          throw TransportException(
             code: ErrorCode.rateLimited,
             message: 'rate limited',
             httpStatus: 429,
+            responseBody: resp.body,
           );
         }
         if (resp.statusCode >= 500) {
@@ -185,6 +186,7 @@ final class HttpTransport {
             code: ErrorCode.connectionFailed,
             message: 'server error: ${_truncate(resp.body)}',
             httpStatus: resp.statusCode,
+            responseBody: resp.body,
           );
         }
         if (resp.statusCode < 200 || resp.statusCode > 299) {
@@ -192,6 +194,7 @@ final class HttpTransport {
             code: ErrorCode.connectionFailed,
             message: 'HTTP ${resp.statusCode} $url: ${_truncate(resp.body)}',
             httpStatus: resp.statusCode,
+            responseBody: resp.body,
           );
         }
         return resp;

@@ -63,8 +63,42 @@ void main() {
         code: ErrorCode.rateLimited,
         message: 'slow down',
         httpStatus: 429,
+        responseBody: '{"error":"slow down"}',
       );
       expect(e.httpStatus, 429);
+      expect(e.responseBody, '{"error":"slow down"}');
+    });
+
+    test('ClobErrorResponse decodes live CLOB error fields', () {
+      final err = ClobErrorResponse.fromBody(
+        '{"type":"validation","code":"order_invalid","error":"maker address not allowed, please use the deposit wallet flow"}',
+        httpStatus: 400,
+      );
+
+      expect(err.httpStatus, 400);
+      expect(err.type, 'validation');
+      expect(err.code, 'order_invalid');
+      expect(
+        err.message,
+        'maker address not allowed, please use the deposit wallet flow',
+      );
+      expect(err.details['error'], contains('deposit wallet'));
+    });
+
+    test('ClobException carries structured upstream CLOB error', () {
+      final upstream = ClobErrorResponse.fromBody(
+        '{"error":"insufficient balance"}',
+        httpStatus: 400,
+      );
+      final e = ClobException(
+        code: ErrorCode.insufficientFunds,
+        message: upstream.message,
+        httpStatus: 400,
+        upstream: upstream,
+      );
+
+      expect(e.upstream, upstream);
+      expect(e.toString(), contains('[CLOB-002] insufficient balance'));
     });
   });
 }

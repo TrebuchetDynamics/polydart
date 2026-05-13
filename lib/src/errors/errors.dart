@@ -5,6 +5,8 @@
 /// so consumers can branch on it.
 library;
 
+import 'dart:convert';
+
 import 'package:meta/meta.dart';
 
 /// Stable machine-readable error codes. Mirrors `internal/errors.Code`.
@@ -84,7 +86,85 @@ final class TransportException extends PolydartException {
     required super.message,
     super.httpStatus,
     super.cause,
+    this.responseBody,
   });
+
+  final String? responseBody;
+}
+
+@immutable
+final class ClobErrorResponse {
+  const ClobErrorResponse({
+    required this.message,
+    required this.rawBody,
+    this.httpStatus,
+    this.code,
+    this.type,
+    this.details = const <String, dynamic>{},
+  });
+
+  factory ClobErrorResponse.fromBody(String body, {int? httpStatus}) {
+    final raw = body.trim();
+    if (raw.isEmpty) {
+      return ClobErrorResponse(
+        message: httpStatus == null
+            ? 'CLOB request failed'
+            : 'CLOB HTTP $httpStatus',
+        rawBody: body,
+        httpStatus: httpStatus,
+      );
+    }
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        final details = decoded.map<String, dynamic>(
+          (key, value) => MapEntry(key.toString(), value),
+        );
+        final message =
+            _firstString(
+              details['message'],
+              details['error'],
+              details['errorMsg'],
+              details['error_msg'],
+              details['detail'],
+              details['reason'],
+            ) ??
+            raw;
+        return ClobErrorResponse(
+          message: message,
+          rawBody: body,
+          httpStatus: httpStatus,
+          code: _firstString(
+            details['code'],
+            details['errorCode'],
+            details['error_code'],
+          ),
+          type: _firstString(
+            details['type'],
+            details['errorType'],
+            details['error_type'],
+          ),
+          details: Map.unmodifiable(details),
+        );
+      }
+    } on FormatException {
+      // Fall through to the raw-body representation.
+    }
+
+    return ClobErrorResponse(
+      message: raw,
+      rawBody: body,
+      httpStatus: httpStatus,
+    );
+  }
+
+  final String message;
+  final String rawBody;
+  final int? httpStatus;
+  final String? code;
+  final String? type;
+  final Map<String, dynamic> details;
 }
 
 final class AuthException extends PolydartException {
@@ -101,7 +181,10 @@ final class ClobException extends PolydartException {
     required super.message,
     super.httpStatus,
     super.cause,
+    this.upstream,
   });
+
+  final ClobErrorResponse? upstream;
 }
 
 final class ValidationException extends PolydartException {
@@ -138,4 +221,19 @@ final class GammaException extends PolydartException {
     super.httpStatus,
     super.cause,
   });
+}
+
+String? _firstString(
+  Object? first, [
+  Object? second,
+  Object? third,
+  Object? fourth,
+  Object? fifth,
+  Object? sixth,
+]) {
+  for (final value in <Object?>[first, second, third, fourth, fifth, sixth]) {
+    final s = value?.toString().trim();
+    if (s != null && s.isNotEmpty) return s;
+  }
+  return null;
 }

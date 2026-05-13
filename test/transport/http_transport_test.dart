@@ -146,6 +146,28 @@ void main() {
       );
       expect(attempts, 1);
     });
+
+    test('4xx TransportException preserves response body', () async {
+      final transport = HttpTransport(
+        config: config,
+        inner: MockClient((req) async {
+          return http.Response('{"error":"market not found"}', 404);
+        }),
+      );
+
+      await expectLater(
+        transport.getJson('/missing'),
+        throwsA(
+          isA<TransportException>()
+              .having((e) => e.httpStatus, 'httpStatus', 404)
+              .having(
+                (e) => e.responseBody,
+                'responseBody',
+                '{"error":"market not found"}',
+              ),
+        ),
+      );
+    });
   });
 
   group('timeout', () {

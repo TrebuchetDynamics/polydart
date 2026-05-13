@@ -56,7 +56,7 @@ orchestration surface. It:
 
 Next live-readiness slices:
 
-- live error DTO fields
+- Flutter example/demo wiring
 
 ## First Public API Target
 
@@ -102,6 +102,9 @@ First live order path:
 - CLOB HMAC headers stay EOA-bound through `POLY_ADDRESS`; low-level cancel
   methods expose the same `polyAddress` argument and clean batch cancel IDs
   before sending `DELETE /orders`.
+- CLOB 4xx write errors throw `ClobException` with
+  `ClobErrorResponse upstream` so apps can branch on typed upstream fields
+  while still showing the original CLOB message.
 - Market buy orders use Polygolem-compatible USDC-budget truncation and can
   discover the fill price from the current opposing book when price is omitted.
 

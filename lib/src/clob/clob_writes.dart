@@ -148,7 +148,9 @@ final class ClobWrites {
       apiKey: apiKey,
       polyAddress: polyAddress,
     );
-    final resp = await _transport.postJson('/order', body, headers: headers);
+    final resp = await _clobRequest(
+      () => _transport.postJson('/order', body, headers: headers),
+    );
     return OrderResponse.fromJson(resp);
   }
 
@@ -181,10 +183,8 @@ final class ClobWrites {
       apiKey: apiKey,
       polyAddress: polyAddress,
     );
-    final resp = await _transport.postJsonList(
-      '/orders',
-      body,
-      headers: headers,
+    final resp = await _clobRequest(
+      () => _transport.postJsonList('/orders', body, headers: headers),
     );
     return BatchOrderResponse.fromJsonList(resp);
   }
@@ -212,10 +212,8 @@ final class ClobWrites {
       apiKey: apiKey,
       polyAddress: polyAddress,
     );
-    final resp = await _transport.delete(
-      '/order',
-      body: body,
-      headers: headers,
+    final resp = await _clobRequest(
+      () => _transport.delete('/order', body: body, headers: headers),
     );
     return CancelResponse.fromJson(resp);
   }
@@ -253,10 +251,8 @@ final class ClobWrites {
       apiKey: apiKey,
       polyAddress: polyAddress,
     );
-    final resp = await _transport.delete(
-      '/orders',
-      body: body,
-      headers: headers,
+    final resp = await _clobRequest(
+      () => _transport.delete('/orders', body: body, headers: headers),
     );
     return CancelResponse.fromJson(resp);
   }
@@ -273,7 +269,9 @@ final class ClobWrites {
       apiKey: apiKey,
       polyAddress: polyAddress,
     );
-    final resp = await _transport.delete('/cancel-all', headers: headers);
+    final resp = await _clobRequest(
+      () => _transport.delete('/cancel-all', headers: headers),
+    );
     return CancelResponse.fromJson(resp);
   }
 
@@ -305,10 +303,12 @@ final class ClobWrites {
       apiKey: apiKey,
       polyAddress: polyAddress,
     );
-    final resp = await _transport.delete(
-      '/cancel-market-orders',
-      body: body,
-      headers: headers,
+    final resp = await _clobRequest(
+      () => _transport.delete(
+        '/cancel-market-orders',
+        body: body,
+        headers: headers,
+      ),
     );
     return CancelResponse.fromJson(resp);
   }
@@ -329,7 +329,57 @@ final class ClobWrites {
       apiKey: apiKey,
       polyAddress: polyAddress,
     );
-    await _transport.postJson('/v1/heartbeats', body, headers: headers);
+    await _clobRequest(
+      () => _transport.postJson('/v1/heartbeats', body, headers: headers),
+    );
+  }
+
+  Future<T> _clobRequest<T>(Future<T> Function() request) async {
+    try {
+      return await request();
+    } on TransportException catch (e) {
+      final status = e.httpStatus;
+      if (status == null ||
+          status == 429 ||
+          status >= 500 ||
+          e.code == ErrorCode.timeout ||
+          e.code == ErrorCode.circuitOpen) {
+        rethrow;
+      }
+
+      final upstream = ClobErrorResponse.fromBody(
+        e.responseBody ?? '',
+        httpStatus: status,
+      );
+      throw ClobException(
+        code: _classifyClobError(upstream),
+        message: upstream.message,
+        httpStatus: status,
+        cause: e,
+        upstream: upstream,
+      );
+    }
+  }
+
+  ErrorCode _classifyClobError(ClobErrorResponse upstream) {
+    final status = upstream.httpStatus;
+    if (status == 401 || status == 403) return ErrorCode.unauthorized;
+
+    final msg = upstream.message.toLowerCase();
+    if (msg.contains('insufficient') ||
+        msg.contains('balance') ||
+        msg.contains('allowance')) {
+      return ErrorCode.insufficientFunds;
+    }
+    if (msg.contains('order') &&
+        (msg.contains('not found') || msg.contains('not exist'))) {
+      return ErrorCode.orderNotFound;
+    }
+    if (msg.contains('token') &&
+        (msg.contains('invalid') || msg.contains('not found'))) {
+      return ErrorCode.invalidTokenId;
+    }
+    return ErrorCode.invalidOrder;
   }
 
   Map<String, String> _l2Headers({
