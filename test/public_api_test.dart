@@ -25,6 +25,7 @@ void main() {
     );
     expect(depositLimitParams.orderType, OrderType.gtc);
     expect(createDepositWalletLimitOrder, isA<Function>());
+    expect(createDepositWalletLimitOrders, isA<Function>());
     expect(signDepositWalletOrderV2, isA<Function>());
 
     const depositMarketParams = CreateDepositWalletMarketOrderParams(

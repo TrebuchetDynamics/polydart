@@ -243,6 +243,91 @@ void main() {
     );
   });
 
+  group('createDepositWalletLimitOrders', () {
+    test(
+      'signs each order as deposit wallet and POSTs /orders with EOA auth',
+      () async {
+        http.BaseRequest? orderRequest;
+        String? orderBody;
+        final signer = _CannedSigner();
+        final depositWallet = deriveDepositWallet(signer.address);
+        final client = _client((req) async {
+          switch (req.url.path) {
+            case '/tick-size':
+              return http.Response(
+                jsonEncode(<String, dynamic>{
+                  'minimum_tick_size': '0.01',
+                  'minimum_order_size': '5',
+                  'tick_size': '0.01',
+                }),
+                200,
+              );
+            case '/orders':
+              orderRequest = req;
+              orderBody = (req as http.Request).body;
+              return http.Response(
+                jsonEncode(<Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'success': true,
+                    'orderID': 'ord-batch-1',
+                    'status': 'live',
+                  },
+                  <String, dynamic>{
+                    'success': true,
+                    'orderID': 'ord-batch-2',
+                    'status': 'live',
+                  },
+                ]),
+                200,
+              );
+            default:
+              return http.Response('not found', 404);
+          }
+        });
+
+        final resp = await createDepositWalletLimitOrders(
+          client: client,
+          signer: signer,
+          apiKey: _testApiKey,
+          orders: const <CreateDepositWalletLimitOrderParams>[
+            CreateDepositWalletLimitOrderParams(
+              tokenId: '12345',
+              side: Side.buy,
+              price: '0.50',
+              size: '10',
+            ),
+            CreateDepositWalletLimitOrderParams(
+              tokenId: '12346',
+              side: Side.sell,
+              price: '0.60',
+              size: '3',
+              postOnly: true,
+            ),
+          ],
+        );
+
+        expect(resp.orders.map((o) => o.orderId), [
+          'ord-batch-1',
+          'ord-batch-2',
+        ]);
+        expect(orderRequest!.method, 'POST');
+        expect(orderRequest!.url.path, '/orders');
+        expect(orderRequest!.headers['POLY_ADDRESS'], signer.address);
+        final body = jsonDecode(orderBody!) as List<dynamic>;
+        expect(body, hasLength(2));
+        expect((body.last as Map<String, dynamic>)['postOnly'], isTrue);
+        for (final row in body.cast<Map<String, dynamic>>()) {
+          expect(row['owner'], _testApiKey.key);
+          final order = row['order'] as Map<String, dynamic>;
+          expect(order['maker'], depositWallet);
+          expect(order['signer'], depositWallet);
+          expect(order['signatureType'], 3);
+          expect((order['signature'] as String).length, 636);
+        }
+      },
+    );
+  });
+
   group('createMarketOrder', () {
     test(
       'uses explicit price for polygolem-compatible market amounts',

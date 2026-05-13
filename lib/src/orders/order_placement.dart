@@ -16,6 +16,7 @@ import '../auth/l2.dart';
 import '../auth/wallet_signer.dart';
 import '../bookreader/bookreader.dart';
 import '../clob/clob_client.dart';
+import '../clob/clob_writes.dart';
 import '../errors/errors.dart';
 import '../types/enums.dart';
 import 'deposit_wallet_order_signing.dart';
@@ -237,6 +238,73 @@ Future<OrderResponse> createDepositWalletLimitOrder({
       postOnly: params.postOnly,
       builderCode: params.builderCode,
     ),
+  );
+}
+
+/// End-to-end deposit-wallet batch limit-order placement.
+///
+/// Each order is built and signed independently through [signer]. The CLOB
+/// HTTP auth address stays EOA-bound while every signed order body uses
+/// `maker == signer == depositWallet` and `signatureType=3`.
+Future<BatchOrderResponse> createDepositWalletLimitOrders({
+  required ClobClient client,
+  required WalletSigner signer,
+  required ApiKey apiKey,
+  required List<CreateDepositWalletLimitOrderParams> orders,
+}) async {
+  if (orders.isEmpty) {
+    throw const ValidationException(
+      code: ErrorCode.missingField,
+      message: 'orders must not be empty',
+      field: 'orders',
+    );
+  }
+  if (orders.length > maxBatchPostSize) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'orders exceeds maxBatchPostSize',
+      field: 'orders',
+    );
+  }
+
+  final depositWallet = deriveDepositWallet(signer.address);
+  final requests = <CreateOrderRequest>[];
+  for (final params in orders) {
+    final tick = await client.tickSize(params.tokenId);
+    final intent =
+        (OrderBuilder(tokenId: params.tokenId, side: params.side)
+              ..price(params.price)
+              ..size(params.size)
+              ..orderType(params.orderType)
+              ..signatureType(SignatureType.poly1271)
+              ..tickSize(tick.tickSize)
+              ..negRisk(params.negRisk)
+              ..feeRateBps(params.feeRateBps)
+              ..expiration(params.expiration)
+              ..funder(depositWallet)
+              ..postOnly(params.postOnly))
+            .build();
+
+    final signed = await signDepositWalletOrderV2(
+      intent: intent,
+      signer: signer,
+      depositWallet: depositWallet,
+      builderCode: params.builderCode,
+    );
+    requests.add(
+      CreateOrderRequest(
+        order: signed,
+        owner: apiKey.key,
+        orderType: params.orderType,
+        postOnly: params.postOnly,
+      ),
+    );
+  }
+
+  return client.writes.createOrders(
+    requests: requests,
+    apiKey: apiKey,
+    polyAddress: signer.address,
   );
 }
 

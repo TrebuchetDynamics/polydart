@@ -55,6 +55,10 @@ final class CreateOrderRequest {
 /// Maximum batch size accepted by the upstream `POST /orders` endpoint.
 const int maxBatchPostSize = 15;
 
+/// Maximum cancellation batch size accepted by the upstream `DELETE /orders`
+/// endpoint.
+const int maxCancelBatchSize = 3000;
+
 /// Response shape for `POST /orders`.
 @immutable
 final class BatchOrderResponse {
@@ -152,6 +156,7 @@ final class ClobWrites {
   Future<BatchOrderResponse> createOrders({
     required List<CreateOrderRequest> requests,
     required ApiKey apiKey,
+    String polyAddress = '',
   }) async {
     if (requests.isEmpty) {
       throw const ValidationException(
@@ -174,6 +179,7 @@ final class ClobWrites {
       path: '/orders',
       body: body,
       apiKey: apiKey,
+      polyAddress: polyAddress,
     );
     final resp = await _transport.postJsonList(
       '/orders',
@@ -187,8 +193,10 @@ final class ClobWrites {
   Future<CancelResponse> cancelOrder({
     required String orderId,
     required ApiKey apiKey,
+    String polyAddress = '',
   }) async {
-    if (orderId.trim().isEmpty) {
+    final id = orderId.trim();
+    if (id.isEmpty) {
       throw const ValidationException(
         code: ErrorCode.missingField,
         message: 'orderId is required',
@@ -196,12 +204,13 @@ final class ClobWrites {
       );
     }
     requireLive(_mode, liveTradingEnabled: _liveTradingEnabled);
-    final body = <String, dynamic>{'orderID': orderId};
+    final body = <String, dynamic>{'orderID': id};
     final headers = _l2Headers(
       method: 'DELETE',
       path: '/order',
       body: body,
       apiKey: apiKey,
+      polyAddress: polyAddress,
     );
     final resp = await _transport.delete(
       '/order',
@@ -215,15 +224,20 @@ final class ClobWrites {
   Future<CancelResponse> cancelOrders({
     required List<String> orderIds,
     required ApiKey apiKey,
+    String polyAddress = '',
   }) async {
-    if (orderIds.isEmpty) {
+    final ids = orderIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList(growable: false);
+    if (ids.isEmpty) {
       throw const ValidationException(
         code: ErrorCode.missingField,
         message: 'orderIds must not be empty',
         field: 'orderIds',
       );
     }
-    if (orderIds.length > 3000) {
+    if (ids.length > maxCancelBatchSize) {
       throw const ValidationException(
         code: ErrorCode.invalidValue,
         message: 'orderIds exceeds max cancel batch size',
@@ -231,12 +245,13 @@ final class ClobWrites {
       );
     }
     requireLive(_mode, liveTradingEnabled: _liveTradingEnabled);
-    final body = <String, dynamic>{'orderIDs': orderIds};
+    final body = <String, dynamic>{'orderIDs': ids};
     final headers = _l2Headers(
       method: 'DELETE',
       path: '/orders',
       body: body,
       apiKey: apiKey,
+      polyAddress: polyAddress,
     );
     final resp = await _transport.delete(
       '/orders',
@@ -247,12 +262,16 @@ final class ClobWrites {
   }
 
   /// Cancels every open order for the authenticated user.
-  Future<CancelResponse> cancelAllOrders({required ApiKey apiKey}) async {
+  Future<CancelResponse> cancelAllOrders({
+    required ApiKey apiKey,
+    String polyAddress = '',
+  }) async {
     requireLive(_mode, liveTradingEnabled: _liveTradingEnabled);
     final headers = _l2Headers(
       method: 'DELETE',
       path: '/cancel-all',
       apiKey: apiKey,
+      polyAddress: polyAddress,
     );
     final resp = await _transport.delete('/cancel-all', headers: headers);
     return CancelResponse.fromJson(resp);
@@ -265,6 +284,7 @@ final class ClobWrites {
     required ApiKey apiKey,
     String market = '',
     String assetId = '',
+    String polyAddress = '',
   }) async {
     final m = market.trim();
     final a = assetId.trim();
@@ -283,6 +303,7 @@ final class ClobWrites {
       path: '/cancel-market-orders',
       body: body,
       apiKey: apiKey,
+      polyAddress: polyAddress,
     );
     final resp = await _transport.delete(
       '/cancel-market-orders',
@@ -296,6 +317,7 @@ final class ClobWrites {
   Future<void> heartbeat({
     required ApiKey apiKey,
     String heartbeatId = '',
+    String polyAddress = '',
   }) async {
     requireLive(_mode, liveTradingEnabled: _liveTradingEnabled);
     final id = heartbeatId.trim();
@@ -305,6 +327,7 @@ final class ClobWrites {
       path: '/v1/heartbeats',
       body: body,
       apiKey: apiKey,
+      polyAddress: polyAddress,
     );
     await _transport.postJson('/v1/heartbeats', body, headers: headers);
   }

@@ -197,11 +197,13 @@ void main() {
           ),
         ],
         apiKey: _apiKey,
+        polyAddress: '0xEoa',
       );
 
       expect(captured!.method, 'POST');
       expect(captured!.url.path, '/orders');
       expect(captured!.headers['POLY_API_KEY'], 'test-key');
+      expect(captured!.headers['POLY_ADDRESS'], '0xEoa');
       final body = jsonDecode(capturedBody!) as List<dynamic>;
       expect(body, hasLength(2));
       expect((body.last as Map<String, dynamic>)['postOnly'], isTrue);
@@ -253,13 +255,18 @@ void main() {
         );
       });
 
-      final resp = await c.writes.cancelOrder(orderId: 'O-1', apiKey: _apiKey);
+      final resp = await c.writes.cancelOrder(
+        orderId: 'O-1',
+        apiKey: _apiKey,
+        polyAddress: '0xEoa',
+      );
 
       expect(captured!.method, 'DELETE');
       expect(captured!.url.path, '/order');
       final body = jsonDecode(capturedBody!) as Map<String, dynamic>;
       expect(body['orderID'], 'O-1');
       expect(captured!.headers['POLY_API_KEY'], 'test-key');
+      expect(captured!.headers['POLY_ADDRESS'], '0xEoa');
 
       expect(resp.canceled, ['O-1']);
       expect(resp.notCanceled, isEmpty);
@@ -290,7 +297,7 @@ void main() {
   });
 
   group('cancelOrders', () {
-    test('DELETEs /orders with {orderIDs} body', () async {
+    test('DELETEs /orders with cleaned {orderIDs} body', () async {
       http.BaseRequest? captured;
       String? capturedBody;
       final c = _liveClient((req) async {
@@ -306,24 +313,35 @@ void main() {
       });
 
       final resp = await c.writes.cancelOrders(
-        orderIds: ['O-1', 'O-2', 'O-3'],
+        orderIds: [' O-1 ', '', 'O-2', ' O-3'],
         apiKey: _apiKey,
+        polyAddress: '0xEoa',
       );
 
       expect(captured!.method, 'DELETE');
       expect(captured!.url.path, '/orders');
+      expect(captured!.headers['POLY_ADDRESS'], '0xEoa');
       final body = jsonDecode(capturedBody!) as Map<String, dynamic>;
       expect(body['orderIDs'], ['O-1', 'O-2', 'O-3']);
       expect(resp.canceled, ['O-1', 'O-2']);
       expect(resp.notCanceled, {'O-3': 'already filled'});
     });
 
-    test('rejects empty list', () async {
-      final c = _liveClient((_) async => http.Response('{}', 200));
+    test('rejects empty or blank-only list before network', () async {
+      var hit = false;
+      final c = _liveClient((_) async {
+        hit = true;
+        return http.Response('{}', 200);
+      });
       expect(
         () => c.writes.cancelOrders(orderIds: const [], apiKey: _apiKey),
         throwsA(isA<ValidationException>()),
       );
+      expect(
+        () => c.writes.cancelOrders(orderIds: const ['   '], apiKey: _apiKey),
+        throwsA(isA<ValidationException>()),
+      );
+      expect(hit, isFalse);
     });
   });
 
@@ -340,11 +358,15 @@ void main() {
         );
       });
 
-      final resp = await c.writes.cancelAllOrders(apiKey: _apiKey);
+      final resp = await c.writes.cancelAllOrders(
+        apiKey: _apiKey,
+        polyAddress: '0xEoa',
+      );
 
       expect(captured!.method, 'DELETE');
       expect(captured!.url.path, '/cancel-all');
       expect(captured!.headers['POLY_SIGNATURE'], isNotNull);
+      expect(captured!.headers['POLY_ADDRESS'], '0xEoa');
       expect(resp.canceled, ['O-1']);
     });
   });
@@ -369,11 +391,13 @@ void main() {
         apiKey: _apiKey,
         market: '0xMarket',
         assetId: 'token-1',
+        polyAddress: '0xEoa',
       );
 
       expect(captured!.method, 'DELETE');
       expect(captured!.url.path, '/cancel-market-orders');
       expect(captured!.headers['POLY_SIGNATURE'], isNotNull);
+      expect(captured!.headers['POLY_ADDRESS'], '0xEoa');
       final decoded = jsonDecode(capturedBody ?? '{}') as Map<String, dynamic>;
       expect(decoded['market'], '0xMarket');
       expect(decoded['asset_id'], 'token-1');

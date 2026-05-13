@@ -124,6 +124,7 @@ export 'src/clob/clob_writes.dart'
         CancelResponse,
         ClobWrites,
         CreateOrderRequest,
+        maxCancelBatchSize,
         maxBatchPostSize;
 export 'src/contracts/contracts.dart'
     show
@@ -260,6 +261,7 @@ export 'src/orders/order_placement.dart'
         CreateLimitOrderParams,
         CreateMarketOrderParams,
         createDepositWalletLimitOrder,
+        createDepositWalletLimitOrders,
         createDepositWalletMarketOrder,
         createLimitOrder,
         createMarketOrder;

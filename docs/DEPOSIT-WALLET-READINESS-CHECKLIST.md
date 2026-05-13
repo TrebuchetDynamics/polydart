@@ -56,7 +56,7 @@ orchestration surface. It:
 
 Next live-readiness slices:
 
-- live batch/cancel parity
+- live error DTO fields
 
 ## First Public API Target
 
@@ -93,12 +93,15 @@ The readiness object should include:
 First live order path:
 
 - `createDepositWalletLimitOrder(...)` and
-  `createDepositWalletMarketOrder(...)` derive the deposit wallet from the EOA
-  signer.
+  `createDepositWalletLimitOrders(...)` derive the deposit wallet from the EOA
+  signer for single and batch limit orders.
+- `createDepositWalletMarketOrder(...)` does the same for buy market orders.
 - The EOA signs the ERC-7739 `TypedDataSign` envelope through `WalletSigner`.
 - The posted order uses `signatureType=3` and
   `maker == signer == depositWallet`.
-- CLOB HMAC headers stay EOA-bound through `POLY_ADDRESS`.
+- CLOB HMAC headers stay EOA-bound through `POLY_ADDRESS`; low-level cancel
+  methods expose the same `polyAddress` argument and clean batch cancel IDs
+  before sending `DELETE /orders`.
 - Market buy orders use Polygolem-compatible USDC-budget truncation and can
   discover the fill price from the current opposing book when price is omitted.
 
