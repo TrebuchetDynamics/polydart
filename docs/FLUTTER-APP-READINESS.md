@@ -92,9 +92,10 @@ V2 pUSD/CTF approvals, and reads CLOB `balance-allowance` with
 making the app infer protocol state from exceptions.
 
 When readiness returns `ready`, use `createDepositWalletLimitOrder(...)` for
-live limit orders. The helper derives the deposit wallet from `signer.address`,
-asks the app-owned `WalletSigner` to approve the ERC-7739 `TypedDataSign`
-payload, posts `signatureType=3`, and leaves raw private keys outside Polydart.
+live limit orders or `createDepositWalletMarketOrder(...)` for buy market
+orders. Both helpers derive the deposit wallet from `signer.address`, ask the
+app-owned `WalletSigner` to approve the ERC-7739 `TypedDataSign` payload, post
+`signatureType=3`, and leave raw private keys outside Polydart.
 
 When readiness returns `needsFunding`, use `planEoaPusdFundingRoute(...)` to
 read EOA-held pUSD and build the direct wallet transaction for

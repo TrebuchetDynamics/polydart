@@ -60,9 +60,9 @@ configuration plus safety gates.
 | `OrderBuilder`, `OrderIntent`, `SignedOrder` | Build and represent order intents. |
 | `computeAmounts`, `roundToTick`, `validatePriceAgainstTick` | Price, size, tick, and amount helpers. |
 | `buildOrderV2TypedData`, `hashOrderV2`, `signOrderV2` | V2 order typed-data, hash, and wallet-mediated signature helpers. |
-| `signDepositWalletOrderV2`, `createDepositWalletLimitOrder` | SignatureType=3 deposit-wallet limit-order signing and placement with EOA wallet approval. |
-| `CreateDepositWalletLimitOrderParams`, `CreateLimitOrderParams`, `CreateMarketOrderParams` | High-level order placement parameter objects. |
-| `createLimitOrder`, `createMarketOrder` | High-level placement helpers; require gated live writes. |
+| `signDepositWalletOrderV2`, `createDepositWalletLimitOrder`, `createDepositWalletMarketOrder` | SignatureType=3 deposit-wallet order signing and placement with EOA wallet approval. |
+| `CreateDepositWalletLimitOrderParams`, `CreateDepositWalletMarketOrderParams`, `CreateLimitOrderParams`, `CreateMarketOrderParams` | High-level order placement parameter objects. |
+| `createLimitOrder`, `createMarketOrder` | High-level placement helpers; market buys accept explicit price or discover the fill price from the book. |
 | `ClobWrites`, `CreateOrderRequest`, `BatchOrderResponse`, `CancelResponse`, `maxBatchPostSize` | Live-only create, batch create, cancel, and heartbeat surface behind `requireLive()`. |
 
 ## Modes, Safety, And Risk

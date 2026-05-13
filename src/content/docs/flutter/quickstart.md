@@ -122,8 +122,9 @@ deploy or approval actions. The readiness result stays machine-readable:
 or `blocked`.
 
 After a `ready` result, use `createDepositWalletLimitOrder(...)` for live limit
-orders. It derives the deposit wallet from the connected EOA, prompts the
-app-owned `WalletSigner` for the ERC-7739 typed-data approval, and posts
+orders or `createDepositWalletMarketOrder(...)` for buy market orders. They
+derive the deposit wallet from the connected EOA, prompt the app-owned
+`WalletSigner` for the ERC-7739 typed-data approval, and post
 `signatureType=3`.
 
 For a `needsFunding` result, call `planEoaPusdFundingRoute(...)`. It reads the

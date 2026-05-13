@@ -6,7 +6,7 @@ custody architecture as described in `docs/adr/0001-wallet-mediated-eoa-signing.
 
 - Canonical upstream source: `polygolem/`
 - Last scaffolded Polygolem commit: `2b7cde7`
-- Last fidelity sync commit: `2b7cde7`
+- Last fidelity sync commit: `b5f8ca1a`
 - Scaffold command: `python3 skills/polydart/scripts/polygolem_inventory.py --root .`
 
 Status values: `implemented`, `partial`, `missing`, `intentional Dart
@@ -21,7 +21,7 @@ all accounted for.
 | Feature | Polygolem Path | Polydart Path | Status | Tests/Fixtures | Safety Review | Upstream Commit | Next Action |
 |---|---|---|---|---|---|---|---|
 | Wallet-mediated EOA custody | internal/auth, internal/wallet | lib/src/auth, lib/src/wallet | intentional Dart divergence | test/auth, test/wallet | required | 2b7cde7 | Enforce ADR 0001 in signing and wallet work |
-| Deposit-wallet live semantics | internal/wallet, internal/relayer, internal/clob | lib/src/wallet, lib/src/relayer, lib/src/clob, lib/src/credentials, lib/src/orders, lib/src/funding | partial | test/wallet, test/relayer, test/clob, test/credentials, test/orders, test/funding | required | 2b7cde7 | Deposit-wallet readiness, limit-order placement, EOA pUSD funding route planning, and post-funding confirmation now cover sigtype-3 approval/funding checks, ERC-7739 wrapped signing, deposit-wallet maker/signer fields, EOA-bound CLOB HMAC auth, direct `pUSD.transfer` wallet transaction planning, wallet-submitted tx receipt polling, and CLOB collateral refresh; continue market-order/batch/cancel parity |
+| Deposit-wallet live semantics | internal/wallet, internal/relayer, internal/clob | lib/src/wallet, lib/src/relayer, lib/src/clob, lib/src/credentials, lib/src/orders, lib/src/funding | partial | test/wallet, test/relayer, test/clob, test/credentials, test/orders, test/funding | required | b5f8ca1a | Deposit-wallet readiness, limit-order placement, buy market-order placement, EOA pUSD funding route planning, and post-funding confirmation now cover sigtype-3 approval/funding checks, ERC-7739 wrapped signing, deposit-wallet maker/signer fields, EOA-bound CLOB HMAC auth, direct `pUSD.transfer` wallet transaction planning, wallet-submitted tx receipt polling, CLOB collateral refresh, market amount truncation, and book price discovery; continue batch/cancel parity |
 | EIP-712 / ERC-7739 / POLY_1271 signing | internal/auth, internal/clob/orders.go | lib/src/auth, lib/src/orders | partial | test/auth, test/orders | required | 2b7cde7 | Expand byte-level parity vectors |
 | Relayer and enable-trading surfaces | pkg/relayer, pkg/enabletrading, internal/enabletrading | lib/src/relayer, lib/src/enabletrading | partial | test/relayer, test/enabletrading | required | 2b7cde7 | Relayer V2 API-key headers, transaction object/list responses, poll defaults, and allowlist classification covered; continue live submission UX docs |
 | CLOB write responses and order results | internal/clob, pkg/orderresults | lib/src/clob, lib/src/orders, lib/src/orderresults | partial | test/clob, test/orders, test/orderresults | required | 2b7cde7 | Order response casing, batch create, cancel body casing, heartbeat, and order-results report builder covered; continue live error DTO fields |
