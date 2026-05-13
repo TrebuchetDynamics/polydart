@@ -167,12 +167,13 @@ void validatePriceAgainstTick(String price, String tickSize) {
 String buildSalt(int seed) => seed.toString();
 
 final Random _rand = Random.secure();
+const int _uint32ExclusiveMax = 0x100000000;
 
 /// Generates a fresh random uint64-style salt suitable for new orders.
 String generateOrderSalt() {
   // Two 32-bit halves combined into a 64-bit positive int.
-  final hi = _rand.nextInt(1 << 32);
-  final lo = _rand.nextInt(1 << 32);
+  final hi = _rand.nextInt(_uint32ExclusiveMax);
+  final lo = _rand.nextInt(_uint32ExclusiveMax);
   final combined = (BigInt.from(hi) << 32) | BigInt.from(lo);
   return combined.toString();
 }
