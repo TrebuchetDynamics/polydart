@@ -225,4 +225,45 @@ void main() {
       expect(captured!.queryParameters['endTs'], '2000');
     });
   });
+
+  group('publicTrades', () {
+    test('GETs unauthenticated trade history by market token', () async {
+      Uri? captured;
+      final client = _client((req) async {
+        captured = req.url;
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'trades': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'id': 'trade-1',
+                'status': 'matched',
+                'market': '0xcondition',
+                'asset_id': '12345',
+                'side': 'BUY',
+                'price': '0.52',
+                'size': '10',
+                'fee_rate_bps': '0',
+                'outcome': 'Yes',
+                'owner': '0xowner',
+                'builder': '',
+                'matched_amount': '5.2',
+                'transaction_hash': '0xtx',
+                'created_at': '2026-05-13T00:00:00Z',
+                'last_updated': '2026-05-13T00:00:00Z',
+              },
+            ],
+          }),
+          200,
+        );
+      });
+
+      final trades = await client.publicTrades(market: '12345');
+
+      expect(captured!.path, '/trades');
+      expect(captured!.queryParameters['market'], '12345');
+      expect(trades, hasLength(1));
+      expect(trades.first.transactionHash, '0xtx');
+      expect(trades.first.price, '0.52');
+    });
+  });
 }

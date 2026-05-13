@@ -255,6 +255,26 @@ final class ClobClient {
     return _flattenWrapped(raw, 'price');
   }
 
+  /// Public CLOB trade history for a token/market.
+  ///
+  /// The CLOB route is unauthenticated and returns either a bare list or a
+  /// wrapped `{ "trades": [...] }` / `{ "data": [...] }` payload depending on
+  /// the upstream or paper-compatible adapter.
+  Future<List<TradeRecord>> publicTrades({String market = ''}) async {
+    final body = await _transport.getJsonValue(
+      '/trades',
+      query: market.trim().isEmpty
+          ? null
+          : <String, dynamic>{'market': market.trim()},
+    );
+    final raw = body is Map ? (body['trades'] ?? body['data']) : body;
+    if (raw is! List) return const <TradeRecord>[];
+    return raw
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => TradeRecord.fromJson(m.cast<String, dynamic>()))
+        .toList(growable: false);
+  }
+
   // --- Order scoring ---
 
   /// Whether [orderId] is currently scored for rewards.
