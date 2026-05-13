@@ -9,6 +9,17 @@ This page shows a minimal Flutter integration that keeps Polydart in a repositor
 
 ## Add The Dependency
 
+Use the hosted alpha release once it is published:
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  polydart: ^0.1.0-alpha.1
+```
+
+For source-pinned consumers, use the public repository tag:
+
 ```yaml
 dependencies:
   flutter:
@@ -16,6 +27,7 @@ dependencies:
   polydart:
     git:
       url: https://github.com/TrebuchetDynamics/polydart.git
+      ref: v0.1.0-alpha.1
 ```
 
 Run:

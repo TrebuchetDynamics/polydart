@@ -2,7 +2,8 @@
 
 Dart-native Polymarket SDK — peer implementation to [polygolem](https://github.com/TrebuchetDynamics/polygolem).
 
-> **Status:** pre-alpha. APIs unstable. Not yet published to pub.dev.
+> **Status:** alpha. APIs unstable; live trading paths are explicit,
+> wallet-mediated, and gated.
 
 ## What it is
 
@@ -10,6 +11,25 @@ A spec-for-spec mirror of polygolem in Dart. Polydart currently provides
 tested public market reads, Data API reads, paper-mode primitives,
 wallet-mediated signing helpers, guarded CLOB write helpers, stream clients,
 and relayer/readiness building blocks for Dart and Flutter applications.
+
+## Install
+
+Use the hosted alpha release once it is published:
+
+```yaml
+dependencies:
+  polydart: ^0.1.0-alpha.1
+```
+
+For source-pinned consumers, use the public repository tag:
+
+```yaml
+dependencies:
+  polydart:
+    git:
+      url: https://github.com/TrebuchetDynamics/polydart.git
+      ref: v0.1.0-alpha.1
+```
 
 ## Quick start (read-only)
 
@@ -44,9 +64,9 @@ dart run example/read_only.dart
 
 Polydart is a Dart package that can be consumed by Flutter apps without adding
 Flutter as a dependency to Polydart itself. See
-[`docs/FLUTTER-APP-READINESS.md`](docs/FLUTTER-APP-READINESS.md) for install
-snippets, platform notes, lifecycle guidance, read-only usage, and the
-`WalletSigner` adapter pattern.
+[`docs/FLUTTER-APP-READINESS.md`](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/FLUTTER-APP-READINESS.md)
+for install snippets, platform notes, lifecycle guidance, read-only usage, and
+the `WalletSigner` adapter pattern.
 
 ## Modes
 
@@ -67,10 +87,11 @@ live configuration, confirmation, and preflight checks.
 
 ## Documents
 
-- `docs/PRD.md` — product requirements
-- `docs/PLAN.md` — implementation plan
-- `docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md` — next live-readiness TDD slice
-- `docs/FLUTTER-APP-READINESS.md` — Flutter integration notes
+- [Product requirements](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/PRD.md)
+- [Implementation plan](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/PLAN.md)
+- [Deposit-wallet readiness checklist](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md)
+- [Flutter integration notes](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/FLUTTER-APP-READINESS.md)
+- [Polygolem parity coverage](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/POLYDART-POLYGOLEM-COVERAGE.md)
 - `src/content/docs/` — Astro Starlight documentation source
 - `CHANGELOG.md` — release log
 

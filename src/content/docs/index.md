@@ -11,13 +11,21 @@ The default path is read-only. Live order submission is not shown in these docs 
 
 ## Install
 
-Use the package from the public repository until a pub.dev release is available:
+Use the hosted alpha release once it is published:
+
+```yaml
+dependencies:
+  polydart: ^0.1.0-alpha.1
+```
+
+For source-pinned consumers, use the public repository tag:
 
 ```yaml
 dependencies:
   polydart:
     git:
       url: https://github.com/TrebuchetDynamics/polydart.git
+      ref: v0.1.0-alpha.1
 ```
 
 Then import the public SDK surface:

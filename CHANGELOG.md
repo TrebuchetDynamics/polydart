@@ -4,7 +4,19 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
-### Added (Phase 1 — Foundation, read-only protocol surface)
+No unreleased changes yet.
+
+## [0.1.0-alpha.1] — 2026-05-13
+
+Polygolem parity commit:
+`5220881a08d512d58d31faca98f17fa184148407`.
+
+### Added
+
+- Public alpha package metadata and release archive filtering for the hosted
+  Dart package.
+- Flutter app readiness documentation, source-pinned install options, lifecycle
+  notes, wallet adapter guidance, and Flutter Web constraints.
 - Errors: sealed `PolydartException` hierarchy with stable `ErrorCode`.
 - Logging: `Logger` interface, silent default, console sink.
 - Type primitives: `Decimal`, `NumericString`, `StringOrArray`,
@@ -47,7 +59,27 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
   reports full, partial, or unavailable funding state without submitting funds.
 - CI workflow: format, analyze, test (network tests opt-in).
 
-## [0.1.0-alpha.1] — TBD
+### Changed
 
-Tag the first alpha once a Flutter consumer has been integrated against this
-surface end-to-end.
+- Order salt generation uses web-safe 32-bit bounds so Flutter Web consumers do
+  not hit Dart-to-JavaScript integer precision limits.
+- Public documentation now treats `WalletSigner` as the app-owned approval
+  boundary for any EOA/deposit-wallet operation.
+
+### Verified
+
+- A Flutter Web consumer smoke path can depend on Polydart, request a
+  wallet-mediated deposit-wallet order signature, and send the resulting order
+  payload through a local mock CLOB endpoint.
+
+### Known Gaps
+
+- Alpha APIs remain unstable and may change before `1.0.0`.
+- Live write paths remain lower-level and require explicit live mode,
+  `liveTradingEnabled`, user approval through `WalletSigner`, and readiness
+  checks.
+- Browser SIWE cookie login and Relayer V2 API-key minting are not directly
+  portable to Flutter Web because browsers do not expose `Set-Cookie` to app
+  code or allow arbitrary `Cookie` request headers.
+- Remaining parity gaps are tracked in
+  `docs/POLYDART-POLYGOLEM-COVERAGE.md`.

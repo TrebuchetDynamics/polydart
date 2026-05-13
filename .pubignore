@@ -1,0 +1,19 @@
+# Repository-only reference material.
+/polygolem/
+/polygolem/live_siwe_probe
+/polygolem/opensource-projects/
+/skills/
+
+# Astro Starlight documentation site source/build output.
+/src/
+/docs/
+/astro.config.mjs
+/package.json
+/package-lock.json
+/node_modules/
+/.astro/
+/dist/
+
+# Local tooling that is not part of the hosted SDK package.
+/.github/
+/tool/

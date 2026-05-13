@@ -19,8 +19,16 @@ Status for this repository snapshot:
 
 ## Install in a Flutter App
 
-Until Polydart is published to pub.dev, add it to the Flutter app's
-`pubspec.yaml` with either a Git or local path dependency:
+Use the hosted alpha release once it is published:
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  polydart: ^0.1.0-alpha.1
+```
+
+For source-pinned consumers, use the public repository tag:
 
 ```yaml
 dependencies:
@@ -48,16 +56,6 @@ Then run:
 
 ```sh
 flutter pub get
-```
-
-When Polydart is published, the dependency can become a normal hosted package
-constraint:
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  polydart: ^0.1.0
 ```
 
 ## Platform Notes
