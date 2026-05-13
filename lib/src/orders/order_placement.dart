@@ -14,7 +14,9 @@ import 'package:meta/meta.dart';
 import '../auth/create2.dart';
 import '../auth/l2.dart';
 import '../auth/wallet_signer.dart';
+import '../bookreader/bookreader.dart';
 import '../clob/clob_client.dart';
+import '../errors/errors.dart';
 import '../types/enums.dart';
 import 'deposit_wallet_order_signing.dart';
 import 'order_builder.dart';
@@ -105,6 +107,7 @@ final class CreateMarketOrderParams {
     required this.tokenId,
     required this.side,
     required this.amount,
+    this.price = '',
     this.orderType = OrderType.fok,
     this.signatureType = SignatureType.eoa,
     this.negRisk = false,
@@ -116,11 +119,44 @@ final class CreateMarketOrderParams {
   final String tokenId;
   final Side side;
   final String amount;
+
+  /// Optional price cap/fill price. When omitted, [createMarketOrder] walks
+  /// the current book and uses the opposing level needed to fill [amount].
+  final String price;
+
   final OrderType orderType;
   final SignatureType signatureType;
   final bool negRisk;
   final int feeRateBps;
   final String funder;
+  final String builderCode;
+}
+
+/// Inputs for [createDepositWalletMarketOrder].
+///
+/// This mirrors [CreateMarketOrderParams] but pins signatureType/funder to the
+/// EOA-derived deposit wallet so callers cannot accidentally sign a live
+/// deposit-wallet order as a plain EOA order.
+@immutable
+final class CreateDepositWalletMarketOrderParams {
+  const CreateDepositWalletMarketOrderParams({
+    required this.tokenId,
+    required this.side,
+    required this.amount,
+    this.price = '',
+    this.orderType = OrderType.fok,
+    this.negRisk = false,
+    this.feeRateBps = 0,
+    this.builderCode = bytes32Zero,
+  });
+
+  final String tokenId;
+  final Side side;
+  final String amount;
+  final String price;
+  final OrderType orderType;
+  final bool negRisk;
+  final int feeRateBps;
   final String builderCode;
 }
 
@@ -212,9 +248,26 @@ Future<OrderResponse> createMarketOrder({
   required ApiKey apiKey,
   required CreateMarketOrderParams params,
 }) async {
+  if (params.side != Side.buy) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'market-order amount is currently supported for BUY only',
+      field: 'side',
+    );
+  }
   final tick = await client.tickSize(params.tokenId);
+  final price = params.price.trim().isEmpty
+      ? await _marketOrderPrice(
+          client: client,
+          tokenId: params.tokenId,
+          side: params.side,
+          amount: params.amount,
+          orderType: params.orderType,
+        )
+      : params.price;
   final intent =
       (OrderBuilder(tokenId: params.tokenId, side: params.side)
+            ..price(price)
             ..amountUsdc(params.amount)
             ..orderType(params.orderType)
             ..signatureType(params.signatureType)
@@ -244,4 +297,79 @@ Future<OrderResponse> createMarketOrder({
     orderType: params.orderType,
     polyAddress: signer.address,
   );
+}
+
+/// End-to-end deposit-wallet market-order placement.
+///
+/// The EOA [signer] approves the ERC-7739 envelope. The order body uses
+/// signatureType=3 with `maker == signer == depositWallet`, while CLOB HMAC
+/// authentication remains bound to the EOA address.
+Future<OrderResponse> createDepositWalletMarketOrder({
+  required ClobClient client,
+  required WalletSigner signer,
+  required ApiKey apiKey,
+  required CreateDepositWalletMarketOrderParams params,
+}) {
+  final depositWallet = deriveDepositWallet(signer.address);
+  return createMarketOrder(
+    client: client,
+    signer: signer,
+    apiKey: apiKey,
+    params: CreateMarketOrderParams(
+      tokenId: params.tokenId,
+      side: params.side,
+      amount: params.amount,
+      price: params.price,
+      orderType: params.orderType,
+      signatureType: SignatureType.poly1271,
+      negRisk: params.negRisk,
+      feeRateBps: params.feeRateBps,
+      funder: depositWallet,
+      builderCode: params.builderCode,
+    ),
+  );
+}
+
+Future<String> _marketOrderPrice({
+  required ClobClient client,
+  required String tokenId,
+  required Side side,
+  required String amount,
+  required OrderType orderType,
+}) async {
+  final amountValue = double.parse(amount);
+  if (amountValue <= 0) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'amount must be positive',
+      field: 'amount',
+    );
+  }
+
+  final book = BookReader(await client.orderBook(tokenId));
+  final levels = side == Side.buy ? book.asks : book.bids;
+  if (levels.isEmpty) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'no opposing orders',
+    );
+  }
+
+  var notional = 0.0;
+  for (final level in levels) {
+    final price = double.parse(level.price);
+    final size = double.parse(level.size);
+    notional += price * size;
+    if (notional >= amountValue) {
+      return level.price;
+    }
+  }
+
+  if (orderType == OrderType.fok) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'insufficient liquidity to fill order',
+    );
+  }
+  return levels.first.price;
 }

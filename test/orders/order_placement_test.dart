@@ -244,10 +244,126 @@ void main() {
   });
 
   group('createMarketOrder', () {
-    test('uses amountUsdc and POSTs /order', () async {
-      String? lastPath;
+    test(
+      'uses explicit price for polygolem-compatible market amounts',
+      () async {
+        String? lastPath;
+        String? orderBody;
+        final client = _client((req) async {
+          lastPath = req.url.path;
+          switch (req.url.path) {
+            case '/tick-size':
+              return http.Response(
+                jsonEncode(<String, dynamic>{
+                  'minimum_tick_size': '0.01',
+                  'minimum_order_size': '5',
+                  'tick_size': '0.01',
+                }),
+                200,
+              );
+            case '/order':
+              orderBody = (req as http.Request).body;
+              return http.Response(
+                jsonEncode(<String, dynamic>{
+                  'success': true,
+                  'order_id': 'ord-mkt-1',
+                  'status': 'matched',
+                }),
+                200,
+              );
+            default:
+              return http.Response('not found', 404);
+          }
+        });
+
+        final resp = await createMarketOrder(
+          client: client,
+          signer: _CannedSigner(),
+          apiKey: _testApiKey,
+          params: const CreateMarketOrderParams(
+            tokenId: '12345',
+            side: Side.buy,
+            amount: '1.011700',
+            price: '0.120000',
+          ),
+        );
+
+        expect(lastPath, '/order');
+        expect(resp.orderId, 'ord-mkt-1');
+        final body = jsonDecode(orderBody!) as Map<String, dynamic>;
+        final order = body['order'] as Map<String, dynamic>;
+        expect(order['makerAmount'], '1010000');
+        expect(order['takerAmount'], '8416600');
+      },
+    );
+
+    test(
+      'deposit-wallet helper derives maker, wraps signature, and uses EOA auth',
+      () async {
+        http.BaseRequest? orderRequest;
+        String? orderBody;
+        final signer = _CannedSigner();
+        final depositWallet = deriveDepositWallet(signer.address);
+        final client = _client((req) async {
+          switch (req.url.path) {
+            case '/tick-size':
+              return http.Response(
+                jsonEncode(<String, dynamic>{
+                  'minimum_tick_size': '0.01',
+                  'minimum_order_size': '5',
+                  'tick_size': '0.01',
+                }),
+                200,
+              );
+            case '/order':
+              orderRequest = req;
+              orderBody = (req as http.Request).body;
+              return http.Response(
+                jsonEncode(<String, dynamic>{
+                  'success': true,
+                  'order_id': 'ord-dw-mkt-1',
+                  'status': 'matched',
+                }),
+                200,
+              );
+            default:
+              return http.Response('not found', 404);
+          }
+        });
+
+        final resp = await createDepositWalletMarketOrder(
+          client: client,
+          signer: signer,
+          apiKey: _testApiKey,
+          params: const CreateDepositWalletMarketOrderParams(
+            tokenId: '12345',
+            side: Side.buy,
+            amount: '1.011700',
+            price: '0.120000',
+          ),
+        );
+
+        expect(resp.orderId, 'ord-dw-mkt-1');
+        expect(orderRequest!.headers['POLY_ADDRESS'], signer.address);
+        expect(signer.lastTyped!['primaryType'], 'TypedDataSign');
+        final body = jsonDecode(orderBody!) as Map<String, dynamic>;
+        expect(body['owner'], _testApiKey.key);
+        expect(body['orderType'], 'FOK');
+        final order = body['order'] as Map<String, dynamic>;
+        expect(order['maker'], depositWallet);
+        expect(order['signer'], depositWallet);
+        expect(order['signatureType'], 3);
+        expect(order['makerAmount'], '1010000');
+        expect(order['takerAmount'], '8416600');
+        expect((order['signature'] as String).length, 636);
+      },
+    );
+  });
+
+  group('market order price discovery', () {
+    test('uses best opposing price when price is omitted', () async {
+      String? orderBody;
       final client = _client((req) async {
-        lastPath = req.url.path;
         switch (req.url.path) {
           case '/tick-size':
             return http.Response(
@@ -258,11 +374,23 @@ void main() {
               }),
               200,
             );
+          case '/book':
+            return http.Response(
+              jsonEncode(<String, dynamic>{
+                'asset_id': '12345',
+                'bids': <Map<String, String>>[],
+                'asks': <Map<String, String>>[
+                  <String, String>{'price': '0.120000', 'size': '10'},
+                ],
+              }),
+              200,
+            );
           case '/order':
+            orderBody = (req as http.Request).body;
             return http.Response(
               jsonEncode(<String, dynamic>{
                 'success': true,
-                'order_id': 'ord-mkt-1',
+                'order_id': 'ord-mkt-book-1',
                 'status': 'matched',
               }),
               200,
@@ -279,12 +407,15 @@ void main() {
         params: const CreateMarketOrderParams(
           tokenId: '12345',
           side: Side.buy,
-          amount: '5',
+          amount: '1.011700',
         ),
       );
 
-      expect(lastPath, '/order');
-      expect(resp.orderId, 'ord-mkt-1');
+      expect(resp.orderId, 'ord-mkt-book-1');
+      final body = jsonDecode(orderBody!) as Map<String, dynamic>;
+      final order = body['order'] as Map<String, dynamic>;
+      expect(order['makerAmount'], '1010000');
+      expect(order['takerAmount'], '8416600');
     });
   });
 }

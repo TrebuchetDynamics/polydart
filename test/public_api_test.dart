@@ -27,6 +27,15 @@ void main() {
     expect(createDepositWalletLimitOrder, isA<Function>());
     expect(signDepositWalletOrderV2, isA<Function>());
 
+    const depositMarketParams = CreateDepositWalletMarketOrderParams(
+      tokenId: '12345',
+      side: Side.buy,
+      amount: '1.00',
+      price: '0.50',
+    );
+    expect(depositMarketParams.orderType, OrderType.fok);
+    expect(createDepositWalletMarketOrder, isA<Function>());
+
     final fundingPlan = buildEoaPusdTransferPlan(
       ownerEoa: '0x2c7536E3605D9C16a7a3D7b1898e529396a65c23',
       depositWallet: '0x21999a074344610057c9b2B362332388a44502D4',

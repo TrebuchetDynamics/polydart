@@ -256,9 +256,11 @@ export 'src/orders/deposit_wallet_order_signing.dart'
 export 'src/orders/order_placement.dart'
     show
         CreateDepositWalletLimitOrderParams,
+        CreateDepositWalletMarketOrderParams,
         CreateLimitOrderParams,
         CreateMarketOrderParams,
         createDepositWalletLimitOrder,
+        createDepositWalletMarketOrder,
         createLimitOrder,
         createMarketOrder;
 export 'src/orders/order_signing.dart'
