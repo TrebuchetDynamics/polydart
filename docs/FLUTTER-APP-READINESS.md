@@ -163,6 +163,12 @@ for a compiling adapter skeleton. It deliberately has no Flutter imports and no
 wallet package dependency; wire the `walletRequest` callback to the wallet SDK
 used by the Flutter app.
 
+For a mock-only deposit-wallet limit-order smoke path, see
+[`example/flutter_deposit_wallet_order.dart`](../example/flutter_deposit_wallet_order.dart).
+It uses a fake wallet signer, a mock CLOB transport, and a local readiness
+state so Flutter Web consumers can validate the `signatureType=3` order path
+without live endpoints, private keys, funds, or product-specific code.
+
 ## Safety Boundaries
 
 - Do not put raw private keys, seed phrases, or funded test secrets in Flutter

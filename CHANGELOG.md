@@ -6,6 +6,9 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 
 ### Changed
 
+- Added a mock-only Flutter Web deposit-wallet order smoke example that proves
+  the `WalletSigner` approval boundary and `signatureType=3` payload path
+  without live endpoints or raw private keys.
 - Matched Data API aggregate routing to current Polygolem endpoints:
   `/holders`, `/value`, `/traded`, `/oi`, `/v1/leaderboard`, and
   `/live-volume?id=...`.
