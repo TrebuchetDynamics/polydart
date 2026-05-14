@@ -409,8 +409,8 @@ final class UniversalClient {
     return _data.activity(user, limit: limit);
   }
 
-  Future<List<MetaHolder>> topHolders(String tokenId, {int limit = 0}) {
-    return _data.topHolders(tokenId, limit: limit);
+  Future<List<MetaHolder>> topHolders(String market, {int limit = 0}) {
+    return _data.topHolders(market, limit: limit);
   }
 
   Future<TotalValue> totalValue(String user) => _data.totalValue(user);
@@ -419,16 +419,16 @@ final class UniversalClient {
     return _data.marketsTraded(user);
   }
 
-  Future<OpenInterest> openInterest(String tokenId) {
-    return _data.openInterest(tokenId);
+  Future<OpenInterest> openInterest(String market) {
+    return _data.openInterest(market);
   }
 
   Future<List<TraderLeaderboardEntry>> traderLeaderboard({int limit = 0}) {
     return _data.traderLeaderboard(limit: limit);
   }
 
-  Future<LiveVolumeResponse> liveVolume({int limit = 0}) {
-    return _data.liveVolume(limit: limit);
+  Future<LiveVolumeResponse> liveVolume(int eventId) {
+    return _data.liveVolume(eventId);
   }
 
   // Market discovery

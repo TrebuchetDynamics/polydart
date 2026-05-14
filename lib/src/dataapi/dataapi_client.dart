@@ -81,22 +81,19 @@ final class DataApiClient {
         .toList(growable: false);
   }
 
-  /// Returns the top holders for [tokenId].
-  Future<List<MetaHolder>> topHolders(String tokenId, {int limit = 0}) async {
+  /// Returns the top holders for [market].
+  Future<List<MetaHolder>> topHolders(String market, {int limit = 0}) async {
     final list = await _transport.getJsonList(
-      '/top-holders',
-      query: <String, dynamic>{'token_id': tokenId, 'limit': limit.toString()},
+      '/holders',
+      query: <String, dynamic>{'market': market, 'limit': limit.toString()},
     );
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => MetaHolder.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return _metaHolders(list);
   }
 
   /// Returns the total dollar value of [user]'s open positions.
   Future<TotalValue> totalValue(String user) async {
     final body = await _transport.getJsonValue(
-      '/total-value',
+      '/value',
       query: <String, dynamic>{'user': user},
     );
     return TotalValue.fromJson(body, defaultUser: user);
@@ -105,19 +102,23 @@ final class DataApiClient {
   /// Returns the count of distinct markets [user] has traded.
   Future<TotalMarketsTraded> marketsTraded(String user) async {
     final body = await _transport.getJson(
-      '/total-markets-traded',
+      '/traded',
       query: <String, dynamic>{'user': user},
     );
     return TotalMarketsTraded.fromJson(body);
   }
 
-  /// Returns the open interest in dollars for [tokenId].
-  Future<OpenInterest> openInterest(String tokenId) async {
-    final body = await _transport.getJson(
-      '/open-interest',
-      query: <String, dynamic>{'token_id': tokenId},
+  /// Returns the open interest in dollars for [market].
+  Future<OpenInterest> openInterest(String market) async {
+    final list = await _transport.getJsonList(
+      '/oi',
+      query: <String, dynamic>{'market': market},
     );
-    return OpenInterest.fromJson(body);
+    final first = _firstMap(list);
+    if (first == null) {
+      return OpenInterest(market: market, assetId: '', openValue: 0);
+    }
+    return OpenInterest.fromJson(first);
   }
 
   /// Returns the global trader leaderboard.
@@ -125,7 +126,7 @@ final class DataApiClient {
     int limit = 0,
   }) async {
     final list = await _transport.getJsonList(
-      '/trader-leaderboard',
+      '/v1/leaderboard',
       query: <String, dynamic>{'limit': limit.toString()},
     );
     return list
@@ -134,11 +135,11 @@ final class DataApiClient {
         .toList(growable: false);
   }
 
-  /// Returns the live-volume leaderboard for events.
-  Future<LiveVolumeResponse> liveVolume({int limit = 0}) async {
+  /// Returns live volume for [eventId].
+  Future<LiveVolumeResponse> liveVolume(int eventId) async {
     final body = await _transport.getJsonValue(
       '/live-volume',
-      query: <String, dynamic>{'limit': limit.toString()},
+      query: <String, dynamic>{'id': eventId.toString()},
     );
     return LiveVolumeResponse.fromJson(body);
   }
@@ -156,4 +157,26 @@ final class DataApiClient {
       .whereType<Map<dynamic, dynamic>>()
       .map((m) => Position.fromJson(m.cast<String, dynamic>()))
       .toList(growable: false);
+
+  List<MetaHolder> _metaHolders(List<dynamic> list) {
+    final holders = <MetaHolder>[];
+    for (final item in list.whereType<Map<dynamic, dynamic>>()) {
+      final nested = item['holders'];
+      if (nested is List) {
+        for (final holder in nested.whereType<Map<dynamic, dynamic>>()) {
+          holders.add(MetaHolder.fromJson(holder.cast<String, dynamic>()));
+        }
+      } else {
+        holders.add(MetaHolder.fromJson(item.cast<String, dynamic>()));
+      }
+    }
+    return holders.toList(growable: false);
+  }
+
+  Map<String, dynamic>? _firstMap(List<dynamic> list) {
+    for (final item in list) {
+      if (item is Map<dynamic, dynamic>) return item.cast<String, dynamic>();
+    }
+    return null;
+  }
 }

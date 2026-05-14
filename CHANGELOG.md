@@ -4,7 +4,13 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
-No unreleased changes yet.
+### Changed
+
+- Matched Data API aggregate routing to current Polygolem endpoints:
+  `/holders`, `/value`, `/traded`, `/oi`, `/v1/leaderboard`, and
+  `/live-volume?id=...`.
+- Flattened current `/holders` responses and widened leaderboard decoding to
+  Polygolem's current field aliases.
 
 ## [0.1.0-alpha.2] — 2026-05-13
 

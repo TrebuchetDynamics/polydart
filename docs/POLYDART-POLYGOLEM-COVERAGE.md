@@ -6,8 +6,10 @@ custody architecture as described in `docs/adr/0001-wallet-mediated-eoa-signing.
 
 - Canonical upstream source: `polygolem/`
 - Last scaffolded Polygolem commit: `2b7cde7`
-- Last fidelity sync commit: `5220881a`
+- Last fidelity sync commit: `f4d0443`
 - Scaffold command: `python3 skills/polydart/scripts/polygolem_inventory.py --root .`
+- Upstream delta after `5220881a` is non-protocol reference maintenance and a
+  docs-only comments plan; no protocol SDK behavior changed there.
 
 Status values: `implemented`, `partial`, `missing`, `intentional Dart
 divergence`, `not applicable`.
@@ -24,8 +26,8 @@ all accounted for.
 | Deposit-wallet live semantics | internal/wallet, internal/relayer, internal/clob | lib/src/wallet, lib/src/relayer, lib/src/clob, lib/src/credentials, lib/src/orders, lib/src/funding | partial | test/wallet, test/relayer, test/clob, test/credentials, test/orders, test/funding | required | 5220881a | Deposit-wallet readiness, limit-order placement, batch limit-order placement, buy market-order placement, cancellation auth, EOA pUSD funding route planning, and post-funding confirmation now cover sigtype-3 approval/funding checks, ERC-7739 wrapped signing, deposit-wallet maker/signer fields, EOA-bound CLOB HMAC auth, direct `pUSD.transfer` wallet transaction planning, wallet-submitted tx receipt polling, CLOB collateral refresh, market amount truncation, book price discovery, typed CLOB live error bodies, and Polygolem-matched batch/cancel request shapes; continue Flutter example/demo wiring |
 | EIP-712 / ERC-7739 / POLY_1271 signing | internal/auth, internal/clob/orders.go | lib/src/auth, lib/src/orders | partial | test/auth, test/orders | required | 2b7cde7 | Expand byte-level parity vectors |
 | Relayer and enable-trading surfaces | pkg/relayer, pkg/enabletrading, internal/enabletrading | lib/src/relayer, lib/src/enabletrading | partial | test/relayer, test/enabletrading | required | 2b7cde7 | Relayer V2 API-key headers, transaction object/list responses, poll defaults, and allowlist classification covered; continue live submission UX docs |
-| CLOB write responses and order results | internal/clob, pkg/orderresults | lib/src/clob, lib/src/orders, lib/src/orderresults | partial | test/clob, test/orders, test/orderresults | required | 5220881a | Order response casing, batch create, EOA-bound batch/cancel `POLY_ADDRESS`, cleaned cancel IDs, cancel body casing, heartbeat, typed live error DTO fields, and order-results report builder covered; continue Data API order-result decoding |
-| Data API live V2 field shapes | internal/dataapi, pkg/data | lib/src/dataapi | partial | test/dataapi | not_required | 2b7cde7 | Current-position, closed-position, trade, holder, open-interest, volume, and aggregate object/list decoding covered; add order-result decoding |
+| CLOB write responses and order results | internal/clob, pkg/orderresults | lib/src/clob, lib/src/orders, lib/src/orderresults | partial | test/clob, test/orders, test/orderresults | required | 5220881a | Order response casing, batch create, EOA-bound batch/cancel `POLY_ADDRESS`, cleaned cancel IDs, cancel body casing, heartbeat, typed live error DTO fields, and order-results report builder covered; continue authenticated read/write edge cases |
+| Data API live V2 field shapes | internal/dataapi, pkg/data | lib/src/dataapi | implemented | test/dataapi | not_required | f4d0443 | Current-position, closed-position, trade, holder, open-interest, volume, leaderboard, aggregate object/list decoding, and current endpoint routing covered; monitor upstream |
 
 ## Surface Inventory
 
@@ -36,7 +38,7 @@ all accounted for.
 | pkg/clob | polygolem/pkg/clob | lib/src/clob, lib/src/credentials | partial | test/clob, test/credentials | required | 2b7cde7 | Wallet-mediated CLOB L2 create/derive and builder-fee key orchestration covered; continue authenticated write parity |
 | pkg/contracts | polygolem/pkg/contracts | lib/src/contracts | implemented | test/contracts | not_required | 2b7cde7 | Contract registry and eth_getCode readiness covered |
 | pkg/ctf | polygolem/pkg/ctf | lib/src/ctf | implemented | test/ctf | not_required | 2b7cde7 | CTF calldata and ID helpers covered |
-| pkg/data | polygolem/pkg/data | lib/src/dataapi | partial | test/dataapi | not_required | 2b7cde7 | Map public Data API wrapper |
+| pkg/data | polygolem/pkg/data | lib/src/dataapi | implemented | test/dataapi | not_required | f4d0443 | Current Data API wrapper methods, endpoints, and DTO decoding covered; monitor upstream |
 | pkg/enabletrading | polygolem/pkg/enabletrading | lib/src/enabletrading | partial | test/enabletrading | required | 2b7cde7 | Wallet-mediated ClobAuth and approval batch planning covered; live submission stays app-owned/gated |
 | pkg/experimental | polygolem/pkg/experimental |  | not applicable |  | not_required | 2b7cde7 | Revisit only if promoted upstream |
 | pkg/funding | polygolem/pkg/funding | lib/src/funding | intentional Dart divergence | test/funding | required | 2b7cde7 | EOA pUSD balance route planning and direct wallet transaction request covered; raw live transfer submission intentionally omitted |
@@ -56,7 +58,7 @@ all accounted for.
 | internal/auth | polygolem/internal/auth | lib/src/auth | partial | test/auth | required | 2b7cde7 | Expand signing parity vectors |
 | internal/clob | polygolem/internal/clob | lib/src/clob, lib/src/credentials | partial | test/clob, test/credentials | required | 5220881a | CLOB L2 credential create/derive reuses one wallet-approved ClobAuth signature across fallback; builder-fee key creation preserves partial readiness; deposit-wallet batch placement and cancellation use EOA-bound HTTP auth; CLOB write 4xx bodies map to structured `ClobException.upstream`; continue authenticated read/write edge cases |
 | internal/config | polygolem/internal/config | lib/src/config | partial | test/config | not_required | 2b7cde7 | Verify redaction and env mapping |
-| internal/dataapi | polygolem/internal/dataapi | lib/src/dataapi | partial | test/dataapi | not_required | 2b7cde7 | Current-position, closed-position, trade, holder, open-interest, volume, and aggregate object/list fields covered; continue order results |
+| internal/dataapi | polygolem/internal/dataapi | lib/src/dataapi | implemented | test/dataapi | not_required | f4d0443 | Current-position, closed-position, trade, holder, open-interest, volume, leaderboard, aggregate object/list fields, and endpoint names covered; monitor upstream |
 | internal/enabletrading | polygolem/internal/enabletrading | lib/src/enabletrading | partial | test/enabletrading | required | 2b7cde7 | Wallet-mediated typed-data builders covered; no raw EOA key submission surface |
 | internal/errors | polygolem/internal/errors | lib/src/errors | partial | test/errors | not_required | 2b7cde7 | Compare error categories and codes |
 | internal/execution | polygolem/internal/execution | lib/src/paper, lib/src/modes | partial | test/paper, test/modes | required | 2b7cde7 | Map executor semantics to paper/live/read-only boundaries |

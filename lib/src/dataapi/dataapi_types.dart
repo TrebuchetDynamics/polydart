@@ -394,8 +394,8 @@ final class TraderLeaderboardEntry {
   factory TraderLeaderboardEntry.fromJson(Map<String, dynamic> json) =>
       TraderLeaderboardEntry(
         rank: _int(json['rank']),
-        user: json['user']?.toString() ?? '',
-        volume: _double(json['volume']),
+        user: _stringOf(json, const ['user', 'proxyWallet', 'userName']),
+        volume: _double(_firstOf(json, const ['volume', 'vol'])),
         pnl: _double(json['pnl']),
         roi: _double(json['roi']),
       );
