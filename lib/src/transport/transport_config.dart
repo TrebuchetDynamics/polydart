@@ -3,12 +3,17 @@ library;
 
 import 'package:meta/meta.dart';
 
+const bool _sendUserAgentHeaderByDefault = !bool.fromEnvironment(
+  'dart.library.js_interop',
+);
+
 @immutable
 final class TransportConfig {
   const TransportConfig({
     required this.baseUrl,
     this.timeout = const Duration(seconds: 30),
     this.userAgent = 'polydart/0.1',
+    this.sendUserAgentHeader = _sendUserAgentHeaderByDefault,
     this.retryMax = 3,
     this.retryDelay = const Duration(milliseconds: 100),
   });
@@ -21,6 +26,13 @@ final class TransportConfig {
 
   /// User-Agent header value.
   final String userAgent;
+
+  /// Whether to send [userAgent] as an HTTP `User-Agent` header.
+  ///
+  /// Defaults to false for browser builds so public APIs with restrictive
+  /// CORS preflight headers, including Polymarket Gamma, remain reachable
+  /// from Flutter Web.
+  final bool sendUserAgentHeader;
 
   /// Maximum retries for idempotent (GET) requests.
   ///

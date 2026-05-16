@@ -240,12 +240,19 @@ final class HttpTransport {
   ) async {
     final req = http.Request(method, Uri.parse(url));
     req.headers['Accept'] = 'application/json';
-    req.headers['User-Agent'] = config.userAgent;
     if (body != null) {
       req.headers['Content-Type'] = 'application/json';
       req.body = jsonEncode(body);
     }
     if (headers != null) req.headers.addAll(headers);
+    if (config.sendUserAgentHeader) {
+      final hasUserAgent = req.headers.keys.any(
+        (name) => name.toLowerCase() == 'user-agent',
+      );
+      if (!hasUserAgent) req.headers['User-Agent'] = config.userAgent;
+    } else {
+      req.headers.removeWhere((name, _) => name.toLowerCase() == 'user-agent');
+    }
 
     final streamed = await _inner.send(req).timeout(config.timeout);
     return http.Response.fromStream(streamed);

@@ -197,6 +197,31 @@ void main() {
   });
 
   group('headers', () {
+    test('default User-Agent behavior follows the compilation target', () {
+      const isBrowser = bool.fromEnvironment('dart.library.js_interop');
+
+      expect(config.sendUserAgentHeader, !isBrowser);
+    });
+
+    test('can omit User-Agent for browser-compatible CORS requests', () async {
+      Map<String, String>? captured;
+      final transport = HttpTransport(
+        config: const TransportConfig(
+          baseUrl: 'https://example.test',
+          sendUserAgentHeader: false,
+        ),
+        inner: MockClient((req) async {
+          captured = Map.of(req.headers);
+          return http.Response('{}', 200);
+        }),
+      );
+
+      await transport.getJson('/h');
+
+      expect(captured!.containsKey('User-Agent'), isFalse);
+      expect(captured!['Accept'], 'application/json');
+    });
+
     test('caller headers and defaults are sent', () async {
       Map<String, String>? captured;
       final transport = HttpTransport(
