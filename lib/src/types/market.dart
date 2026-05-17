@@ -109,21 +109,52 @@ final class Market {
     required this.image,
     required this.icon,
     required this.description,
+    this.resolutionSource = '',
     required this.category,
     required this.startDate,
     required this.endDate,
+    this.startDateIso = '',
+    this.endDateIso = '',
+    this.umaEndDate,
+    this.closedTime,
+    this.createdAt,
+    this.updatedAt,
+    this.gameStartTime,
+    this.eventStartTime,
+    this.acceptingOrdersTimestamp,
     required this.outcomes,
     required this.outcomePrices,
     required this.active,
     required this.closed,
     required this.archived,
+    this.isNew = false,
+    this.featured = false,
+    this.restricted = false,
+    this.ready = false,
+    this.funded = false,
     required this.acceptingOrders,
     required this.enableOrderBook,
+    this.orderMinSize = 0,
+    this.orderPriceMinTickSize = 0,
+    this.makerBaseFee = 0,
+    this.takerBaseFee = 0,
+    this.volume = '',
+    this.liquidity = '',
     required this.liquidityNum,
     required this.volumeNum,
+    this.volume24hr = 0,
+    this.volume1wk = 0,
+    this.volume1mo = 0,
+    this.volume1yr = 0,
+    this.volumeClob = 0,
+    this.liquidityClob = 0,
     required this.lastTradePrice,
     required this.bestBid,
     required this.bestAsk,
+    this.spread = 0,
+    this.negRisk = false,
+    this.negRiskMarketId = '',
+    this.rfqEnabled = false,
     required this.clobTokenIds,
     required this.tags,
     required this.raw,
@@ -138,21 +169,54 @@ final class Market {
     image: json['image']?.toString() ?? '',
     icon: json['icon']?.toString() ?? '',
     description: json['description']?.toString() ?? '',
+    resolutionSource: json['resolutionSource']?.toString() ?? '',
     category: json['category']?.toString() ?? '',
     startDate: parseNormalizedDateTime(json['startDate']),
     endDate: parseNormalizedDateTime(json['endDate']),
+    startDateIso: json['startDateIso']?.toString() ?? '',
+    endDateIso: json['endDateIso']?.toString() ?? '',
+    umaEndDate: parseNormalizedDateTime(json['umaEndDate']),
+    closedTime: parseNormalizedDateTime(json['closedTime']),
+    createdAt: parseNormalizedDateTime(json['createdAt']),
+    updatedAt: parseNormalizedDateTime(json['updatedAt']),
+    gameStartTime: parseNormalizedDateTime(json['gameStartTime']),
+    eventStartTime: parseNormalizedDateTime(json['eventStartTime']),
+    acceptingOrdersTimestamp: parseNormalizedDateTime(
+      json['acceptingOrdersTimestamp'],
+    ),
     outcomes: parseStringOrArray(json['outcomes']),
     outcomePrices: parseStringOrArray(json['outcomePrices']),
     active: json['active'] == true,
     closed: json['closed'] == true,
     archived: json['archived'] == true,
+    isNew: json['new'] == true,
+    featured: json['featured'] == true,
+    restricted: json['restricted'] == true,
+    ready: json['ready'] == true,
+    funded: json['funded'] == true,
     acceptingOrders: json['acceptingOrders'] == true,
     enableOrderBook: json['enableOrderBook'] == true,
+    orderMinSize: _double(json['orderMinSize']),
+    orderPriceMinTickSize: _double(json['orderPriceMinTickSize']),
+    makerBaseFee: _int(json['makerBaseFee']),
+    takerBaseFee: _int(json['takerBaseFee']),
+    volume: json['volume']?.toString() ?? '',
+    liquidity: json['liquidity']?.toString() ?? '',
     liquidityNum: _double(json['liquidityNum']),
     volumeNum: _double(json['volumeNum']),
+    volume24hr: _double(json['volume24hr']),
+    volume1wk: _double(json['volume1wk']),
+    volume1mo: _double(json['volume1mo']),
+    volume1yr: _double(json['volume1yr']),
+    volumeClob: _double(json['volumeClob']),
+    liquidityClob: _double(json['liquidityClob']),
     lastTradePrice: _double(json['lastTradePrice']),
     bestBid: _double(json['bestBid']),
     bestAsk: _double(json['bestAsk']),
+    spread: _double(json['spread']),
+    negRisk: json['negRisk'] == true,
+    negRiskMarketId: json['negRiskMarketID']?.toString() ?? '',
+    rfqEnabled: json['rfqEnabled'] == true,
     clobTokenIds: json['clobTokenIds']?.toString() ?? '',
     tags: _tags(json['tags']),
     raw: Map.unmodifiable(json),
@@ -166,21 +230,52 @@ final class Market {
   final String image;
   final String icon;
   final String description;
+  final String resolutionSource;
   final String category;
   final DateTime? startDate;
   final DateTime? endDate;
+  final String startDateIso;
+  final String endDateIso;
+  final DateTime? umaEndDate;
+  final DateTime? closedTime;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final DateTime? gameStartTime;
+  final DateTime? eventStartTime;
+  final DateTime? acceptingOrdersTimestamp;
   final List<String> outcomes;
   final List<String> outcomePrices;
   final bool active;
   final bool closed;
   final bool archived;
+  final bool isNew;
+  final bool featured;
+  final bool restricted;
+  final bool ready;
+  final bool funded;
   final bool acceptingOrders;
   final bool enableOrderBook;
+  final double orderMinSize;
+  final double orderPriceMinTickSize;
+  final int makerBaseFee;
+  final int takerBaseFee;
+  final String volume;
+  final String liquidity;
   final double liquidityNum;
   final double volumeNum;
+  final double volume24hr;
+  final double volume1wk;
+  final double volume1mo;
+  final double volume1yr;
+  final double volumeClob;
+  final double liquidityClob;
   final double lastTradePrice;
   final double bestBid;
   final double bestAsk;
+  final double spread;
+  final bool negRisk;
+  final String negRiskMarketId;
+  final bool rfqEnabled;
   final String clobTokenIds;
   final List<Tag> tags;
 
@@ -197,17 +292,39 @@ final class Event {
     required this.slug,
     required this.title,
     required this.description,
+    this.resolutionSource = '',
     required this.image,
     required this.icon,
     required this.startDate,
     required this.endDate,
+    this.creationDate,
+    this.publishedAt,
+    this.createdAt,
+    this.updatedAt,
+    this.closedTime,
+    this.eventDate,
+    this.startTime,
     required this.active,
     required this.closed,
     required this.archived,
     required this.featured,
+    this.restricted = false,
+    this.commentsEnabled = false,
+    this.commentCount = 0,
+    this.openInterest = 0,
+    this.enableOrderBook = false,
     required this.liquidity,
     required this.volume,
+    this.liquidityAmm = 0,
+    this.liquidityClob = 0,
+    this.volume24hr = 0,
+    this.volume1wk = 0,
+    this.volume1mo = 0,
+    this.volume1yr = 0,
+    this.negRisk = false,
+    this.negRiskMarketId = '',
     required this.markets,
+    this.series = const <Series>[],
     required this.tags,
     required this.raw,
   });
@@ -218,17 +335,39 @@ final class Event {
     slug: json['slug']?.toString() ?? '',
     title: json['title']?.toString() ?? '',
     description: json['description']?.toString() ?? '',
+    resolutionSource: json['resolutionSource']?.toString() ?? '',
     image: json['image']?.toString() ?? '',
     icon: json['icon']?.toString() ?? '',
     startDate: parseNormalizedDateTime(json['startDate']),
     endDate: parseNormalizedDateTime(json['endDate']),
+    creationDate: parseNormalizedDateTime(json['creationDate']),
+    publishedAt: parseNormalizedDateTime(json['published_at']),
+    createdAt: parseNormalizedDateTime(json['createdAt']),
+    updatedAt: parseNormalizedDateTime(json['updatedAt']),
+    closedTime: parseNormalizedDateTime(json['closedTime']),
+    eventDate: parseNormalizedDateTime(json['eventDate']),
+    startTime: parseNormalizedDateTime(json['startTime']),
     active: json['active'] == true,
     closed: json['closed'] == true,
     archived: json['archived'] == true,
     featured: json['featured'] == true,
+    restricted: json['restricted'] == true,
+    commentsEnabled: json['commentsEnabled'] == true,
+    commentCount: _int(json['commentCount']),
+    openInterest: _double(json['openInterest']),
+    enableOrderBook: json['enableOrderBook'] == true,
     liquidity: _double(json['liquidity']),
     volume: _double(json['volume']),
+    liquidityAmm: _double(json['liquidityAmm']),
+    liquidityClob: _double(json['liquidityClob']),
+    volume24hr: _double(json['volume24hr']),
+    volume1wk: _double(json['volume1wk']),
+    volume1mo: _double(json['volume1mo']),
+    volume1yr: _double(json['volume1yr']),
+    negRisk: json['negRisk'] == true,
+    negRiskMarketId: json['negRiskMarketID']?.toString() ?? '',
     markets: _markets(json['markets']),
+    series: _seriesList(json['series']),
     tags: _tags(json['tags']),
     raw: Map.unmodifiable(json),
   );
@@ -238,17 +377,39 @@ final class Event {
   final String slug;
   final String title;
   final String description;
+  final String resolutionSource;
   final String image;
   final String icon;
   final DateTime? startDate;
   final DateTime? endDate;
+  final DateTime? creationDate;
+  final DateTime? publishedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final DateTime? closedTime;
+  final DateTime? eventDate;
+  final DateTime? startTime;
   final bool active;
   final bool closed;
   final bool archived;
   final bool featured;
+  final bool restricted;
+  final bool commentsEnabled;
+  final int commentCount;
+  final double openInterest;
+  final bool enableOrderBook;
   final double liquidity;
   final double volume;
+  final double liquidityAmm;
+  final double liquidityClob;
+  final double volume24hr;
+  final double volume1wk;
+  final double volume1mo;
+  final double volume1yr;
+  final bool negRisk;
+  final String negRiskMarketId;
   final List<Market> markets;
+  final List<Series> series;
   final List<Tag> tags;
   final Map<String, dynamic> raw;
 }
@@ -608,6 +769,14 @@ List<Event> _events(Object? raw) {
   return raw
       .whereType<Map<dynamic, dynamic>>()
       .map((m) => Event.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+}
+
+List<Series> _seriesList(Object? raw) {
+  if (raw is! List) return const <Series>[];
+  return raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => Series.fromJson(m.cast<String, dynamic>()))
       .toList(growable: false);
 }
 

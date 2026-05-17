@@ -42,6 +42,10 @@ final class OrderBook {
     required this.hash,
     required this.bids,
     required this.asks,
+    this.minOrderSize = '',
+    this.tickSize = '',
+    this.negRisk = false,
+    this.lastTradePrice = '',
   });
 
   factory OrderBook.fromJson(Map<String, dynamic> json) => OrderBook(
@@ -51,6 +55,10 @@ final class OrderBook {
     hash: json['hash']?.toString() ?? '',
     bids: _levels(json['bids']),
     asks: _levels(json['asks']),
+    minOrderSize: json['min_order_size']?.toString() ?? '',
+    tickSize: json['tick_size']?.toString() ?? '',
+    negRisk: json['neg_risk'] == true,
+    lastTradePrice: json['last_trade_price']?.toString() ?? '',
   );
 
   final String market;
@@ -59,6 +67,10 @@ final class OrderBook {
   final String hash;
   final List<OrderBookLevel> bids;
   final List<OrderBookLevel> asks;
+  final String minOrderSize;
+  final String tickSize;
+  final bool negRisk;
+  final String lastTradePrice;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     'market': market,
@@ -67,6 +79,10 @@ final class OrderBook {
     'hash': hash,
     'bids': bids.map((l) => l.toJson()).toList(),
     'asks': asks.map((l) => l.toJson()).toList(),
+    if (minOrderSize.isNotEmpty) 'min_order_size': minOrderSize,
+    if (tickSize.isNotEmpty) 'tick_size': tickSize,
+    if (negRisk) 'neg_risk': negRisk,
+    if (lastTradePrice.isNotEmpty) 'last_trade_price': lastTradePrice,
   };
 }
 
@@ -113,10 +129,10 @@ final class Token {
   });
 
   factory Token.fromJson(Map<String, dynamic> json) => Token(
-    tokenId: json['token_id']?.toString() ?? '',
-    outcome: json['outcome']?.toString() ?? '',
-    price: parseNumericString(json['price']),
-    winner: json['winner'] == true,
+    tokenId: _string(json, 'token_id', 't'),
+    outcome: _string(json, 'outcome', 'o'),
+    price: parseNumericString(_first(json, 'price', 'p')),
+    winner: _bool(_first(json, 'winner', 'w')),
   );
 
   final String tokenId;
@@ -147,10 +163,20 @@ final class ClobMarket {
     required this.negRisk,
     required this.orderMinSize,
     required this.orderPriceMinTickSize,
+    this.rewardsMinSize = 0,
+    this.rewardsMaxSpread = 0,
+    this.makerBaseFee = 0,
+    this.takerBaseFee = 0,
+    this.rfqEnabled = false,
+    this.takerOrderDelay = false,
+    this.blockaidCheckEnabled = false,
+    this.minimumOrderAge = 0,
+    this.feeDetails = const ClobFeeDetails(),
   });
 
   factory ClobMarket.fromJson(Map<String, dynamic> json) {
-    final rawTokens = json['tokens'];
+    final rawTokens = _first(json, 'tokens', 't');
+    final rewards = _map(json['r']);
     final tokens = (rawTokens is List)
         ? rawTokens
               .whereType<Map<dynamic, dynamic>>()
@@ -158,17 +184,35 @@ final class ClobMarket {
               .toList(growable: false)
         : const <Token>[];
     return ClobMarket(
-      conditionId: json['condition_id']?.toString() ?? '',
-      questionId: json['question_id']?.toString() ?? '',
+      conditionId: _string(json, 'condition_id', 'c'),
+      questionId: _string(json, 'question_id', 'q'),
       tokens: tokens,
       spread: _double(json['spread']),
-      enableOrderBook: json['enable_order_book'] == true,
-      acceptingOrders: json['accepting_orders'] == true,
+      enableOrderBook: _bool(_first(json, 'enable_order_book', 'cbos')),
+      acceptingOrders: _bool(_first(json, 'accepting_orders', 'ao')),
       closed: json['closed'] == true,
       archived: json['archived'] == true,
-      negRisk: json['neg_risk'] == true,
-      orderMinSize: _double(json['order_min_size']),
-      orderPriceMinTickSize: _double(json['order_price_min_tick_size']),
+      negRisk: _bool(_first(json, 'neg_risk', 'nr')),
+      orderMinSize: _double(_first(json, 'order_min_size', 'mos')),
+      orderPriceMinTickSize: _double(
+        _first(json, 'order_price_min_tick_size', 'mts'),
+      ),
+      rewardsMinSize: _double(_firstMap(rewards, 'rewards_min_size', 'mi')),
+      rewardsMaxSpread: _double(_firstMap(rewards, 'rewards_max_spread', 'ma')),
+      makerBaseFee: _int(_first(json, 'maker_base_fee', 'mbf')),
+      takerBaseFee: _int(_first(json, 'taker_base_fee', 'tbf')),
+      rfqEnabled: _bool(_first(json, 'rfq_enabled', 'rfqe')),
+      takerOrderDelay: _bool(_first(json, 'taker_order_delay', 'itode')),
+      blockaidCheckEnabled: _bool(
+        _first(json, 'blockaid_check_enabled', 'ibce'),
+      ),
+      minimumOrderAge: _int(
+        _first(json, 'minimum_order_age', 'oas') ??
+            _firstMap(rewards, 'minimum_order_age', 'moas'),
+      ),
+      feeDetails: ClobFeeDetails.fromJson(
+        _map(_first(json, 'fee_details', 'fd')),
+      ),
     );
   }
 
@@ -183,6 +227,34 @@ final class ClobMarket {
   final bool negRisk;
   final double orderMinSize;
   final double orderPriceMinTickSize;
+  final double rewardsMinSize;
+  final double rewardsMaxSpread;
+  final int makerBaseFee;
+  final int takerBaseFee;
+  final bool rfqEnabled;
+  final bool takerOrderDelay;
+  final bool blockaidCheckEnabled;
+  final int minimumOrderAge;
+  final ClobFeeDetails feeDetails;
+}
+
+@immutable
+final class ClobFeeDetails {
+  const ClobFeeDetails({
+    this.rate = 0,
+    this.exponent = 0,
+    this.takerOnly = false,
+  });
+
+  factory ClobFeeDetails.fromJson(Map<String, dynamic> json) => ClobFeeDetails(
+    rate: _double(_first(json, 'rate', 'r')),
+    exponent: _double(_first(json, 'exponent', 'e')),
+    takerOnly: _bool(_first(json, 'taker_only', 'to')),
+  );
+
+  final double rate;
+  final double exponent;
+  final bool takerOnly;
 }
 
 @immutable
@@ -303,4 +375,29 @@ int _int(Object? raw) {
   if (raw is num) return raw.toInt();
   if (raw is String) return int.tryParse(raw) ?? 0;
   return 0;
+}
+
+bool _bool(Object? raw) {
+  if (raw is bool) return raw;
+  if (raw is String) return raw.toLowerCase() == 'true';
+  return false;
+}
+
+Object? _first(Map<String, dynamic> json, String first, String second) {
+  if (json.containsKey(first)) return json[first];
+  return json[second];
+}
+
+Object? _firstMap(Map<String, dynamic> json, String first, String second) {
+  if (json.containsKey(first)) return json[first];
+  return json[second];
+}
+
+String _string(Map<String, dynamic> json, String first, String second) {
+  return _first(json, first, second)?.toString() ?? '';
+}
+
+Map<String, dynamic> _map(Object? raw) {
+  if (raw is Map) return raw.cast<String, dynamic>();
+  return const <String, dynamic>{};
 }
