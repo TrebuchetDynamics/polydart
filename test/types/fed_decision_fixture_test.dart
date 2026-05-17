@@ -49,6 +49,21 @@ void main() {
       }
     });
 
+    test('finds the event from Gamma public search before detail lookup', () {
+      final search = SearchResponse.fromJson(_fixtureMap('gamma-search.json'));
+
+      expect(search.pagination.totalResults, greaterThanOrEqualTo(1));
+      final event = search.events.firstWhere(
+        (event) => event.slug == 'fed-decision-in-june-825',
+      );
+      expect(event.id, '101772');
+      expect(event.title, 'Fed Decision in June?');
+      expect(event.markets, hasLength(5));
+      for (final market in event.markets) {
+        _expectGammaMarketTruth(market);
+      }
+    });
+
     test('parses current abbreviated CLOB market and book fields', () {
       final markets = _fixtureList(
         'clob-markets.json',
