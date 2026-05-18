@@ -538,8 +538,9 @@ final class CommentUser {
   });
 
   factory CommentUser.fromJson(Map<String, dynamic> json) => CommentUser(
-    address: json['address']?.toString() ?? '',
-    pseudonym: json['pseudonym']?.toString() ?? '',
+    address:
+        json['address']?.toString() ?? json['baseAddress']?.toString() ?? '',
+    pseudonym: json['pseudonym']?.toString() ?? json['name']?.toString() ?? '',
     profileImage: json['profileImage']?.toString() ?? '',
   );
 
@@ -561,21 +562,18 @@ final class Comment {
     required this.replies,
   });
 
-  factory Comment.fromJson(Map<String, dynamic> json) => Comment(
-    id: json['id']?.toString() ?? '',
-    body: json['body']?.toString() ?? '',
-    user: json['user'] is Map
-        ? CommentUser.fromJson((json['user'] as Map).cast<String, dynamic>())
-        : const CommentUser(address: '', pseudonym: '', profileImage: ''),
-    createdAt: parseNormalizedDateTime(json['createdAt']),
-    updatedAt: parseNormalizedDateTime(json['updatedAt']),
-    parentId: json['parentId'] is num
-        ? (json['parentId'] as num).toInt()
-        : (json['parentId'] is String
-              ? int.tryParse(json['parentId'] as String)
-              : null),
-    replies: _comments(json['replies']),
-  );
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    final user = _commentUser(json);
+    return Comment(
+      id: json['id']?.toString() ?? '',
+      body: json['body']?.toString() ?? '',
+      user: user,
+      createdAt: parseNormalizedDateTime(json['createdAt']),
+      updatedAt: parseNormalizedDateTime(json['updatedAt']),
+      parentId: _nullableInt(json['parentId'] ?? json['parentEntityID']),
+      replies: _comments(json['replies']),
+    );
+  }
 
   final String id;
   final String body;
@@ -730,6 +728,30 @@ int _int(Object? raw) {
   if (raw is num) return raw.toInt();
   if (raw is String) return int.tryParse(raw) ?? 0;
   return 0;
+}
+
+int? _nullableInt(Object? raw) {
+  if (raw is int) return raw;
+  if (raw is num) return raw.toInt();
+  if (raw is String) return int.tryParse(raw);
+  return null;
+}
+
+CommentUser _commentUser(Map<String, dynamic> json) {
+  final rawUser = json['user'];
+  final rawProfile = json['profile'];
+  final user = rawUser is Map
+      ? CommentUser.fromJson(rawUser.cast<String, dynamic>())
+      : rawProfile is Map
+      ? CommentUser.fromJson(rawProfile.cast<String, dynamic>())
+      : const CommentUser(address: '', pseudonym: '', profileImage: '');
+  final fallbackAddress = json['userAddress']?.toString() ?? '';
+  if (user.address.isNotEmpty || fallbackAddress.isEmpty) return user;
+  return CommentUser(
+    address: fallbackAddress,
+    pseudonym: user.pseudonym,
+    profileImage: user.profileImage,
+  );
 }
 
 List<Tag> _tags(Object? raw) {

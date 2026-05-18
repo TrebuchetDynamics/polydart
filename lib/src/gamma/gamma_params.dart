@@ -238,9 +238,9 @@ final class CommentQuery {
 
   Map<String, dynamic> toQuery() {
     final q = <String, dynamic>{};
-    if (entityId != null) q['entity_id'] = entityId!.toString();
+    if (entityId != null) q['parent_entity_id'] = entityId!.toString();
     if (entityType != null && entityType!.isNotEmpty) {
-      q['entity_type'] = entityType;
+      q['parent_entity_type'] = entityType;
     }
     if (limit != null && limit! > 0) q['limit'] = limit!.toString();
     if (offset != null && offset! > 0) q['offset'] = offset!.toString();

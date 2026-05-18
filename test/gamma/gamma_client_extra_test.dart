@@ -237,31 +237,70 @@ void main() {
   });
 
   group('comments / commentById / commentsByUser', () {
-    test('comments GETs /comments with entity_id + entity_type', () async {
-      Uri? captured;
+    test(
+      'comments GETs /comments with parent_entity_id + parent_entity_type',
+      () async {
+        Uri? captured;
+        final client = _client((req) async {
+          captured = req.url;
+          return _jsonList([
+            <String, dynamic>{
+              'id': 'c1',
+              'body': 'gm',
+              'user': <String, dynamic>{
+                'address': '0xabc',
+                'pseudonym': 'pix',
+                'profileImage': '',
+              },
+            },
+          ]);
+        });
+        final out = await client.comments(
+          const CommentQuery(entityId: 99, entityType: 'Event', limit: 50),
+        );
+        expect(captured!.path, '/comments');
+        expect(captured!.queryParameters['parent_entity_id'], '99');
+        expect(captured!.queryParameters['parent_entity_type'], 'Event');
+        expect(captured!.queryParameters.containsKey('entity_id'), isFalse);
+        expect(captured!.queryParameters.containsKey('entity_type'), isFalse);
+        expect(captured!.queryParameters['limit'], '50');
+        expect(out.first.id, 'c1');
+        expect(out.first.user.address, '0xabc');
+      },
+    );
+
+    test('comments decodes current Gamma profile shape', () async {
       final client = _client((req) async {
-        captured = req.url;
         return _jsonList([
           <String, dynamic>{
-            'id': 'c1',
-            'body': 'gm',
-            'user': <String, dynamic>{
-              'address': '0xabc',
-              'pseudonym': 'pix',
-              'profileImage': '',
+            'id': '2933135',
+            'body': 'Why so many people moving from this market?',
+            'parentEntityType': 'Series',
+            'parentEntityID': 35,
+            'userAddress': '0xf5aa8ba8f7f0ef81f7ff0365212e6550116b0376',
+            'createdAt': '2026-05-18T06:47:21.255417Z',
+            'updatedAt': '2026-05-18T06:47:29.475121Z',
+            'profile': <String, dynamic>{
+              'name': 'Higuain76',
+              'pseudonym': 'Growing-Bidding',
+              'baseAddress': '0xf5aa8ba8f7f0ef81f7ff0365212e6550116b0376',
+              'profileImage': 'https://example.com/profile.png',
             },
           },
         ]);
       });
       final out = await client.comments(
-        const CommentQuery(entityId: 99, entityType: 'event', limit: 50),
+        const CommentQuery(entityId: 35, entityType: 'Series', limit: 3),
       );
-      expect(captured!.path, '/comments');
-      expect(captured!.queryParameters['entity_id'], '99');
-      expect(captured!.queryParameters['entity_type'], 'event');
-      expect(captured!.queryParameters['limit'], '50');
-      expect(out.first.id, 'c1');
-      expect(out.first.user.address, '0xabc');
+
+      expect(out.first.id, '2933135');
+      expect(out.first.parentId, 35);
+      expect(
+        out.first.user.address,
+        '0xf5aa8ba8f7f0ef81f7ff0365212e6550116b0376',
+      );
+      expect(out.first.user.pseudonym, 'Growing-Bidding');
+      expect(out.first.user.profileImage, 'https://example.com/profile.png');
     });
 
     test('commentById GETs /comments/{id}', () async {
