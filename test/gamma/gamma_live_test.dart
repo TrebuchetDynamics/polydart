@@ -1,7 +1,7 @@
 /// Network-tagged smoke test against the real Polymarket Gamma API.
 ///
 /// Disabled by default — opt in with:
-///   dart test --tags network
+///   dart test --tags network --run-skipped
 @Tags(['network'])
 library;
 
@@ -31,6 +31,22 @@ void main() {
         (event) => event.slug == 'fed-decision-in-june-825',
       );
       expect(event.id, '101772');
+      expect(event.title, 'Fed Decision in June?');
+      expect(event.markets, hasLength(5));
+    } finally {
+      client.close();
+    }
+  });
+
+  test('exact slug search finds the Fed decision event first', () async {
+    final client = Polydart.readOnly();
+    try {
+      final r = await client.gamma.search(
+        const SearchParams(query: 'fed-decision-in-june-825', limitPerType: 3),
+      );
+      final event = r.events.first;
+      expect(event.id, '101772');
+      expect(event.slug, 'fed-decision-in-june-825');
       expect(event.title, 'Fed Decision in June?');
       expect(event.markets, hasLength(5));
     } finally {
