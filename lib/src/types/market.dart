@@ -110,6 +110,9 @@ final class Market {
     required this.icon,
     required this.description,
     this.resolutionSource = '',
+    this.groupItemTitle = '',
+    this.groupItemThreshold = '',
+    this.groupItemRange = '',
     required this.category,
     required this.startDate,
     required this.endDate,
@@ -170,6 +173,9 @@ final class Market {
     icon: json['icon']?.toString() ?? '',
     description: json['description']?.toString() ?? '',
     resolutionSource: json['resolutionSource']?.toString() ?? '',
+    groupItemTitle: json['groupItemTitle']?.toString() ?? '',
+    groupItemThreshold: json['groupItemThreshold']?.toString() ?? '',
+    groupItemRange: json['groupItemRange']?.toString() ?? '',
     category: json['category']?.toString() ?? '',
     startDate: parseNormalizedDateTime(json['startDate']),
     endDate: parseNormalizedDateTime(json['endDate']),
@@ -231,6 +237,9 @@ final class Market {
   final String icon;
   final String description;
   final String resolutionSource;
+  final String groupItemTitle;
+  final String groupItemThreshold;
+  final String groupItemRange;
   final String category;
   final DateTime? startDate;
   final DateTime? endDate;

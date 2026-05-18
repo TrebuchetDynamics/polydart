@@ -47,6 +47,20 @@ void main() {
       for (final market in event.markets) {
         _expectGammaMarketTruth(market);
       }
+
+      expect(
+        {
+          for (final market in event.markets)
+            market.groupItemTitle: market.groupItemThreshold,
+        },
+        const {
+          '50+ bps decrease': '0',
+          '25 bps decrease': '1',
+          'No change': '2',
+          '25 bps increase': '3',
+          '50+ bps increase': '4',
+        },
+      );
     });
 
     test('finds the event from Gamma public search before detail lookup', () {
