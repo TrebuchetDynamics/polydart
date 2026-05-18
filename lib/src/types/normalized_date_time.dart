@@ -16,6 +16,14 @@ DateTime? parseNormalizedDateTime(Object? raw) {
   }
   if (s.isEmpty || s == 'null') return null;
 
+  final dateOnly = _dateOnlyRegex.firstMatch(s);
+  if (dateOnly != null) {
+    final year = int.parse(dateOnly.group(1)!);
+    final month = int.parse(dateOnly.group(2)!);
+    final day = int.parse(dateOnly.group(3)!);
+    return DateTime.utc(year, month, day);
+  }
+
   // Pad short timezone suffixes: "+07" → "+07:00".
   if (s.length >= 3 && (s.contains(' ') || s.contains('T'))) {
     final last3 = s.substring(s.length - 3);
@@ -58,6 +66,7 @@ String? encodeNormalizedDateTime(DateTime? dt) {
 bool _isDigit(int code) => code >= 0x30 && code <= 0x39;
 
 final RegExp _longDateRegex = RegExp(r'^([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})$');
+final RegExp _dateOnlyRegex = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$');
 
 const Map<String, int> _monthNameToInt = {
   'january': 1,

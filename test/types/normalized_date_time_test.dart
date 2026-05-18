@@ -36,8 +36,7 @@ void main() {
 
   test('date-only form', () {
     final dt = parseNormalizedDateTime('2026-05-07');
-    expect(dt, isNotNull);
-    expect(dt!.year, 2026);
+    expect(dt, DateTime.utc(2026, 5, 7));
   });
 
   test('long human form', () {
