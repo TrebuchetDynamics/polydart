@@ -108,6 +108,43 @@ void main() {
       },
     );
 
+    test(
+      'delegates market trades to the public Data API market filter',
+      () async {
+        Uri? dataUrl;
+        final client = UniversalClient(
+          config: UniversalConfig(
+            dataTransport: _transport(DataApiClient.defaultBaseUrl, (
+              req,
+            ) async {
+              dataUrl = req.url;
+              return http.Response(
+                jsonEncode([
+                  <String, dynamic>{
+                    'conditionId': '0xmarket',
+                    'asset': 'yes-token',
+                    'side': 'BUY',
+                  },
+                ]),
+                200,
+              );
+            }),
+          ),
+        );
+
+        addTearDown(client.close);
+
+        final trades = await client.marketTrades('0xmarket', limit: 7);
+
+        expect(dataUrl!.path, '/trades');
+        expect(dataUrl!.queryParameters['market'], '0xmarket');
+        expect(dataUrl!.queryParameters['limit'], '7');
+        expect(dataUrl!.queryParameters.containsKey('user'), isFalse);
+        expect(trades.single.market, '0xmarket');
+        expect(trades.single.assetId, 'yes-token');
+      },
+    );
+
     test('creates stream clients from the configured stream surface', () async {
       Uri? capturedUrl;
       final channel = _FakeWebSocketChannel();

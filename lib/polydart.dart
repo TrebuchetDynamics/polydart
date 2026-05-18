@@ -444,6 +444,7 @@ export 'src/universal/universal_client.dart'
 
 import 'src/clob/clob_client.dart';
 import 'src/config/config.dart';
+import 'src/dataapi/dataapi_client.dart';
 import 'src/errors/errors.dart';
 import 'src/gamma/gamma_client.dart';
 import 'src/marketdiscovery/market_discovery.dart';
@@ -456,7 +457,7 @@ const String polydartVersion = '0.1.0-alpha.2';
 
 /// Top-level polydart client.
 ///
-/// Owns one HTTP transport per upstream (Gamma + CLOB) and shares those
+/// Owns one HTTP transport per upstream (Gamma + CLOB + Data API) and shares those
 /// transports across every sub-client. Closing the top-level client is
 /// the only correct way to release resources.
 ///
@@ -475,6 +476,7 @@ final class Polydart {
     required this.eoaAddress,
     required this.gamma,
     required this.clob,
+    required this.data,
     required this.resolver,
     required this.discovery,
   });
@@ -482,18 +484,26 @@ final class Polydart {
   /// Constructs a polydart client for [PolydartMode.readOnly].
   ///
   /// Pass [config] to override base URLs / timeouts (typically wired from
-  /// [PolydartConfig.fromEnv]). Pass [gammaTransport] / [clobTransport]
+  /// [PolydartConfig.fromEnv]). Pass [gammaTransport] / [clobTransport] /
+  /// [dataTransport]
   /// to inject a custom [HttpTransport] (for example one with a shared
   /// rate limiter or circuit breaker).
   factory Polydart.readOnly({
     PolydartConfig? config,
     HttpTransport? gammaTransport,
     HttpTransport? clobTransport,
+    HttpTransport? dataTransport,
   }) {
     final cfg = (config ?? const PolydartConfig()).copyWith(
       mode: PolydartMode.readOnly,
     );
-    return _build(cfg, gammaTransport, clobTransport, eoaAddress: '');
+    return _build(
+      cfg,
+      gammaTransport,
+      clobTransport,
+      dataTransport,
+      eoaAddress: '',
+    );
   }
 
   /// Constructs a polydart client for [PolydartMode.paper].
@@ -507,6 +517,7 @@ final class Polydart {
     PolydartConfig? config,
     HttpTransport? gammaTransport,
     HttpTransport? clobTransport,
+    HttpTransport? dataTransport,
   }) {
     if (eoaAddress.trim().isEmpty) {
       throw const ValidationException(
@@ -518,7 +529,13 @@ final class Polydart {
     final cfg = (config ?? const PolydartConfig()).copyWith(
       mode: PolydartMode.paper,
     );
-    return _build(cfg, gammaTransport, clobTransport, eoaAddress: eoaAddress);
+    return _build(
+      cfg,
+      gammaTransport,
+      clobTransport,
+      dataTransport,
+      eoaAddress: eoaAddress,
+    );
   }
 
   /// SDK configuration captured at construction time.
@@ -536,6 +553,9 @@ final class Polydart {
   /// CLOB API surface — book, price, midpoint, spread, …
   final ClobClient clob;
 
+  /// Data API surface — positions, activity, holders, analytics, …
+  final DataApiClient data;
+
   /// Slug ↔ id ↔ token resolver layered on top of [gamma].
   final MarketResolver resolver;
 
@@ -546,12 +566,14 @@ final class Polydart {
   void close() {
     gamma.close();
     clob.close();
+    data.close();
   }
 
   static Polydart _build(
     PolydartConfig cfg,
     HttpTransport? gammaTransport,
-    HttpTransport? clobTransport, {
+    HttpTransport? clobTransport,
+    HttpTransport? dataTransport, {
     required String eoaAddress,
   }) {
     final gt =
@@ -570,17 +592,27 @@ final class Polydart {
             timeout: cfg.requestTimeout,
           ),
         );
+    final dt =
+        dataTransport ??
+        HttpTransport(
+          config: TransportConfig(
+            baseUrl: cfg.dataBaseUrl,
+            timeout: cfg.requestTimeout,
+          ),
+        );
     final gamma = GammaClient(transport: gt);
     final clob = ClobClient(
       transport: ct,
       mode: cfg.mode,
       liveTradingEnabled: cfg.liveTradingEnabled,
     );
+    final data = DataApiClient(transport: dt);
     return Polydart._(
       config: cfg,
       eoaAddress: eoaAddress,
       gamma: gamma,
       clob: clob,
+      data: data,
       resolver: MarketResolver(gamma: gamma),
       discovery: MarketDiscovery(gamma: gamma, clob: clob),
     );

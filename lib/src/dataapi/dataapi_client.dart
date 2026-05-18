@@ -69,6 +69,18 @@ final class DataApiClient {
         .toList(growable: false);
   }
 
+  /// Returns recent public trades for [market], a market condition ID.
+  Future<List<Trade>> marketTrades(String market, {int limit = 0}) async {
+    final list = await _transport.getJsonList(
+      '/trades',
+      query: <String, dynamic>{'market': market, 'limit': limit.toString()},
+    );
+    return list
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => Trade.fromJson(m.cast<String, dynamic>()))
+        .toList(growable: false);
+  }
+
   /// Returns [user]'s recent on/off-chain activity.
   Future<List<Activity>> activity(String user, {int limit = 0}) async {
     final list = await _transport.getJsonList(

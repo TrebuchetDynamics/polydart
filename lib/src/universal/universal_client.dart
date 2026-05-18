@@ -405,6 +405,10 @@ final class UniversalClient {
     return _data.trades(user, limit: limit);
   }
 
+  Future<List<Trade>> marketTrades(String market, {int limit = 0}) {
+    return _data.marketTrades(market, limit: limit);
+  }
+
   Future<List<Activity>> activity(String user, {int limit = 0}) {
     return _data.activity(user, limit: limit);
   }

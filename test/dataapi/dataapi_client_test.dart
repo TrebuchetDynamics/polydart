@@ -295,6 +295,38 @@ void main() {
       expect(trade.traderSide, 'TAKER');
       expect(trade.createdAt, '1714001234');
     });
+
+    test('GETs /trades with market filter and no user', () async {
+      Uri? captured;
+      final client = _client((req) async {
+        captured = req.url;
+        return http.Response(
+          jsonEncode([
+            <String, dynamic>{
+              'conditionId': '0xmarket',
+              'asset': 'yes-token',
+              'side': 'BUY',
+              'price': '0.98',
+              'size': '4.5',
+              'outcome': 'Yes',
+              'timestamp': 1778314880,
+              'transactionHash': '0xtx',
+            },
+          ]),
+          200,
+        );
+      });
+
+      final trades = await client.marketTrades('0xmarket', limit: 25);
+
+      expect(captured!.path, '/trades');
+      expect(captured!.queryParameters['market'], '0xmarket');
+      expect(captured!.queryParameters['limit'], '25');
+      expect(captured!.queryParameters.containsKey('user'), isFalse);
+      expect(trades.single.market, '0xmarket');
+      expect(trades.single.assetId, 'yes-token');
+      expect(trades.single.transactionHash, '0xtx');
+    });
   });
 
   group('activity', () {
