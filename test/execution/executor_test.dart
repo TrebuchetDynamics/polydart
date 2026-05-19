@@ -7,7 +7,7 @@ import 'package:polydart/src/types/enums.dart';
 import 'package:test/test.dart';
 
 void main() {
-  OrderIntent _buildIntent({
+  OrderIntent buildIntent({
     String tokenId = 'tok-1',
     Side side = Side.buy,
     String price = '0.55',
@@ -24,7 +24,7 @@ void main() {
   group('PaperExecutor', () {
     test('Place buy order succeeds', () {
       final executor = PaperExecutor(initialCash: '1000');
-      final intent = _buildIntent();
+      final intent = buildIntent();
       final resp = executor.place(intent);
 
       expect(resp.success, isTrue);
@@ -35,7 +35,7 @@ void main() {
 
     test('Cancel existing order', () {
       final executor = PaperExecutor(initialCash: '1000');
-      final intent = _buildIntent();
+      final intent = buildIntent();
       final resp = executor.place(intent);
       executor.cancel(resp.orderId);
 
@@ -54,7 +54,7 @@ void main() {
 
     test('GetOrder returns order by ID', () {
       final executor = PaperExecutor(initialCash: '1000');
-      final intent = _buildIntent();
+      final intent = buildIntent();
       final resp = executor.place(intent);
 
       final order = executor.getOrder(resp.orderId);
@@ -69,7 +69,7 @@ void main() {
 
     test('ListOrders returns all placed orders', () {
       final executor = PaperExecutor(initialCash: '1000');
-      final intent = _buildIntent();
+      final intent = buildIntent();
       executor.place(intent);
       executor.place(intent);
 
@@ -79,12 +79,12 @@ void main() {
 
     test('Rejects invalid intent', () {
       final executor = PaperExecutor(initialCash: '1000');
-      final emptyIntent = OrderIntent(
+      final emptyIntent = const OrderIntent(
         tokenId: '',
         side: Side.buy,
         price: Decimal.zero,
         size: Decimal.zero,
-        tickSize: const TickSize(
+        tickSize: TickSize(
           minimumTickSize: '0.01',
           minimumOrderSize: '1',
           tickSize: '0.01',
@@ -103,7 +103,7 @@ void main() {
 
     test('Order IDs are sequential', () {
       final executor = PaperExecutor(initialCash: '1000');
-      final intent = _buildIntent();
+      final intent = buildIntent();
       final r1 = executor.place(intent);
       final r2 = executor.place(intent);
       final r3 = executor.place(intent);
@@ -115,7 +115,7 @@ void main() {
 
     test('Snapshot returns current state', () {
       final executor = PaperExecutor(initialCash: '1000');
-      final intent = _buildIntent();
+      final intent = buildIntent();
       executor.place(intent);
 
       final snap = executor.snapshot('USD');
