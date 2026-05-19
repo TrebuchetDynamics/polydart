@@ -10,6 +10,7 @@ import 'package:meta/meta.dart';
 
 import 'normalized_date_time.dart';
 import 'string_or_array.dart';
+import 'clob.dart' show Token;
 
 @immutable
 final class Pagination {
@@ -160,32 +161,41 @@ final class Market {
     this.rfqEnabled = false,
     required this.clobTokenIds,
     required this.tags,
+    this.status = '',
+    this.closeTimestamp,
+    this.eventEndTime,
+    this.resolvedTimestamp,
+    this.closedAt,
+    this.fetchedAt,
+    this.commentsCount = 0,
+    this.tokens = const <Token>[],
+    this.tokenIds = const <String>[],
     required this.raw,
   });
 
   factory Market.fromJson(Map<String, dynamic> json) => Market(
     id: json['id']?.toString() ?? '',
     question: json['question']?.toString() ?? '',
-    conditionId: json['conditionId']?.toString() ?? '',
+    conditionId: _field(json, 'conditionId', 'condition_id')?.toString() ?? '',
     slug: json['slug']?.toString() ?? '',
-    questionId: json['questionID']?.toString() ?? '',
+    questionId: _field(json, 'questionID', 'question_id')?.toString() ?? '',
     image: json['image']?.toString() ?? '',
     icon: json['icon']?.toString() ?? '',
     description: json['description']?.toString() ?? '',
     resolutionSource: json['resolutionSource']?.toString() ?? '',
-    groupItemTitle: json['groupItemTitle']?.toString() ?? '',
-    groupItemThreshold: json['groupItemThreshold']?.toString() ?? '',
+    groupItemTitle: _field(json, 'groupItemTitle', 'group_item_title')?.toString() ?? '',
+    groupItemThreshold: _field(json, 'groupItemThreshold', 'group_item_threshold')?.toString() ?? '',
     groupItemRange: json['groupItemRange']?.toString() ?? '',
     category: json['category']?.toString() ?? '',
     startDate: parseNormalizedDateTime(json['startDate']),
     endDate: parseNormalizedDateTime(json['endDate']),
     startDateIso: json['startDateIso']?.toString() ?? '',
-    endDateIso: json['endDateIso']?.toString() ?? '',
+    endDateIso: _field(json, 'endDateIso', 'end_date_iso')?.toString() ?? '',
     umaEndDate: parseNormalizedDateTime(json['umaEndDate']),
-    closedTime: parseNormalizedDateTime(json['closedTime']),
+    closedTime: parseNormalizedDateTime(_field(json, 'closedTime', 'closed_time')),
     createdAt: parseNormalizedDateTime(json['createdAt']),
-    updatedAt: parseNormalizedDateTime(json['updatedAt']),
-    gameStartTime: parseNormalizedDateTime(json['gameStartTime']),
+    updatedAt: parseNormalizedDateTime(_field(json, 'updatedAt', 'updated_at')),
+    gameStartTime: parseNormalizedDateTime(_field(json, 'gameStartTime', 'game_start_time')),
     eventStartTime: parseNormalizedDateTime(json['eventStartTime']),
     acceptingOrdersTimestamp: parseNormalizedDateTime(
       json['acceptingOrdersTimestamp'],
@@ -200,15 +210,15 @@ final class Market {
     restricted: json['restricted'] == true,
     ready: json['ready'] == true,
     funded: json['funded'] == true,
-    acceptingOrders: json['acceptingOrders'] == true,
-    enableOrderBook: json['enableOrderBook'] == true,
+    acceptingOrders: _field(json, 'acceptingOrders', 'accepting_orders') == true,
+    enableOrderBook: _field(json, 'enableOrderBook', 'enable_order_book') == true,
     orderMinSize: _double(json['orderMinSize']),
     orderPriceMinTickSize: _double(json['orderPriceMinTickSize']),
     makerBaseFee: _int(json['makerBaseFee']),
     takerBaseFee: _int(json['takerBaseFee']),
     volume: json['volume']?.toString() ?? '',
     liquidity: json['liquidity']?.toString() ?? '',
-    liquidityNum: _double(json['liquidityNum']),
+    liquidityNum: _double(_field(json, 'liquidityNum', 'liquidity_num')),
     volumeNum: _double(json['volumeNum']),
     volume24hr: _double(json['volume24hr']),
     volume1wk: _double(json['volume1wk']),
@@ -225,6 +235,27 @@ final class Market {
     rfqEnabled: json['rfqEnabled'] == true,
     clobTokenIds: json['clobTokenIds']?.toString() ?? '',
     tags: _tags(json['tags']),
+    status: _field(json, 'status', 'status')?.toString() ?? '',
+    closeTimestamp: parseNormalizedDateTime(
+      _field(json, 'closeTimestamp', 'close_timestamp'),
+    ),
+    eventEndTime: parseNormalizedDateTime(
+      _field(json, 'eventEndTime', 'event_end_time'),
+    ),
+    resolvedTimestamp: parseNormalizedDateTime(
+      _field(json, 'resolvedTimestamp', 'resolved_timestamp'),
+    ),
+    closedAt: parseNormalizedDateTime(
+      _field(json, 'closedAt', 'closed_at'),
+    ),
+    fetchedAt: parseNormalizedDateTime(
+      _field(json, 'fetchedAt', 'fetched_at'),
+    ),
+    commentsCount: _int(
+      _field(json, 'commentCount', 'comment_count'),
+    ),
+    tokens: _tokens(json['tokens']),
+    tokenIds: _stringList(_field(json, 'tokenIds', 'token_ids')),
     raw: Map.unmodifiable(json),
   );
 
@@ -287,6 +318,15 @@ final class Market {
   final bool rfqEnabled;
   final String clobTokenIds;
   final List<Tag> tags;
+  final String status;
+  final DateTime? closeTimestamp;
+  final DateTime? eventEndTime;
+  final DateTime? resolvedTimestamp;
+  final DateTime? closedAt;
+  final DateTime? fetchedAt;
+  final int commentsCount;
+  final List<Token> tokens;
+  final List<String> tokenIds;
 
   /// The original payload. Read-only; useful for fields polydart hasn't
   /// typed yet. Do not mutate.
@@ -726,6 +766,10 @@ final class MarketByTokenResponse {
 
 // ---- helpers ----
 
+/// Resolve a JSON value, trying [camelKey] first then [snakeKey].
+Object? _field(Map<String, dynamic> json, String camelKey, String snakeKey) =>
+    json[camelKey] ?? json[snakeKey];
+
 double _double(Object? raw) {
   if (raw is num) return raw.toDouble();
   if (raw is String) return double.tryParse(raw) ?? 0;
@@ -817,4 +861,17 @@ List<Comment> _comments(Object? raw) {
       .whereType<Map<dynamic, dynamic>>()
       .map((m) => Comment.fromJson(m.cast<String, dynamic>()))
       .toList(growable: false);
+}
+
+List<Token> _tokens(Object? raw) {
+  if (raw is! List) return const <Token>[];
+  return raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => Token.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+}
+
+List<String> _stringList(Object? raw) {
+  if (raw is! List) return const <String>[];
+  return raw.map((e) => e.toString()).toList(growable: false);
 }

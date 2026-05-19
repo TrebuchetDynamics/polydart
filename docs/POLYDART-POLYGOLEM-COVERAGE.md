@@ -6,10 +6,10 @@ custody architecture as described in `docs/adr/0001-wallet-mediated-eoa-signing.
 
 - Canonical upstream source: `polygolem/`
 - Last scaffolded Polygolem commit: `2b7cde7`
-- Last fidelity sync commit: `f4d0443`
+- Last fidelity sync commit: `21f1982`
 - Scaffold command: `python3 skills/polydart/scripts/polygolem_inventory.py --root .`
-- Upstream delta after `5220881a` is non-protocol reference maintenance and a
-  docs-only comments plan; no protocol SDK behavior changed there.
+- Upstream delta after `21f1982`: Gamma comment profiles normalization, market
+  trades Data API, batch orderbooks exposure, and market metadata. All ported.
 
 Status values: `implemented`, `partial`, `missing`, `intentional Dart
 divergence`, `not applicable`.
@@ -45,7 +45,8 @@ all accounted for.
 | pkg/gamma | polygolem/pkg/gamma | lib/src/gamma | partial | test/gamma | not_required | 2b7cde7 | Profile creation helper covered; continue endpoint and DTO coverage |
 | pkg/marketdata | polygolem/pkg/marketdata | lib/src/marketdata | implemented | test/marketdata | not_required | 2b7cde7 | Market-data tracker covered |
 | pkg/marketresolver | polygolem/pkg/marketresolver | lib/src/marketresolver | partial | test/marketresolver | not_required | 2b7cde7 | Compare resolver semantics |
-| pkg/orderbook | polygolem/pkg/orderbook | lib/src/bookreader | partial | test/bookreader | required | 2b7cde7 | Confirm naming divergence and behavior parity |
+| pkg/orderbook | polygolem/pkg/orderbook | lib/src/orderbook | implemented | test/orderbook | not_required | 21f1982 | ClobOrderBookReader (single + batch fetches), ValidationException on empty tokenId, empty-skip behavior, BookReader integration, and 5 mock HTTP tests covered; matches polygolem Reader/BatchReader interfaces |
+| pkg/orderbook (bookreader) | polygolem/pkg/bookreader | lib/src/bookreader | implemented | test/bookreader | not_required | 2b7cde7 | BookReader compute class (sorted bids/asks, midpoint, spread, depth) covered |
 | pkg/orderresults | polygolem/pkg/orderresults | lib/src/orderresults | implemented | test/orderresults | not_required | 2b7cde7 | Report builder covered; CLOB inclusion uses ApiKey reader instead of raw private key |
 | pkg/pagination | polygolem/pkg/pagination | lib/src/pagination | implemented | test/pagination | not_required | 2b7cde7 | Cursor/offset stream, collect, and batch helpers covered |
 | pkg/plugins | polygolem/pkg/plugins | lib/src/plugins | implemented | test/plugins | not_required | 2b7cde7 | Plugin interfaces covered |
@@ -57,11 +58,11 @@ all accounted for.
 | pkg/wallet | polygolem/pkg/wallet | lib/src/wallet | partial | test/wallet | required | 2b7cde7 | Port protocol behavior without raw EOA keys |
 | internal/auth | polygolem/internal/auth | lib/src/auth | partial | test/auth | required | 2b7cde7 | Expand signing parity vectors |
 | internal/clob | polygolem/internal/clob | lib/src/clob, lib/src/credentials | partial | test/clob, test/credentials | required | 5220881a | CLOB L2 credential create/derive reuses one wallet-approved ClobAuth signature across fallback; builder-fee key creation preserves partial readiness; deposit-wallet batch placement and cancellation use EOA-bound HTTP auth; CLOB write 4xx bodies map to structured `ClobException.upstream`; continue authenticated read/write edge cases |
-| internal/config | polygolem/internal/config | lib/src/config | partial | test/config | not_required | 2b7cde7 | Verify redaction and env mapping |
+| internal/config | polygolem/internal/config | lib/src/config | implemented | test/config | not_required | 21f1982 | PolydartConfig with defaults, fromEnv (prefix support), copyWith, redacted toString, parseDuration, and 10 tests covered; YAML file loading intentionally omitted (CLI-only concern in Go) |
 | internal/dataapi | polygolem/internal/dataapi | lib/src/dataapi | implemented | test/dataapi | not_required | f4d0443 | Current-position, closed-position, trade, holder, open-interest, volume, leaderboard, aggregate object/list fields, and endpoint names covered; monitor upstream |
 | internal/enabletrading | polygolem/internal/enabletrading | lib/src/enabletrading | partial | test/enabletrading | required | 2b7cde7 | Wallet-mediated typed-data builders covered; no raw EOA key submission surface |
-| internal/errors | polygolem/internal/errors | lib/src/errors | partial | test/errors | not_required | 2b7cde7 | Compare error categories and codes |
-| internal/execution | polygolem/internal/execution | lib/src/paper, lib/src/modes | partial | test/paper, test/modes | required | 2b7cde7 | Map executor semantics to paper/live/read-only boundaries |
+| internal/errors | polygolem/internal/errors | lib/src/errors | implemented | test/errors | not_required | 21f1982 | All 20 ErrorCode values match 1:1 (NET-*, AUTH-*, CLOB-*, VAL-*, SAFETY-*, GAMMA-*); typed exception hierarchy (TransportException, AuthException, ClobException, ValidationException, SafetyException, GammaException) with 10 tests; ClobErrorResponse structured decoding covered |
+| internal/execution | polygolem/internal/execution | lib/src/execution | implemented | test/execution | not_required | 21f1982 | Executor interface, PaperExecutor with Place/Cancel/GetOrder/ListOrders, PaperOrderEntry, PaperFillEntry, and 10 tests covered; maps executor semantics to polydart's paper/live/read-only boundaries |
 | internal/gamma | polygolem/internal/gamma | lib/src/gamma | partial | test/gamma | not_required | 2b7cde7 | Profile creation helper covered; continue search/event/tag/series/profile DTO parity |
 | internal/marketdiscovery | polygolem/internal/marketdiscovery | lib/src/marketdiscovery | partial | test/marketdiscovery | not_required | 2b7cde7 | Compare enrichment behavior |
 | internal/modes | polygolem/internal/modes | lib/src/modes | implemented | test/modes | not_required | 2b7cde7 | Parse defaults and live-gate validation covered |
@@ -75,7 +76,7 @@ all accounted for.
 | internal/rpc | polygolem/internal/rpc | lib/src/rpc | partial | test/rpc, test/funding | not_required | 2b7cde7 | Read-only code/approval/allowance/balance helpers covered; live transfer/swap submission still gated out |
 | internal/stream | polygolem/internal/stream | lib/src/stream | implemented | test/stream | not_required | 2b7cde7 | Message parsing, lifecycle events, reconnect resubscribe, and custom-feature subscription covered |
 | internal/telemetry | polygolem/internal/telemetry | lib/src/telemetry | implemented | test/telemetry | not_required | 2b7cde7 | Request/retry/rate-limit/circuit-open telemetry and redaction covered |
-| internal/transport | polygolem/internal/transport | lib/src/transport | partial | test/transport | not_required | 2b7cde7 | Compare retry, rate limit, circuit breaker |
+| internal/transport | polygolem/internal/transport | lib/src/transport | implemented | test/transport | not_required | 21f1982 | CircuitBreaker (3-state closed/open/halfOpen, maxFailures=5, resetTimeout=60s, halfOpenMaxRequests=3), RateLimiter (token bucket, tryAcquire/acquire/stop), HttpTransport (GET/POST with retry on 5xx/429, no-retry on POST/4xx, circuit breaker + rate limiter integration, timeout, redaction), and 38 tests covered; matches polygolem behavior |
 | internal/wallet | polygolem/internal/wallet | lib/src/wallet | partial | test/wallet | required | 2b7cde7 | Compare derive/deploy/status/batch semantics |
 | cli/* | polygolem/internal/cli |  | not applicable |  | mixed | 2b7cde7 | Port behavior only when it maps to public SDK APIs |
 

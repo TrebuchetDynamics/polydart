@@ -121,11 +121,9 @@ final class HttpTransport {
     Map<String, String>? headers,
     bool retry = true,
   }) async {
-    _circuitBreaker?.beforeRequest();
-    await _rateLimiter?.acquire();
-
-    try {
-      final resp = await _doInner(
+    Future<http.Response> operation() async {
+      await _rateLimiter?.acquire();
+      return _doInner(
         method,
         path,
         body,
@@ -133,12 +131,12 @@ final class HttpTransport {
         headers,
         retry: retry,
       );
-      _circuitBreaker?.recordResult(null);
-      return resp;
-    } catch (e) {
-      _circuitBreaker?.recordResult(e);
-      rethrow;
     }
+
+    if (_circuitBreaker != null) {
+      return _circuitBreaker.protect(operation);
+    }
+    return operation();
   }
 
   Future<http.Response> _doInner(
