@@ -119,7 +119,7 @@ void main() {
     test('category filters use Polymarket-style aliases', () {
       final markets = [
         _market(conditionId: 'business', category: 'Business'),
-        _market(conditionId: 'science', category: 'Science'),
+        _market(conditionId: 'technology', category: 'Technology'),
         _market(conditionId: 'politics', category: 'Politics'),
       ];
 
@@ -129,11 +129,35 @@ void main() {
       );
       expect(
         filterMarketsByCategory(markets, 'Tech').single.conditionId,
-        'science',
+        'technology',
       );
       expect(
         filterMarketsByCategory(markets, 'Elections').single.conditionId,
         'politics',
+      );
+    });
+
+    test('category filters keep Tech separate from Science', () {
+      final markets = [
+        _market(conditionId: 'science', category: 'Science'),
+        _market(conditionId: 'technology', category: 'Technology'),
+      ];
+
+      expect(
+        filterMarketsByCategory(markets, 'Tech').single.conditionId,
+        'technology',
+      );
+    });
+
+    test('category filters keep World separate from Politics', () {
+      final markets = [
+        _market(conditionId: 'politics', category: 'Politics'),
+        _market(conditionId: 'world', category: 'World'),
+      ];
+
+      expect(
+        filterMarketsByCategory(markets, 'World').single.conditionId,
+        'world',
       );
     });
 
@@ -239,13 +263,39 @@ void main() {
     test('event category filters use Polymarket-style aliases', () {
       final events = [
         _event(id: 'business', slug: 'business-event', category: 'Business'),
-        _event(id: 'science', slug: 'science-event', category: 'Science'),
+        _event(
+          id: 'technology',
+          slug: 'technology-event',
+          category: 'Technology',
+        ),
         _event(id: 'politics', slug: 'politics-event', category: 'Politics'),
       ];
 
       expect(filterEventsByCategory(events, 'Finance').single.id, 'business');
-      expect(filterEventsByCategory(events, 'Tech').single.id, 'science');
+      expect(filterEventsByCategory(events, 'Tech').single.id, 'technology');
       expect(filterEventsByCategory(events, 'Elections').single.id, 'politics');
+    });
+
+    test('event category filters keep Tech separate from Science', () {
+      final events = [
+        _event(id: 'science', slug: 'science-event', category: 'Science'),
+        _event(
+          id: 'technology',
+          slug: 'technology-event',
+          category: 'Technology',
+        ),
+      ];
+
+      expect(filterEventsByCategory(events, 'Tech').single.id, 'technology');
+    });
+
+    test('event category filters keep World separate from Politics', () {
+      final events = [
+        _event(id: 'politics', slug: 'politics-event', category: 'Politics'),
+        _event(id: 'world', slug: 'world-event', category: 'World'),
+      ];
+
+      expect(filterEventsByCategory(events, 'World').single.id, 'world');
     });
 
     test('event category filters keep Weather separate from Science', () {

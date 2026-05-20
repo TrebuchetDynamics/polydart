@@ -506,7 +506,7 @@ Set<String> _categoryAliases(String category) {
       return const {'finance', 'business', 'economy', 'markets'};
     case 'technology':
     case 'tech':
-      return const {'technology', 'tech', 'science', 'ai'};
+      return const {'technology', 'tech', 'ai'};
     case 'entertainment':
     case 'culture':
     case 'pop culture':
@@ -514,7 +514,7 @@ Set<String> _categoryAliases(String category) {
     case 'elections':
       return const {'elections', 'election', 'politics'};
     case 'world':
-      return const {'world', 'global', 'geopolitics', 'politics'};
+      return const {'world', 'global', 'geopolitics'};
     case 'weather':
       return const {'weather', 'climate'};
     default:
