@@ -137,6 +137,18 @@ void main() {
       );
     });
 
+    test('category filters keep Weather separate from Science', () {
+      final markets = [
+        _market(conditionId: 'science', category: 'Science'),
+        _market(conditionId: 'weather', category: 'Weather'),
+      ];
+
+      expect(
+        filterMarketsByCategory(markets, 'Weather').single.conditionId,
+        'weather',
+      );
+    });
+
     test('category filters match market tags', () {
       final markets = [
         _market(
@@ -234,6 +246,15 @@ void main() {
       expect(filterEventsByCategory(events, 'Finance').single.id, 'business');
       expect(filterEventsByCategory(events, 'Tech').single.id, 'science');
       expect(filterEventsByCategory(events, 'Elections').single.id, 'politics');
+    });
+
+    test('event category filters keep Weather separate from Science', () {
+      final events = [
+        _event(id: 'science', slug: 'science-event', category: 'Science'),
+        _event(id: 'weather', slug: 'weather-event', category: 'Weather'),
+      ];
+
+      expect(filterEventsByCategory(events, 'Weather').single.id, 'weather');
     });
 
     test('events GETs /events with limit + slug repeated', () async {

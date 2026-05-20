@@ -516,7 +516,7 @@ Set<String> _categoryAliases(String category) {
     case 'world':
       return const {'world', 'global', 'geopolitics', 'politics'};
     case 'weather':
-      return const {'weather', 'climate', 'science'};
+      return const {'weather', 'climate'};
     default:
       return {category};
   }
