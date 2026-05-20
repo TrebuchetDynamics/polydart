@@ -210,7 +210,13 @@ export 'src/funding/funding.dart'
         buildPusdTransferCall,
         buildPusdTransferCallPlan,
         pusdTransferSelector;
-export 'src/gamma/gamma_client.dart' show GammaClient, KeysetPage;
+export 'src/gamma/gamma_client.dart'
+    show
+        GammaClient,
+        KeysetPage,
+        deduplicateMarketsByConditionId,
+        filterMarketsByCategory,
+        marketMatchesCategory;
 export 'src/gamma/gamma_params.dart'
     show
         CommentQuery,

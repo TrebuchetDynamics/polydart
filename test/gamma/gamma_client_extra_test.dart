@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:polydart/src/gamma/gamma_client.dart';
 import 'package:polydart/src/gamma/gamma_params.dart';
+import 'package:polydart/src/types/market.dart';
 import 'package:polydart/src/transport/http_transport.dart';
 import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
@@ -33,8 +34,89 @@ http.Response _jsonList(List<Map<String, dynamic>> rows) =>
 http.Response _jsonObj(Map<String, dynamic> obj) =>
     http.Response(jsonEncode(obj), 200);
 
+Market _market({required String conditionId, required String category}) {
+  return Market.fromJson(<String, dynamic>{
+    'id': conditionId,
+    'conditionId': conditionId,
+    'question': 'Question $conditionId',
+    'category': category,
+    'active': true,
+    'closed': false,
+  });
+}
+
 void main() {
   group('activeMarkets', () {
+    test(
+      'activeMarketsAll collects pages and dedupes by condition id',
+      () async {
+        final client = _client((req) async {
+          expect(req.url.path, '/markets');
+          expect(req.url.queryParameters['active'], 'true');
+          expect(req.url.queryParameters['closed'], 'false');
+          expect(req.url.queryParameters['limit'], '100');
+          final offset =
+              int.tryParse(req.url.queryParameters['offset'] ?? '') ?? 0;
+          final rows = switch (offset) {
+            0 => [
+              for (var index = 0; index < 100; index++)
+                <String, dynamic>{
+                  'id': '$index',
+                  'conditionId': 'c$index',
+                  'question': 'Market $index',
+                  'active': true,
+                  'closed': false,
+                },
+            ],
+            100 => [
+              <String, dynamic>{
+                'id': 'dup',
+                'conditionId': 'c99',
+                'question': 'Duplicate',
+                'active': true,
+                'closed': false,
+              },
+              <String, dynamic>{
+                'id': '100',
+                'conditionId': 'c100',
+                'question': 'Page two',
+                'active': true,
+                'closed': false,
+              },
+            ],
+            _ => <Map<String, dynamic>>[],
+          };
+          return _jsonList(rows);
+        });
+
+        final markets = await client.activeMarketsAll();
+
+        expect(markets, hasLength(101));
+        expect(markets.last.conditionId, 'c100');
+      },
+    );
+
+    test('category filters use Polymarket-style aliases', () {
+      final markets = [
+        _market(conditionId: 'business', category: 'Business'),
+        _market(conditionId: 'science', category: 'Science'),
+        _market(conditionId: 'politics', category: 'Politics'),
+      ];
+
+      expect(
+        filterMarketsByCategory(markets, 'Finance').single.conditionId,
+        'business',
+      );
+      expect(
+        filterMarketsByCategory(markets, 'Tech').single.conditionId,
+        'science',
+      );
+      expect(
+        filterMarketsByCategory(markets, 'Elections').single.conditionId,
+        'politics',
+      );
+    });
+
     test('GETs /markets with active=true&closed=false', () async {
       Uri? captured;
       final client = _client((req) async {

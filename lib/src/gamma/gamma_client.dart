@@ -5,6 +5,7 @@
 /// market-by-token, and keyset pagination.
 library;
 
+import '../pagination/pagination.dart';
 import '../transport/http_transport.dart';
 import '../transport/transport_config.dart';
 import '../types/market.dart';
@@ -16,6 +17,9 @@ import 'gamma_params.dart';
 /// `(data, next_cursor, error)` triple polygolem returns from
 /// [GammaClient.eventsKeyset] / [GammaClient.marketsKeyset].
 typedef KeysetPage<T> = ({List<T> data, String nextCursor});
+
+const int _defaultMarketPageSize = 100;
+const int _defaultMaxMarketPages = 50;
 
 final class GammaClient {
   GammaClient({HttpTransport? transport})
@@ -85,6 +89,30 @@ final class GammaClient {
   /// `markets(GetMarketsParams(active: true, closed: false))`.
   Future<List<Market>> activeMarkets() =>
       markets(const GetMarketsParams(active: true, closed: false));
+
+  /// Collects active, non-closed markets across offset pages and deduplicates
+  /// by condition ID. Intended for discovery/indexing surfaces that need more
+  /// than the first Gamma page.
+  Future<List<Market>> activeMarketsAll({
+    int pageSize = _defaultMarketPageSize,
+    int maxPages = _defaultMaxMarketPages,
+  }) async {
+    final raw = await collectOffset<Market>((offset, limit) async {
+      if (offset >= pageSize * maxPages) {
+        return const OffsetPageResult<Market>(items: [], count: 0);
+      }
+      final page = await markets(
+        GetMarketsParams(
+          active: true,
+          closed: false,
+          limit: limit,
+          offset: offset,
+        ),
+      );
+      return OffsetPageResult<Market>(items: page, count: page.length);
+    }, pageSize);
+    return deduplicateMarketsByConditionId(raw);
+  }
 
   /// Lists events with optional filters.
   Future<List<Event>> events([
@@ -304,4 +332,66 @@ final class GammaClient {
       .whereType<Map<dynamic, dynamic>>()
       .map((m) => SportsMarketType.fromJson(m.cast<String, dynamic>()))
       .toList(growable: false);
+}
+
+/// Returns markets in input order, dropping empty or duplicate condition IDs.
+List<Market> deduplicateMarketsByConditionId(Iterable<Market> markets) {
+  final seen = <String>{};
+  final out = <Market>[];
+  for (final market in markets) {
+    final conditionId = market.conditionId.trim();
+    if (conditionId.isEmpty || !seen.add(conditionId)) continue;
+    out.add(market);
+  }
+  return out;
+}
+
+/// Applies Polymarket-style category aliases over a market list. Empty and
+/// `All` selections return all markets.
+List<Market> filterMarketsByCategory(
+  Iterable<Market> markets,
+  String category,
+) {
+  final selected = category.trim().toLowerCase();
+  if (selected.isEmpty || selected == 'all') {
+    return markets.toList(growable: false);
+  }
+  return markets
+      .where((market) => marketMatchesCategory(market.category, selected))
+      .toList(growable: false);
+}
+
+/// Returns whether a provider category matches a user-facing category label.
+bool marketMatchesCategory(String marketCategory, String selectedCategory) {
+  final market = marketCategory.trim().toLowerCase();
+  final selected = selectedCategory.trim().toLowerCase();
+  if (selected.isEmpty || selected == 'all') return true;
+  if (market.isNotEmpty &&
+      (market.contains(selected) || selected.contains(market))) {
+    return true;
+  }
+  return _categoryAliases(selected).any(market.contains);
+}
+
+Set<String> _categoryAliases(String category) {
+  switch (category) {
+    case 'finance':
+    case 'economy':
+      return const {'finance', 'business', 'economy', 'markets'};
+    case 'technology':
+    case 'tech':
+      return const {'technology', 'tech', 'science', 'ai'};
+    case 'entertainment':
+    case 'culture':
+    case 'pop culture':
+      return const {'entertainment', 'culture', 'pop culture', 'movies'};
+    case 'elections':
+      return const {'elections', 'election', 'politics'};
+    case 'world':
+      return const {'world', 'global', 'geopolitics', 'politics'};
+    case 'weather':
+      return const {'weather', 'climate', 'science'};
+    default:
+      return {category};
+  }
 }
