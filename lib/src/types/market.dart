@@ -522,6 +522,7 @@ final class Series {
     required this.seriesType,
     required this.recurrence,
     required this.description,
+    this.category = '',
     required this.image,
     required this.icon,
     required this.active,
@@ -547,6 +548,7 @@ final class Series {
     seriesType: json['seriesType']?.toString() ?? '',
     recurrence: json['recurrence']?.toString() ?? '',
     description: json['description']?.toString() ?? '',
+    category: json['category']?.toString() ?? '',
     image: json['image']?.toString() ?? '',
     icon: json['icon']?.toString() ?? '',
     active: json['active'] == true,
@@ -571,6 +573,7 @@ final class Series {
   final String seriesType;
   final String recurrence;
   final String description;
+  final String category;
   final String image;
   final String icon;
   final bool active;

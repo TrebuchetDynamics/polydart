@@ -22,6 +22,10 @@ const int _defaultMarketPageSize = 100;
 const int _defaultMaxMarketPages = 50;
 const int _defaultEventPageSize = 100;
 const int _defaultMaxEventPages = 50;
+const int _defaultSeriesPageSize = 100;
+const int _defaultMaxSeriesPages = 50;
+const int _defaultTagPageSize = 100;
+const int _defaultMaxTagPages = 50;
 
 final class GammaClient {
   GammaClient({HttpTransport? transport})
@@ -163,6 +167,24 @@ final class GammaClient {
     return list.first;
   }
 
+  /// Collects non-closed series across offset pages and deduplicates by slug,
+  /// falling back to ID when slug is empty.
+  Future<List<Series>> activeSeriesAll({
+    int pageSize = _defaultSeriesPageSize,
+    int maxPages = _defaultMaxSeriesPages,
+  }) async {
+    final raw = await collectOffset<Series>((offset, limit) async {
+      if (offset >= pageSize * maxPages) {
+        return const OffsetPageResult<Series>(items: [], count: 0);
+      }
+      final page = await series(
+        GetSeriesParams(closed: false, limit: limit, offset: offset),
+      );
+      return OffsetPageResult<Series>(items: page, count: page.length);
+    }, pageSize);
+    return deduplicateSeriesBySlugOrId(raw);
+  }
+
   /// Lists series with optional filters.
   Future<List<Series>> series([
     GetSeriesParams params = const GetSeriesParams(),
@@ -179,6 +201,22 @@ final class GammaClient {
     final body = await _transport.getJson('/series/$id');
     if (body.isEmpty) return null;
     return Series.fromJson(body);
+  }
+
+  /// Collects tags across offset pages and deduplicates by slug, falling back
+  /// to ID when slug is empty.
+  Future<List<Tag>> tagsAll({
+    int pageSize = _defaultTagPageSize,
+    int maxPages = _defaultMaxTagPages,
+  }) async {
+    final raw = await collectOffset<Tag>((offset, limit) async {
+      if (offset >= pageSize * maxPages) {
+        return const OffsetPageResult<Tag>(items: [], count: 0);
+      }
+      final page = await tags(GetTagsParams(limit: limit, offset: offset));
+      return OffsetPageResult<Tag>(items: page, count: page.length);
+    }, pageSize);
+    return deduplicateTagsBySlugOrId(raw);
   }
 
   /// Lists tags with optional filters.
@@ -352,6 +390,34 @@ final class GammaClient {
       .whereType<Map<dynamic, dynamic>>()
       .map((m) => SportsMarketType.fromJson(m.cast<String, dynamic>()))
       .toList(growable: false);
+}
+
+/// Returns series in input order, dropping repeated slugs or repeated IDs when
+/// slug is empty.
+List<Series> deduplicateSeriesBySlugOrId(Iterable<Series> series) {
+  final seen = <String>{};
+  final out = <Series>[];
+  for (final item in series) {
+    var key = item.slug.trim();
+    if (key.isEmpty) key = item.id.trim();
+    if (key.isEmpty || !seen.add(key)) continue;
+    out.add(item);
+  }
+  return out;
+}
+
+/// Returns tags in input order, dropping repeated slugs or repeated IDs when
+/// slug is empty.
+List<Tag> deduplicateTagsBySlugOrId(Iterable<Tag> tags) {
+  final seen = <String>{};
+  final out = <Tag>[];
+  for (final tag in tags) {
+    var key = tag.slug.trim();
+    if (key.isEmpty) key = tag.id.trim();
+    if (key.isEmpty || !seen.add(key)) continue;
+    out.add(tag);
+  }
+  return out;
 }
 
 /// Returns events in input order, dropping repeated slugs or repeated IDs when

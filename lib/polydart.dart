@@ -216,6 +216,8 @@ export 'src/gamma/gamma_client.dart'
         KeysetPage,
         deduplicateEventsBySlugOrId,
         deduplicateMarketsByConditionId,
+        deduplicateSeriesBySlugOrId,
+        deduplicateTagsBySlugOrId,
         filterEventsByCategory,
         filterMarketsByCategory,
         marketMatchesCategory;

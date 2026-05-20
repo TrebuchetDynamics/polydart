@@ -259,6 +259,51 @@ void main() {
   });
 
   group('series / seriesById', () {
+    test('activeSeriesAll collects pages and dedupes by slug', () async {
+      final client = _client((req) async {
+        expect(req.url.path, '/series');
+        expect(req.url.queryParameters['closed'], 'false');
+        expect(req.url.queryParameters['limit'], '100');
+        final offset =
+            int.tryParse(req.url.queryParameters['offset'] ?? '') ?? 0;
+        final rows = switch (offset) {
+          0 => [
+            for (var index = 0; index < 100; index++)
+              <String, dynamic>{
+                'id': 's$index',
+                'slug': 'series-$index',
+                'title': 'Series $index',
+                'active': true,
+                'closed': false,
+              },
+          ],
+          100 => [
+            <String, dynamic>{
+              'id': 'dup',
+              'slug': 'series-99',
+              'title': 'Duplicate',
+              'active': true,
+              'closed': false,
+            },
+            <String, dynamic>{
+              'id': 's100',
+              'slug': 'series-100',
+              'title': 'Page two',
+              'active': true,
+              'closed': false,
+            },
+          ],
+          _ => <Map<String, dynamic>>[],
+        };
+        return _jsonList(rows);
+      });
+
+      final series = await client.activeSeriesAll();
+
+      expect(series, hasLength(101));
+      expect(series.last.slug, 'series-100');
+    });
+
     test('series GETs /series with order/ascending', () async {
       Uri? captured;
       final client = _client((req) async {
@@ -289,6 +334,44 @@ void main() {
   });
 
   group('tags / tagById / tagBySlug', () {
+    test('tagsAll collects pages and dedupes by slug', () async {
+      final client = _client((req) async {
+        expect(req.url.path, '/tags');
+        expect(req.url.queryParameters['limit'], '100');
+        final offset =
+            int.tryParse(req.url.queryParameters['offset'] ?? '') ?? 0;
+        final rows = switch (offset) {
+          0 => [
+            for (var index = 0; index < 100; index++)
+              <String, dynamic>{
+                'id': '$index',
+                'slug': 'tag-$index',
+                'label': 'Tag $index',
+              },
+          ],
+          100 => [
+            <String, dynamic>{
+              'id': 'dup',
+              'slug': 'tag-99',
+              'label': 'Duplicate',
+            },
+            <String, dynamic>{
+              'id': '100',
+              'slug': 'tag-100',
+              'label': 'Page two',
+            },
+          ],
+          _ => <Map<String, dynamic>>[],
+        };
+        return _jsonList(rows);
+      });
+
+      final tags = await client.tagsAll();
+
+      expect(tags, hasLength(101));
+      expect(tags.last.slug, 'tag-100');
+    });
+
     test('tags GETs /tags', () async {
       Uri? captured;
       final client = _client((req) async {
