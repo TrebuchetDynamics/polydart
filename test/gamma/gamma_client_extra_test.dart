@@ -49,12 +49,17 @@ Event _event({
   });
 }
 
-Market _market({required String conditionId, required String category}) {
+Market _market({
+  required String conditionId,
+  required String category,
+  List<Map<String, dynamic>> tags = const [],
+}) {
   return Market.fromJson(<String, dynamic>{
     'id': conditionId,
     'conditionId': conditionId,
     'question': 'Question $conditionId',
     'category': category,
+    'tags': tags,
     'active': true,
     'closed': false,
   });
@@ -129,6 +134,31 @@ void main() {
       expect(
         filterMarketsByCategory(markets, 'Elections').single.conditionId,
         'politics',
+      );
+    });
+
+    test('category filters match market tags', () {
+      final markets = [
+        _market(
+          conditionId: 'fed',
+          category: '',
+          tags: const [
+            {'id': '1', 'label': 'Fed', 'slug': 'fed'},
+          ],
+        ),
+        _market(
+          conditionId: 'crypto',
+          category: 'Crypto',
+          tags: const [
+            {'id': '2', 'label': 'Bitcoin', 'slug': 'bitcoin'},
+          ],
+        ),
+      ];
+
+      expect(filterMarketsByCategory(markets, 'Fed').single.conditionId, 'fed');
+      expect(
+        filterMarketsByCategory(markets, 'bitcoin').single.conditionId,
+        'crypto',
       );
     });
 

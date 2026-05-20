@@ -469,7 +469,11 @@ List<Market> filterMarketsByCategory(
     return markets.toList(growable: false);
   }
   return markets
-      .where((market) => marketMatchesCategory(market.category, selected))
+      .where(
+        (market) =>
+            marketMatchesCategory(market.category, selected) ||
+            _marketTagsMatchCategory(market.tags, selected),
+      )
       .toList(growable: false);
 }
 
@@ -483,6 +487,16 @@ bool marketMatchesCategory(String marketCategory, String selectedCategory) {
     return true;
   }
   return _categoryAliases(selected).any(market.contains);
+}
+
+bool _marketTagsMatchCategory(Iterable<Tag> tags, String selected) {
+  for (final tag in tags) {
+    if (marketMatchesCategory(tag.label, selected) ||
+        marketMatchesCategory(tag.slug, selected)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 Set<String> _categoryAliases(String category) {
