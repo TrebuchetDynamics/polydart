@@ -20,6 +20,8 @@ typedef KeysetPage<T> = ({List<T> data, String nextCursor});
 
 const int _defaultMarketPageSize = 100;
 const int _defaultMaxMarketPages = 50;
+const int _defaultEventPageSize = 100;
+const int _defaultMaxEventPages = 50;
 
 final class GammaClient {
   GammaClient({HttpTransport? transport})
@@ -112,6 +114,24 @@ final class GammaClient {
       return OffsetPageResult<Market>(items: page, count: page.length);
     }, pageSize);
     return deduplicateMarketsByConditionId(raw);
+  }
+
+  /// Collects non-closed events across offset pages and deduplicates by slug,
+  /// falling back to ID when slug is empty.
+  Future<List<Event>> activeEventsAll({
+    int pageSize = _defaultEventPageSize,
+    int maxPages = _defaultMaxEventPages,
+  }) async {
+    final raw = await collectOffset<Event>((offset, limit) async {
+      if (offset >= pageSize * maxPages) {
+        return const OffsetPageResult<Event>(items: [], count: 0);
+      }
+      final page = await events(
+        GetEventsParams(closed: false, limit: limit, offset: offset),
+      );
+      return OffsetPageResult<Event>(items: page, count: page.length);
+    }, pageSize);
+    return deduplicateEventsBySlugOrId(raw);
   }
 
   /// Lists events with optional filters.
@@ -331,6 +351,32 @@ final class GammaClient {
   static List<SportsMarketType> _sportsMarketTypes(List<dynamic> raw) => raw
       .whereType<Map<dynamic, dynamic>>()
       .map((m) => SportsMarketType.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+}
+
+/// Returns events in input order, dropping repeated slugs or repeated IDs when
+/// slug is empty.
+List<Event> deduplicateEventsBySlugOrId(Iterable<Event> events) {
+  final seen = <String>{};
+  final out = <Event>[];
+  for (final event in events) {
+    var key = event.slug.trim();
+    if (key.isEmpty) key = event.id.trim();
+    if (key.isEmpty || !seen.add(key)) continue;
+    out.add(event);
+  }
+  return out;
+}
+
+/// Applies Polymarket-style category aliases over an event list. Empty and
+/// `All` selections return all events.
+List<Event> filterEventsByCategory(Iterable<Event> events, String category) {
+  final selected = category.trim().toLowerCase();
+  if (selected.isEmpty || selected == 'all') {
+    return events.toList(growable: false);
+  }
+  return events
+      .where((event) => marketMatchesCategory(event.category, selected))
       .toList(growable: false);
 }
 

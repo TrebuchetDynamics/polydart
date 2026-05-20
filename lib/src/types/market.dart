@@ -183,8 +183,15 @@ final class Market {
     icon: json['icon']?.toString() ?? '',
     description: json['description']?.toString() ?? '',
     resolutionSource: json['resolutionSource']?.toString() ?? '',
-    groupItemTitle: _field(json, 'groupItemTitle', 'group_item_title')?.toString() ?? '',
-    groupItemThreshold: _field(json, 'groupItemThreshold', 'group_item_threshold')?.toString() ?? '',
+    groupItemTitle:
+        _field(json, 'groupItemTitle', 'group_item_title')?.toString() ?? '',
+    groupItemThreshold:
+        _field(
+          json,
+          'groupItemThreshold',
+          'group_item_threshold',
+        )?.toString() ??
+        '',
     groupItemRange: json['groupItemRange']?.toString() ?? '',
     category: json['category']?.toString() ?? '',
     startDate: parseNormalizedDateTime(json['startDate']),
@@ -192,10 +199,14 @@ final class Market {
     startDateIso: json['startDateIso']?.toString() ?? '',
     endDateIso: _field(json, 'endDateIso', 'end_date_iso')?.toString() ?? '',
     umaEndDate: parseNormalizedDateTime(json['umaEndDate']),
-    closedTime: parseNormalizedDateTime(_field(json, 'closedTime', 'closed_time')),
+    closedTime: parseNormalizedDateTime(
+      _field(json, 'closedTime', 'closed_time'),
+    ),
     createdAt: parseNormalizedDateTime(json['createdAt']),
     updatedAt: parseNormalizedDateTime(_field(json, 'updatedAt', 'updated_at')),
-    gameStartTime: parseNormalizedDateTime(_field(json, 'gameStartTime', 'game_start_time')),
+    gameStartTime: parseNormalizedDateTime(
+      _field(json, 'gameStartTime', 'game_start_time'),
+    ),
     eventStartTime: parseNormalizedDateTime(json['eventStartTime']),
     acceptingOrdersTimestamp: parseNormalizedDateTime(
       json['acceptingOrdersTimestamp'],
@@ -210,8 +221,10 @@ final class Market {
     restricted: json['restricted'] == true,
     ready: json['ready'] == true,
     funded: json['funded'] == true,
-    acceptingOrders: _field(json, 'acceptingOrders', 'accepting_orders') == true,
-    enableOrderBook: _field(json, 'enableOrderBook', 'enable_order_book') == true,
+    acceptingOrders:
+        _field(json, 'acceptingOrders', 'accepting_orders') == true,
+    enableOrderBook:
+        _field(json, 'enableOrderBook', 'enable_order_book') == true,
     orderMinSize: _double(json['orderMinSize']),
     orderPriceMinTickSize: _double(json['orderPriceMinTickSize']),
     makerBaseFee: _int(json['makerBaseFee']),
@@ -245,15 +258,9 @@ final class Market {
     resolvedTimestamp: parseNormalizedDateTime(
       _field(json, 'resolvedTimestamp', 'resolved_timestamp'),
     ),
-    closedAt: parseNormalizedDateTime(
-      _field(json, 'closedAt', 'closed_at'),
-    ),
-    fetchedAt: parseNormalizedDateTime(
-      _field(json, 'fetchedAt', 'fetched_at'),
-    ),
-    commentsCount: _int(
-      _field(json, 'commentCount', 'comment_count'),
-    ),
+    closedAt: parseNormalizedDateTime(_field(json, 'closedAt', 'closed_at')),
+    fetchedAt: parseNormalizedDateTime(_field(json, 'fetchedAt', 'fetched_at')),
+    commentsCount: _int(_field(json, 'commentCount', 'comment_count')),
     tokens: _tokens(json['tokens']),
     tokenIds: _stringList(_field(json, 'tokenIds', 'token_ids')),
     raw: Map.unmodifiable(json),
@@ -342,6 +349,7 @@ final class Event {
     required this.title,
     required this.description,
     this.resolutionSource = '',
+    this.category = '',
     required this.image,
     required this.icon,
     required this.startDate,
@@ -385,6 +393,7 @@ final class Event {
     title: json['title']?.toString() ?? '',
     description: json['description']?.toString() ?? '',
     resolutionSource: json['resolutionSource']?.toString() ?? '',
+    category: json['category']?.toString() ?? '',
     image: json['image']?.toString() ?? '',
     icon: json['icon']?.toString() ?? '',
     startDate: parseNormalizedDateTime(json['startDate']),
@@ -427,6 +436,7 @@ final class Event {
   final String title;
   final String description;
   final String resolutionSource;
+  final String category;
   final String image;
   final String icon;
   final DateTime? startDate;

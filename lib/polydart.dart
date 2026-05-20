@@ -214,7 +214,9 @@ export 'src/gamma/gamma_client.dart'
     show
         GammaClient,
         KeysetPage,
+        deduplicateEventsBySlugOrId,
         deduplicateMarketsByConditionId,
+        filterEventsByCategory,
         filterMarketsByCategory,
         marketMatchesCategory;
 export 'src/gamma/gamma_params.dart'

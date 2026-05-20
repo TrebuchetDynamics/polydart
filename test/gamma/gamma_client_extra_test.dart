@@ -34,6 +34,21 @@ http.Response _jsonList(List<Map<String, dynamic>> rows) =>
 http.Response _jsonObj(Map<String, dynamic> obj) =>
     http.Response(jsonEncode(obj), 200);
 
+Event _event({
+  required String id,
+  required String slug,
+  required String category,
+}) {
+  return Event.fromJson(<String, dynamic>{
+    'id': id,
+    'slug': slug,
+    'title': 'Event $id',
+    'category': category,
+    'active': true,
+    'closed': false,
+  });
+}
+
 Market _market({required String conditionId, required String category}) {
   return Market.fromJson(<String, dynamic>{
     'id': conditionId,
@@ -134,6 +149,63 @@ void main() {
   });
 
   group('events / eventById / eventBySlug', () {
+    test('activeEventsAll collects pages and dedupes by slug', () async {
+      final client = _client((req) async {
+        expect(req.url.path, '/events');
+        expect(req.url.queryParameters['closed'], 'false');
+        expect(req.url.queryParameters['limit'], '100');
+        final offset =
+            int.tryParse(req.url.queryParameters['offset'] ?? '') ?? 0;
+        final rows = switch (offset) {
+          0 => [
+            for (var index = 0; index < 100; index++)
+              <String, dynamic>{
+                'id': 'e$index',
+                'slug': 'event-$index',
+                'title': 'Event $index',
+                'active': true,
+                'closed': false,
+              },
+          ],
+          100 => [
+            <String, dynamic>{
+              'id': 'dup',
+              'slug': 'event-99',
+              'title': 'Duplicate',
+              'active': true,
+              'closed': false,
+            },
+            <String, dynamic>{
+              'id': 'e100',
+              'slug': 'event-100',
+              'title': 'Page two',
+              'active': true,
+              'closed': false,
+            },
+          ],
+          _ => <Map<String, dynamic>>[],
+        };
+        return _jsonList(rows);
+      });
+
+      final events = await client.activeEventsAll();
+
+      expect(events, hasLength(101));
+      expect(events.last.slug, 'event-100');
+    });
+
+    test('event category filters use Polymarket-style aliases', () {
+      final events = [
+        _event(id: 'business', slug: 'business-event', category: 'Business'),
+        _event(id: 'science', slug: 'science-event', category: 'Science'),
+        _event(id: 'politics', slug: 'politics-event', category: 'Politics'),
+      ];
+
+      expect(filterEventsByCategory(events, 'Finance').single.id, 'business');
+      expect(filterEventsByCategory(events, 'Tech').single.id, 'science');
+      expect(filterEventsByCategory(events, 'Elections').single.id, 'politics');
+    });
+
     test('events GETs /events with limit + slug repeated', () async {
       Uri? captured;
       final client = _client((req) async {
