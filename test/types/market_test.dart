@@ -172,6 +172,15 @@ void main() {
       expect(event.featuredImage, 'https://example.com/featured.png');
     });
 
+    test('decodes Polygolem Gamma Disqus thread', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'disqusThread': 'event-thread-1',
+      });
+
+      expect(event.disqusThread, 'event-thread-1');
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
