@@ -445,6 +445,7 @@ final class Event {
     this.enableNegRisk = false,
     this.automaticallyActive = false,
     this.seriesSlug = '',
+    this.eventWeek = 0,
     this.competitive = 0,
     this.commentCount = 0,
     this.openInterest = 0,
@@ -512,6 +513,7 @@ final class Event {
     enableNegRisk: json['enableNegRisk'] == true,
     automaticallyActive: json['automaticallyActive'] == true,
     seriesSlug: json['seriesSlug']?.toString() ?? '',
+    eventWeek: _int(json['eventWeek']),
     competitive: _double(json['competitive']),
     commentCount: _int(json['commentCount']),
     openInterest: _double(json['openInterest']),
@@ -578,6 +580,7 @@ final class Event {
   final bool enableNegRisk;
   final bool automaticallyActive;
   final String seriesSlug;
+  final int eventWeek;
   final double competitive;
   final int commentCount;
   final double openInterest;
