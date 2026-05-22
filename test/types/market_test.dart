@@ -172,6 +172,46 @@ void main() {
       expect(event.featuredImage, 'https://example.com/featured.png');
     });
 
+    test('decodes Polygolem Gamma optimized event image', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'imageOptimized': <String, dynamic>{
+          'id': 'image-1',
+          'imageUrlSource': 'https://example.com/source.png',
+          'imageUrlOptimized': 'https://example.com/optimized.webp',
+          'imageSizeKbSource': 128,
+          'imageSizeKbOptimized': '42',
+          'imageOptimizedComplete': true,
+          'imageOptimizedLastUpdated': '2026-05-21T12:34:56Z',
+          'relID': 77,
+          'field': 'image',
+          'relname': 'events',
+        },
+      });
+
+      final image = event.imageOptimized;
+      expect(image, isNotNull);
+      expect(image!.id, 'image-1');
+      expect(image.imageUrlSource, 'https://example.com/source.png');
+      expect(image.imageUrlOptimized, 'https://example.com/optimized.webp');
+      expect(image.imageSizeKbSource, 128);
+      expect(image.imageSizeKbOptimized, 42);
+      expect(image.imageOptimizedComplete, isTrue);
+      expect(
+        image.imageOptimizedLastUpdated,
+        DateTime.utc(2026, 5, 21, 12, 34, 56),
+      );
+      expect(image.relId, 77);
+      expect(image.field, 'image');
+      expect(image.relName, 'events');
+      expect(
+        Event.fromJson(<String, dynamic>{
+          'imageOptimized': 'invalid',
+        }).imageOptimized,
+        isNull,
+      );
+    });
+
     test('decodes Polygolem Gamma Disqus thread', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',

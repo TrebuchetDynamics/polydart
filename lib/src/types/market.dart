@@ -97,6 +97,48 @@ final class Profile {
   final String profileImage;
 }
 
+@immutable
+final class OptimizedImage {
+  const OptimizedImage({
+    required this.id,
+    required this.imageUrlSource,
+    required this.imageUrlOptimized,
+    required this.imageSizeKbSource,
+    required this.imageSizeKbOptimized,
+    required this.imageOptimizedComplete,
+    this.imageOptimizedLastUpdated,
+    required this.relId,
+    required this.field,
+    required this.relName,
+  });
+
+  factory OptimizedImage.fromJson(Map<String, dynamic> json) => OptimizedImage(
+    id: json['id']?.toString() ?? '',
+    imageUrlSource: json['imageUrlSource']?.toString() ?? '',
+    imageUrlOptimized: json['imageUrlOptimized']?.toString() ?? '',
+    imageSizeKbSource: _int(json['imageSizeKbSource']),
+    imageSizeKbOptimized: _int(json['imageSizeKbOptimized']),
+    imageOptimizedComplete: json['imageOptimizedComplete'] == true,
+    imageOptimizedLastUpdated: parseNormalizedDateTime(
+      json['imageOptimizedLastUpdated'],
+    ),
+    relId: _int(json['relID']),
+    field: json['field']?.toString() ?? '',
+    relName: json['relname']?.toString() ?? '',
+  );
+
+  final String id;
+  final String imageUrlSource;
+  final String imageUrlOptimized;
+  final int imageSizeKbSource;
+  final int imageSizeKbOptimized;
+  final bool imageOptimizedComplete;
+  final DateTime? imageOptimizedLastUpdated;
+  final int relId;
+  final String field;
+  final String relName;
+}
+
 /// A market (Gamma view). Stores the full raw payload so callers can read
 /// fields polydart hasn't typed yet without losing data.
 @immutable
@@ -389,6 +431,7 @@ final class Event {
     this.isNew = false,
     required this.featured,
     this.featuredImage = '',
+    this.imageOptimized,
     this.disqusThread = '',
     this.parentEvent = '',
     this.restricted = false,
@@ -446,6 +489,7 @@ final class Event {
     isNew: json['new'] == true,
     featured: json['featured'] == true,
     featuredImage: json['featuredImage']?.toString() ?? '',
+    imageOptimized: _optimizedImage(json['imageOptimized']),
     disqusThread: json['disqusThread']?.toString() ?? '',
     parentEvent: json['parentEvent']?.toString() ?? '',
     restricted: json['restricted'] == true,
@@ -502,6 +546,7 @@ final class Event {
   final bool isNew;
   final bool featured;
   final String featuredImage;
+  final OptimizedImage? imageOptimized;
   final String disqusThread;
   final String parentEvent;
   final bool restricted;
@@ -899,6 +944,11 @@ List<Profile> _profiles(Object? raw) {
       .whereType<Map<dynamic, dynamic>>()
       .map((m) => Profile.fromJson(m.cast<String, dynamic>()))
       .toList(growable: false);
+}
+
+OptimizedImage? _optimizedImage(Object? raw) {
+  if (raw is! Map) return null;
+  return OptimizedImage.fromJson(raw.cast<String, dynamic>());
 }
 
 List<Market> _markets(Object? raw) {
