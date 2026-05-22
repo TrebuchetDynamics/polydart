@@ -12,8 +12,9 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
   `Market.negRiskFeeBips`, `Event.subtitle`, `Event.subcategory`,
   `Event.sortBy`, `Event.isTemplate`, `Event.templateVariables`,
   `Event.createdBy`, `Event.updatedBy`, `Event.competitive`,
-  `Event.featuredImage`, `Event.imageOptimized`, `Event.disqusThread`,
-  `Event.parentEvent`, `Event.isNew`, and `Event.negRiskFeeBips`.
+  `Event.featuredImage`, `Event.imageOptimized`, `Event.iconOptimized`,
+  `Event.disqusThread`, `Event.parentEvent`, `Event.isNew`, and
+  `Event.negRiskFeeBips`.
 - Added Polygolem `pkg/orderfills` parity for on-chain `OrderFilled` truth
   data, including public models, validation, reader interfaces, and a read-only
   Polygon JSON-RPC log reader for `eth_getLogs`/block timestamp decoding.

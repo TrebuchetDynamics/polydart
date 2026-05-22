@@ -432,6 +432,7 @@ final class Event {
     required this.featured,
     this.featuredImage = '',
     this.imageOptimized,
+    this.iconOptimized,
     this.disqusThread = '',
     this.parentEvent = '',
     this.restricted = false,
@@ -490,6 +491,7 @@ final class Event {
     featured: json['featured'] == true,
     featuredImage: json['featuredImage']?.toString() ?? '',
     imageOptimized: _optimizedImage(json['imageOptimized']),
+    iconOptimized: _optimizedImage(json['iconOptimized']),
     disqusThread: json['disqusThread']?.toString() ?? '',
     parentEvent: json['parentEvent']?.toString() ?? '',
     restricted: json['restricted'] == true,
@@ -547,6 +549,7 @@ final class Event {
   final bool featured;
   final String featuredImage;
   final OptimizedImage? imageOptimized;
+  final OptimizedImage? iconOptimized;
   final String disqusThread;
   final String parentEvent;
   final bool restricted;

@@ -212,6 +212,43 @@ void main() {
       );
     });
 
+    test('decodes Polygolem Gamma optimized event icon', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'iconOptimized': <String, dynamic>{
+          'id': 'icon-1',
+          'imageUrlSource': 'https://example.com/icon.png',
+          'imageUrlOptimized': 'https://example.com/icon.webp',
+          'imageSizeKbSource': '64',
+          'imageSizeKbOptimized': 18,
+          'imageOptimizedComplete': true,
+          'imageOptimizedLastUpdated': '2026-05-21T13:00:00Z',
+          'relID': '88',
+          'field': 'icon',
+          'relname': 'events',
+        },
+      });
+
+      final icon = event.iconOptimized;
+      expect(icon, isNotNull);
+      expect(icon!.id, 'icon-1');
+      expect(icon.imageUrlSource, 'https://example.com/icon.png');
+      expect(icon.imageUrlOptimized, 'https://example.com/icon.webp');
+      expect(icon.imageSizeKbSource, 64);
+      expect(icon.imageSizeKbOptimized, 18);
+      expect(icon.imageOptimizedComplete, isTrue);
+      expect(icon.imageOptimizedLastUpdated, DateTime.utc(2026, 5, 21, 13));
+      expect(icon.relId, 88);
+      expect(icon.field, 'icon');
+      expect(icon.relName, 'events');
+      expect(
+        Event.fromJson(<String, dynamic>{
+          'iconOptimized': 'invalid',
+        }).iconOptimized,
+        isNull,
+      );
+    });
+
     test('decodes Polygolem Gamma Disqus thread', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
