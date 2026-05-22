@@ -87,6 +87,31 @@ void main() {
     );
     expect(relayerError.code, 401);
 
+    final normalizedFill = normalizeOrderFill(
+      OrderFill(
+        txHash: '0xtx',
+        logIndex: 1,
+        exchange: '0xexchange',
+        marketId: 'market-1',
+        conditionId: 'condition-1',
+        tokenId: 'token-1',
+        side: ' buy ',
+        price: '0.45',
+        size: '10',
+        blockNumber: 123,
+        filledAt: DateTime.utc(2026, 5, 16),
+        source: '',
+      ),
+    );
+    expect(normalizedFill.side, orderFillSideBuy);
+    expect(normalizedFill.source, orderFillSourceOnchainOrderFilled);
+    expect(
+      () => validateOrderFillsQuery(
+        const OrderFillsQuery(fromBlock: 2, toBlock: 1),
+      ),
+      throwsA(isA<ValidationException>()),
+    );
+
     const credentialKey = CredentialKey(
       eoaAddress: '0x0000000000000000000000000000000000001234',
       chainId: 137,

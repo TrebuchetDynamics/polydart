@@ -293,6 +293,19 @@ export 'src/orders/order_signing.dart'
         signOrderV2;
 export 'src/orders/order_intent.dart'
     show LifecycleState, OrderIntent, OrderResponse, SignedOrder;
+export 'src/orderfills/orderfills.dart'
+    show
+        OrderFill,
+        OrderFillsBlockNumberReader,
+        OrderFillsMarket,
+        OrderFillsQuery,
+        OrderFillsReader,
+        normalizeOrderFill,
+        orderFillSideBuy,
+        orderFillSideSell,
+        orderFillSourceOnchainOrderFilled,
+        validateOrderFill,
+        validateOrderFillsQuery;
 export 'src/orderresults/orderresults.dart'
     show
         ClobOrderResultsReader,

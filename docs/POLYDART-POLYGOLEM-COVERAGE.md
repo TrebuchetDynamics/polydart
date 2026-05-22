@@ -9,7 +9,10 @@ custody architecture as described in `docs/adr/0001-wallet-mediated-eoa-signing.
 - Last fidelity sync commit: `21f1982`
 - Scaffold command: `python3 skills/polydart/scripts/polygolem_inventory.py --root .`
 - Upstream delta after `21f1982`: Gamma comment profiles normalization, market
-  trades Data API, batch orderbooks exposure, and market metadata. All ported.
+  trades Data API, batch orderbooks exposure, and market metadata are ported.
+  Polygolem `91876cf` added `pkg/orderfills`; Polydart now covers public
+  models, validation, and reader interfaces, with live Polygon RPC log decoding
+  still pending.
 
 Status values: `implemented`, `partial`, `missing`, `intentional Dart
 divergence`, `not applicable`.
@@ -48,6 +51,7 @@ all accounted for.
 | pkg/orderbook | polygolem/pkg/orderbook | lib/src/orderbook | implemented | test/orderbook | not_required | 21f1982 | ClobOrderBookReader (single + batch fetches), ValidationException on empty tokenId, empty-skip behavior, BookReader integration, and 5 mock HTTP tests covered; matches polygolem Reader/BatchReader interfaces |
 | pkg/orderbook (bookreader) | polygolem/pkg/bookreader | lib/src/bookreader | implemented | test/bookreader | not_required | 2b7cde7 | BookReader compute class (sorted bids/asks, midpoint, spread, depth) covered |
 | pkg/orderresults | polygolem/pkg/orderresults | lib/src/orderresults | implemented | test/orderresults | not_required | 2b7cde7 | Report builder covered; CLOB inclusion uses ApiKey reader instead of raw private key |
+| pkg/orderfills | polygolem/pkg/orderfills | lib/src/orderfills | partial | test/orderfills | not_required | 91876cf | Public Fill/Market/Query, validation, and reader interfaces covered; live Polygon RPC log reader pending |
 | pkg/pagination | polygolem/pkg/pagination | lib/src/pagination | implemented | test/pagination | not_required | 2b7cde7 | Cursor/offset stream, collect, and batch helpers covered |
 | pkg/plugins | polygolem/pkg/plugins | lib/src/plugins | implemented | test/plugins | not_required | 2b7cde7 | Plugin interfaces covered |
 | pkg/relayer | polygolem/pkg/relayer | lib/src/relayer | partial | test/relayer | required | 2b7cde7 | V2 auth headers, transaction response shapes, poll defaults, and allowlist rejection classifier covered; continue endpoint parity |
