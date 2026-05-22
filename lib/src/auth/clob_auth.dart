@@ -7,10 +7,12 @@ library;
 
 import 'dart:typed_data';
 
+import '../errors/errors.dart';
 import 'eip712.dart';
 import 'eth_hex.dart';
 import 'wallet_signer.dart';
 
+const int _polymarketChainId = 137;
 const String clobAuthDomainName = 'ClobAuthDomain';
 const String clobAuthDomainVersion = '1';
 const String clobAuthDefaultMessage =
@@ -100,6 +102,13 @@ Future<Map<String, String>> buildL1Headers({
   int nonce = 0,
   String message = clobAuthDefaultMessage,
 }) async {
+  if (signer.chainId != _polymarketChainId) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'CLOB auth signing requires Polygon chainId=137',
+      field: 'chainId',
+    );
+  }
   final typed = buildClobAuthTypedData(
     address: signer.address,
     chainId: signer.chainId,
