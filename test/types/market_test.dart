@@ -46,6 +46,25 @@ void main() {
       expect(m.bestAsk, 0.44);
     });
 
+    test('decodes Polygolem Gamma market metadata fields', () {
+      final m = Market.fromJson(<String, dynamic>{
+        'id': '7',
+        'marketType': 'normal',
+        'umaResolutionStatus': 'proposed',
+        'rewardsMinSize': '25.5',
+        'rewardsMaxSpread': 0.03,
+        'readyTimestamp': '2026-05-21T12:34:56Z',
+        'negRiskFeeBips': 15,
+      });
+
+      expect(m.marketType, 'normal');
+      expect(m.umaResolutionStatus, 'proposed');
+      expect(m.rewardsMinSize, 25.5);
+      expect(m.rewardsMaxSpread, 0.03);
+      expect(m.readyTimestamp, DateTime.utc(2026, 5, 21, 12, 34, 56));
+      expect(m.negRiskFeeBips, 15);
+    });
+
     test('preserves uncommon fields on raw', () {
       final m = Market.fromJson(<String, dynamic>{
         'id': '7',

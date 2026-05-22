@@ -125,6 +125,7 @@ final class Market {
     this.updatedAt,
     this.gameStartTime,
     this.eventStartTime,
+    this.readyTimestamp,
     this.acceptingOrdersTimestamp,
     required this.outcomes,
     required this.outcomePrices,
@@ -136,6 +137,8 @@ final class Market {
     this.restricted = false,
     this.ready = false,
     this.funded = false,
+    this.marketType = '',
+    this.umaResolutionStatus = '',
     required this.acceptingOrders,
     required this.enableOrderBook,
     this.orderMinSize = 0,
@@ -156,8 +159,11 @@ final class Market {
     required this.bestBid,
     required this.bestAsk,
     this.spread = 0,
+    this.rewardsMinSize = 0,
+    this.rewardsMaxSpread = 0,
     this.negRisk = false,
     this.negRiskMarketId = '',
+    this.negRiskFeeBips = 0,
     this.rfqEnabled = false,
     required this.clobTokenIds,
     required this.tags,
@@ -208,6 +214,7 @@ final class Market {
       _field(json, 'gameStartTime', 'game_start_time'),
     ),
     eventStartTime: parseNormalizedDateTime(json['eventStartTime']),
+    readyTimestamp: parseNormalizedDateTime(json['readyTimestamp']),
     acceptingOrdersTimestamp: parseNormalizedDateTime(
       json['acceptingOrdersTimestamp'],
     ),
@@ -221,6 +228,8 @@ final class Market {
     restricted: json['restricted'] == true,
     ready: json['ready'] == true,
     funded: json['funded'] == true,
+    marketType: json['marketType']?.toString() ?? '',
+    umaResolutionStatus: json['umaResolutionStatus']?.toString() ?? '',
     acceptingOrders:
         _field(json, 'acceptingOrders', 'accepting_orders') == true,
     enableOrderBook:
@@ -243,8 +252,11 @@ final class Market {
     bestBid: _double(json['bestBid']),
     bestAsk: _double(json['bestAsk']),
     spread: _double(json['spread']),
+    rewardsMinSize: _double(json['rewardsMinSize']),
+    rewardsMaxSpread: _double(json['rewardsMaxSpread']),
     negRisk: json['negRisk'] == true,
     negRiskMarketId: json['negRiskMarketID']?.toString() ?? '',
+    negRiskFeeBips: _int(json['negRiskFeeBips']),
     rfqEnabled: json['rfqEnabled'] == true,
     clobTokenIds: json['clobTokenIds']?.toString() ?? '',
     tags: _tags(json['tags']),
@@ -289,6 +301,7 @@ final class Market {
   final DateTime? updatedAt;
   final DateTime? gameStartTime;
   final DateTime? eventStartTime;
+  final DateTime? readyTimestamp;
   final DateTime? acceptingOrdersTimestamp;
   final List<String> outcomes;
   final List<String> outcomePrices;
@@ -300,6 +313,8 @@ final class Market {
   final bool restricted;
   final bool ready;
   final bool funded;
+  final String marketType;
+  final String umaResolutionStatus;
   final bool acceptingOrders;
   final bool enableOrderBook;
   final double orderMinSize;
@@ -320,8 +335,11 @@ final class Market {
   final double bestBid;
   final double bestAsk;
   final double spread;
+  final double rewardsMinSize;
+  final double rewardsMaxSpread;
   final bool negRisk;
   final String negRiskMarketId;
+  final int negRiskFeeBips;
   final bool rfqEnabled;
   final String clobTokenIds;
   final List<Tag> tags;
