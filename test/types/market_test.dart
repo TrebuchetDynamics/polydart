@@ -98,6 +98,17 @@ void main() {
       expect(event.subtitle, '2026 season');
     });
 
+    test('decodes Polygolem Gamma subcategory', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'category': 'Sports',
+        'subcategory': 'NBA',
+      });
+
+      expect(event.category, 'Sports');
+      expect(event.subcategory, 'NBA');
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',

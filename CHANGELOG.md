@@ -9,7 +9,8 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 - Typed additional Polygolem Gamma metadata fields: `Market.marketType`,
   `Market.umaResolutionStatus`, `Market.readyTimestamp`,
   `Market.rewardsMinSize`, `Market.rewardsMaxSpread`,
-  `Market.negRiskFeeBips`, `Event.subtitle`, and `Event.negRiskFeeBips`.
+  `Market.negRiskFeeBips`, `Event.subtitle`, `Event.subcategory`, and
+  `Event.negRiskFeeBips`.
 - Added Polygolem `pkg/orderfills` parity for on-chain `OrderFilled` truth
   data, including public models, validation, reader interfaces, and a read-only
   Polygon JSON-RPC log reader for `eth_getLogs`/block timestamp decoding.

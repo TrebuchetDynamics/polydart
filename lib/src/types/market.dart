@@ -369,6 +369,7 @@ final class Event {
     required this.description,
     this.resolutionSource = '',
     this.category = '',
+    this.subcategory = '',
     required this.image,
     required this.icon,
     required this.startDate,
@@ -415,6 +416,7 @@ final class Event {
     description: json['description']?.toString() ?? '',
     resolutionSource: json['resolutionSource']?.toString() ?? '',
     category: json['category']?.toString() ?? '',
+    subcategory: json['subcategory']?.toString() ?? '',
     image: json['image']?.toString() ?? '',
     icon: json['icon']?.toString() ?? '',
     startDate: parseNormalizedDateTime(json['startDate']),
@@ -460,6 +462,7 @@ final class Event {
   final String description;
   final String resolutionSource;
   final String category;
+  final String subcategory;
   final String image;
   final String icon;
   final DateTime? startDate;
