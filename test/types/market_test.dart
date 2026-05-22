@@ -190,6 +190,15 @@ void main() {
       expect(event.parentEvent, 'parent-event-1');
     });
 
+    test('decodes Polygolem Gamma new-event flag', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'new': true,
+      });
+
+      expect(event.isNew, isTrue);
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',

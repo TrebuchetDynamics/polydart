@@ -386,6 +386,7 @@ final class Event {
     required this.active,
     required this.closed,
     required this.archived,
+    this.isNew = false,
     required this.featured,
     this.featuredImage = '',
     this.disqusThread = '',
@@ -442,6 +443,7 @@ final class Event {
     active: json['active'] == true,
     closed: json['closed'] == true,
     archived: json['archived'] == true,
+    isNew: json['new'] == true,
     featured: json['featured'] == true,
     featuredImage: json['featuredImage']?.toString() ?? '',
     disqusThread: json['disqusThread']?.toString() ?? '',
@@ -497,6 +499,7 @@ final class Event {
   final bool active;
   final bool closed;
   final bool archived;
+  final bool isNew;
   final bool featured;
   final String featuredImage;
   final String disqusThread;
