@@ -389,6 +389,7 @@ final class Event {
     required this.featured,
     this.featuredImage = '',
     this.disqusThread = '',
+    this.parentEvent = '',
     this.restricted = false,
     this.commentsEnabled = false,
     this.competitive = 0,
@@ -444,6 +445,7 @@ final class Event {
     featured: json['featured'] == true,
     featuredImage: json['featuredImage']?.toString() ?? '',
     disqusThread: json['disqusThread']?.toString() ?? '',
+    parentEvent: json['parentEvent']?.toString() ?? '',
     restricted: json['restricted'] == true,
     commentsEnabled: json['commentsEnabled'] == true,
     competitive: _double(json['competitive']),
@@ -498,6 +500,7 @@ final class Event {
   final bool featured;
   final String featuredImage;
   final String disqusThread;
+  final String parentEvent;
   final bool restricted;
   final bool commentsEnabled;
   final double competitive;

@@ -181,6 +181,15 @@ void main() {
       expect(event.disqusThread, 'event-thread-1');
     });
 
+    test('decodes Polygolem Gamma parent event', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'parentEvent': 'parent-event-1',
+      });
+
+      expect(event.parentEvent, 'parent-event-1');
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
