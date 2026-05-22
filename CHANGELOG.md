@@ -6,9 +6,9 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 
 ### Changed
 
-- Added Polygolem `pkg/orderfills` model, validation, and reader-interface
-  parity for on-chain `OrderFilled` truth data; live Polygon RPC log decoding
-  remains pending.
+- Added Polygolem `pkg/orderfills` parity for on-chain `OrderFilled` truth
+  data, including public models, validation, reader interfaces, and a read-only
+  Polygon JSON-RPC log reader for `eth_getLogs`/block timestamp decoding.
 - Added a mock-only Flutter Web deposit-wallet order smoke example that proves
   the `WalletSigner` approval boundary and `signatureType=3` payload path
   without live endpoints or raw private keys.

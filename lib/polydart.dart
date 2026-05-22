@@ -300,6 +300,7 @@ export 'src/orderfills/orderfills.dart'
         OrderFillsMarket,
         OrderFillsQuery,
         OrderFillsReader,
+        RpcOrderFillsReader,
         normalizeOrderFill,
         orderFillSideBuy,
         orderFillSideSell,

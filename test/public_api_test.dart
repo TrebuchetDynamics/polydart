@@ -105,6 +105,12 @@ void main() {
     );
     expect(normalizedFill.side, orderFillSideBuy);
     expect(normalizedFill.source, orderFillSourceOnchainOrderFilled);
+    final rpcOrderFillsReader = RpcOrderFillsReader(
+      rpcUrl: 'http://rpc.invalid',
+    );
+    expect(rpcOrderFillsReader, isA<OrderFillsReader>());
+    expect(rpcOrderFillsReader, isA<OrderFillsBlockNumberReader>());
+    rpcOrderFillsReader.close();
     expect(
       () => validateOrderFillsQuery(
         const OrderFillsQuery(fromBlock: 2, toBlock: 1),
