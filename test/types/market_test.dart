@@ -87,6 +87,17 @@ void main() {
   });
 
   group('Event.fromJson', () {
+    test('decodes Polygolem Gamma subtitle', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'title': 'Championship winner',
+        'subtitle': '2026 season',
+      });
+
+      expect(event.title, 'Championship winner');
+      expect(event.subtitle, '2026 season');
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',

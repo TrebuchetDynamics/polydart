@@ -365,6 +365,7 @@ final class Event {
     required this.ticker,
     required this.slug,
     required this.title,
+    this.subtitle = '',
     required this.description,
     this.resolutionSource = '',
     this.category = '',
@@ -410,6 +411,7 @@ final class Event {
     ticker: json['ticker']?.toString() ?? '',
     slug: json['slug']?.toString() ?? '',
     title: json['title']?.toString() ?? '',
+    subtitle: json['subtitle']?.toString() ?? '',
     description: json['description']?.toString() ?? '',
     resolutionSource: json['resolutionSource']?.toString() ?? '',
     category: json['category']?.toString() ?? '',
@@ -454,6 +456,7 @@ final class Event {
   final String ticker;
   final String slug;
   final String title;
+  final String subtitle;
   final String description;
   final String resolutionSource;
   final String category;
