@@ -152,6 +152,30 @@ void main() {
       },
     );
 
+    test('rejects non-Polygon signer before wallet signing', () async {
+      final signer = _StubSigner(signature: Uint8List(65), chainId: 80002);
+
+      await expectLater(
+        signWalletBatch(
+          signer: signer,
+          walletAddress: _wallet,
+          nonce: _nonce,
+          deadline: _deadline,
+          calls: _sampleCalls(),
+        ),
+        throwsA(
+          isA<ValidationException>()
+              .having((e) => e.field, 'field', 'chainId')
+              .having(
+                (e) => e.message,
+                'message',
+                contains('Polygon chainId=137'),
+              ),
+        ),
+      );
+      expect(signer.lastEnvelope, isNull);
+    });
+
     test('rejects empty calls before signing', () async {
       final signer = _StubSigner(signature: Uint8List(65));
       expect(
@@ -191,16 +215,18 @@ void main() {
 }
 
 class _StubSigner implements WalletSigner {
-  _StubSigner({required this.signature});
+  _StubSigner({required this.signature, int chainId = 137})
+    : _chainId = chainId;
 
   final Uint8List signature;
+  final int _chainId;
   Map<String, dynamic>? lastEnvelope;
 
   @override
   String get address => '0x2c7536E3605D9C16a7a3D7b1898e529396a65c23';
 
   @override
-  int get chainId => 137;
+  int get chainId => _chainId;
 
   @override
   Future<Uint8List> signTypedData(Map<String, dynamic> typedData) async {

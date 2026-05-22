@@ -247,12 +247,19 @@ Future<String> signWalletBatch({
       field: 'calls',
     );
   }
+  if (signer.chainId != _polygonChainId) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'deposit-wallet batch signing requires Polygon chainId=137',
+      field: 'chainId',
+    );
+  }
   final typed = buildWalletBatchTypedData(
     walletAddress: walletAddress,
     nonce: nonce,
     deadline: deadline,
     calls: calls,
-    chainId: signer.chainId,
+    chainId: _polygonChainId,
   );
   final sig = await signer.signTypedData(typed);
   if (sig.length != 65) {
