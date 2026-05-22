@@ -249,6 +249,49 @@ void main() {
       );
     });
 
+    test('decodes Polygolem Gamma optimized featured event image', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'featuredImageOptimized': <String, dynamic>{
+          'id': 'featured-image-1',
+          'imageUrlSource': 'https://example.com/featured.png',
+          'imageUrlOptimized': 'https://example.com/featured.webp',
+          'imageSizeKbSource': 256,
+          'imageSizeKbOptimized': '72',
+          'imageOptimizedComplete': true,
+          'imageOptimizedLastUpdated': '2026-05-21T14:15:00Z',
+          'relID': 99,
+          'field': 'featuredImage',
+          'relname': 'events',
+        },
+      });
+
+      final featuredImage = event.featuredImageOptimized;
+      expect(featuredImage, isNotNull);
+      expect(featuredImage!.id, 'featured-image-1');
+      expect(featuredImage.imageUrlSource, 'https://example.com/featured.png');
+      expect(
+        featuredImage.imageUrlOptimized,
+        'https://example.com/featured.webp',
+      );
+      expect(featuredImage.imageSizeKbSource, 256);
+      expect(featuredImage.imageSizeKbOptimized, 72);
+      expect(featuredImage.imageOptimizedComplete, isTrue);
+      expect(
+        featuredImage.imageOptimizedLastUpdated,
+        DateTime.utc(2026, 5, 21, 14, 15),
+      );
+      expect(featuredImage.relId, 99);
+      expect(featuredImage.field, 'featuredImage');
+      expect(featuredImage.relName, 'events');
+      expect(
+        Event.fromJson(<String, dynamic>{
+          'featuredImageOptimized': 'invalid',
+        }).featuredImageOptimized,
+        isNull,
+      );
+    });
+
     test('decodes Polygolem Gamma Disqus thread', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
