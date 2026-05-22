@@ -127,6 +127,15 @@ void main() {
       expect(event.isTemplate, isTrue);
     });
 
+    test('decodes Polygolem Gamma template variables', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'templateVariables': '{"team":"Lakers"}',
+      });
+
+      expect(event.templateVariables, '{"team":"Lakers"}');
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
