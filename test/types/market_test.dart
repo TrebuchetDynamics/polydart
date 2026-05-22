@@ -355,6 +355,21 @@ void main() {
       );
     });
 
+    test('decodes Polygolem Gamma automatically-resolved flag', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'automaticallyResolved': true,
+      });
+
+      expect(event.automaticallyResolved, isTrue);
+      expect(
+        Event.fromJson(<String, dynamic>{
+          'id': 'event-2',
+        }).automaticallyResolved,
+        isFalse,
+      );
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
