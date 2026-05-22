@@ -376,6 +376,7 @@ final class Event {
     required this.endDate,
     this.creationDate,
     this.publishedAt,
+    this.createdBy = '',
     this.createdAt,
     this.updatedAt,
     this.closedTime,
@@ -426,6 +427,7 @@ final class Event {
     endDate: parseNormalizedDateTime(json['endDate']),
     creationDate: parseNormalizedDateTime(json['creationDate']),
     publishedAt: parseNormalizedDateTime(json['published_at']),
+    createdBy: json['createdBy']?.toString() ?? '',
     createdAt: parseNormalizedDateTime(json['createdAt']),
     updatedAt: parseNormalizedDateTime(json['updatedAt']),
     closedTime: parseNormalizedDateTime(json['closedTime']),
@@ -475,6 +477,7 @@ final class Event {
   final DateTime? endDate;
   final DateTime? creationDate;
   final DateTime? publishedAt;
+  final String createdBy;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? closedTime;

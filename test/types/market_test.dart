@@ -136,6 +136,15 @@ void main() {
       expect(event.templateVariables, '{"team":"Lakers"}');
     });
 
+    test('decodes Polygolem Gamma creator address', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'createdBy': '0x1111111111111111111111111111111111111111',
+      });
+
+      expect(event.createdBy, '0x1111111111111111111111111111111111111111');
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
