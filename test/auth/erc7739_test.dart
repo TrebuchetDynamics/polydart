@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'package:polydart/src/auth/erc7739.dart';
 import 'package:polydart/src/auth/eth_hex.dart';
 import 'package:polydart/src/auth/wallet_signer.dart';
+import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/orders/order_signing.dart';
 import 'package:polydart/src/types/enums.dart';
 import 'package:test/test.dart';
@@ -179,6 +180,29 @@ void main() {
       expect(domain['chainId'], 137);
     });
 
+    test('rejects non-Polygon signer before wallet signing', () async {
+      final signer = _StubSigner(signature: Uint8List(65), chainId: 80002);
+
+      await expectLater(
+        () => wrapPoly1271Signature(
+          signer: signer,
+          draft: _draft(),
+          depositWalletAddress: _depositWallet,
+        ),
+        throwsA(
+          isA<ValidationException>()
+              .having(
+                (error) => error.message,
+                'message',
+                contains('POLY_1271 signing requires Polygon chainId=137'),
+              )
+              .having((error) => error.field, 'field', 'chainId'),
+        ),
+      );
+      expect(signer.signTypedDataCalls, 0);
+      expect(signer.lastEnvelope, isNull);
+    });
+
     test('rejects wallet signatures of wrong length', () async {
       final signer = _StubSigner(signature: Uint8List(64));
       expect(
@@ -194,19 +218,22 @@ void main() {
 }
 
 class _StubSigner implements WalletSigner {
-  _StubSigner({required this.signature});
+  _StubSigner({required this.signature, this.chainId = 137});
 
   final Uint8List signature;
+
+  @override
+  final int chainId;
+
   Map<String, dynamic>? lastEnvelope;
+  int signTypedDataCalls = 0;
 
   @override
   String get address => '0x2c7536E3605D9C16a7a3D7b1898e529396a65c23';
 
   @override
-  int get chainId => 137;
-
-  @override
   Future<Uint8List> signTypedData(Map<String, dynamic> typedData) async {
+    signTypedDataCalls++;
     lastEnvelope = typedData;
     return signature;
   }

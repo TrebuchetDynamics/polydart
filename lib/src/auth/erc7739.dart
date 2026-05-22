@@ -215,6 +215,13 @@ Future<String> wrapPoly1271Signature({
   required String depositWalletAddress,
   bool negRisk = false,
 }) async {
+  if (signer.chainId != polymarketChainId) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'POLY_1271 signing requires Polygon chainId=137',
+      field: 'chainId',
+    );
+  }
   final envelope = buildPoly1271TypedDataEnvelope(
     draft: draft,
     depositWalletAddress: depositWalletAddress,
