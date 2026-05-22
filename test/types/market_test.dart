@@ -436,6 +436,16 @@ void main() {
       expect(Event.fromJson(<String, dynamic>{'id': 'event-2'}).elapsed, '');
     });
 
+    test('decodes Polygolem Gamma period', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'period': '2H',
+      });
+
+      expect(event.period, '2H');
+      expect(Event.fromJson(<String, dynamic>{'id': 'event-2'}).period, '');
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',

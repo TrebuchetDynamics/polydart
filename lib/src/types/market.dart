@@ -448,6 +448,7 @@ final class Event {
     this.eventWeek = 0,
     this.score = '',
     this.elapsed = '',
+    this.period = '',
     this.competitive = 0,
     this.commentCount = 0,
     this.openInterest = 0,
@@ -518,6 +519,7 @@ final class Event {
     eventWeek: _int(json['eventWeek']),
     score: json['score']?.toString() ?? '',
     elapsed: json['elapsed']?.toString() ?? '',
+    period: json['period']?.toString() ?? '',
     competitive: _double(json['competitive']),
     commentCount: _int(json['commentCount']),
     openInterest: _double(json['openInterest']),
@@ -587,6 +589,7 @@ final class Event {
   final int eventWeek;
   final String score;
   final String elapsed;
+  final String period;
   final double competitive;
   final int commentCount;
   final double openInterest;
