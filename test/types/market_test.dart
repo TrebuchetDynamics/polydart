@@ -370,6 +370,19 @@ void main() {
       );
     });
 
+    test('decodes Polygolem Gamma enable-negative-risk flag', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'enableNegRisk': true,
+      });
+
+      expect(event.enableNegRisk, isTrue);
+      expect(
+        Event.fromJson(<String, dynamic>{'id': 'event-2'}).enableNegRisk,
+        isFalse,
+      );
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
