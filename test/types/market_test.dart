@@ -145,6 +145,15 @@ void main() {
       expect(event.createdBy, '0x1111111111111111111111111111111111111111');
     });
 
+    test('decodes Polygolem Gamma updater address', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'updatedBy': '0x2222222222222222222222222222222222222222',
+      });
+
+      expect(event.updatedBy, '0x2222222222222222222222222222222222222222');
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
