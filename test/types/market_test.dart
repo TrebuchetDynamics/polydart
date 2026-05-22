@@ -383,6 +383,19 @@ void main() {
       );
     });
 
+    test('decodes Polygolem Gamma automatically-active flag', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'automaticallyActive': true,
+      });
+
+      expect(event.automaticallyActive, isTrue);
+      expect(
+        Event.fromJson(<String, dynamic>{'id': 'event-2'}).automaticallyActive,
+        isFalse,
+      );
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',

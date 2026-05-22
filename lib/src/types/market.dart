@@ -443,6 +443,7 @@ final class Event {
     this.showMarketImages = false,
     this.automaticallyResolved = false,
     this.enableNegRisk = false,
+    this.automaticallyActive = false,
     this.competitive = 0,
     this.commentCount = 0,
     this.openInterest = 0,
@@ -508,6 +509,7 @@ final class Event {
     showMarketImages: json['showMarketImages'] == true,
     automaticallyResolved: json['automaticallyResolved'] == true,
     enableNegRisk: json['enableNegRisk'] == true,
+    automaticallyActive: json['automaticallyActive'] == true,
     competitive: _double(json['competitive']),
     commentCount: _int(json['commentCount']),
     openInterest: _double(json['openInterest']),
@@ -572,6 +574,7 @@ final class Event {
   final bool showMarketImages;
   final bool automaticallyResolved;
   final bool enableNegRisk;
+  final bool automaticallyActive;
   final double competitive;
   final int commentCount;
   final double openInterest;
