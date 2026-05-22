@@ -59,6 +59,41 @@ void main() {
     );
 
     test(
+      'rejects non-Polygon signer before cached credentials can bypass checks',
+      () async {
+        final store = MemoryCredentialStore();
+        const wrongChainKey = CredentialKey(
+          eoaAddress: _address,
+          chainId: 80002,
+        );
+        await store.writeClobApiKey(wrongChainKey, _cachedClobKey);
+        await store.writeBuilderFeeKey(wrongChainKey, _cachedBuilderFeeKey);
+        await store.writeRelayerApiKey(wrongChainKey, _cachedRelayerKey);
+        final signer = _CannedSigner(chainId: 80002);
+        final client = _client((_) async => fail('HTTP should not be called'));
+
+        await expectLater(
+          LiveCredentialService(
+            clob: client,
+            credentialStore: store,
+            nowSeconds: () => 1700000000,
+          ).ensure(signer: signer),
+          throwsA(
+            isA<ValidationException>()
+                .having((e) => e.field, 'field', 'chainId')
+                .having(
+                  (e) => e.message,
+                  'message',
+                  contains('Polygon chainId=137'),
+                ),
+          ),
+        );
+        expect(signer.signTypedDataCalls, 0);
+        expect(signer.personalSignCalls, 0);
+      },
+    );
+
+    test(
       'creates CLOB, builder-fee, and relayer keys and stores all',
       () async {
         final requests = <Map<String, dynamic>>[];
@@ -529,11 +564,13 @@ Map<String, dynamic> _request(http.BaseRequest req) {
 }
 
 class _CannedSigner implements WalletSigner {
+  _CannedSigner({this.chainId = 137});
+
   @override
   String get address => _address;
 
   @override
-  int get chainId => 137;
+  final int chainId;
 
   var signTypedDataCalls = 0;
   var personalSignCalls = 0;

@@ -15,6 +15,8 @@ import '../clob/clob_client.dart';
 import '../errors/errors.dart';
 import '../relayer/v2_auth.dart';
 
+const int _polymarketChainId = 137;
+
 enum LiveCredentialStatus { cached, created, derived, userRejected, blocked }
 
 enum LiveCredentialAction { none, requestSignature, retry }
@@ -187,6 +189,13 @@ final class LiveCredentialService {
     required WalletSigner signer,
     bool forceRefresh = false,
   }) async {
+    if (signer.chainId != _polymarketChainId) {
+      throw const ValidationException(
+        code: ErrorCode.invalidValue,
+        message: 'live credential readiness requires Polygon chainId=137',
+        field: 'chainId',
+      );
+    }
     final key = CredentialKey(
       eoaAddress: signer.address,
       chainId: signer.chainId,
