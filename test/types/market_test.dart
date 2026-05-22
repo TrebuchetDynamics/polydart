@@ -319,6 +319,16 @@ void main() {
       expect(event.isNew, isTrue);
     });
 
+    test('decodes Polygolem Gamma custom-market flag', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'cyom': true,
+      });
+
+      expect(event.cyom, isTrue);
+      expect(Event.fromJson(<String, dynamic>{'id': 'event-2'}).cyom, isFalse);
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',

@@ -438,6 +438,7 @@ final class Event {
     this.parentEvent = '',
     this.restricted = false,
     this.commentsEnabled = false,
+    this.cyom = false,
     this.competitive = 0,
     this.commentCount = 0,
     this.openInterest = 0,
@@ -498,6 +499,7 @@ final class Event {
     parentEvent: json['parentEvent']?.toString() ?? '',
     restricted: json['restricted'] == true,
     commentsEnabled: json['commentsEnabled'] == true,
+    cyom: json['cyom'] == true,
     competitive: _double(json['competitive']),
     commentCount: _int(json['commentCount']),
     openInterest: _double(json['openInterest']),
@@ -557,6 +559,7 @@ final class Event {
   final String parentEvent;
   final bool restricted;
   final bool commentsEnabled;
+  final bool cyom;
   final double competitive;
   final int commentCount;
   final double openInterest;
