@@ -342,6 +342,19 @@ void main() {
       );
     });
 
+    test('decodes Polygolem Gamma show-market-images flag', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'showMarketImages': true,
+      });
+
+      expect(event.showMarketImages, isTrue);
+      expect(
+        Event.fromJson(<String, dynamic>{'id': 'event-2'}).showMarketImages,
+        isFalse,
+      );
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',

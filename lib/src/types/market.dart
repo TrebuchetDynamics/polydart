@@ -440,6 +440,7 @@ final class Event {
     this.commentsEnabled = false,
     this.cyom = false,
     this.showAllOutcomes = false,
+    this.showMarketImages = false,
     this.competitive = 0,
     this.commentCount = 0,
     this.openInterest = 0,
@@ -502,6 +503,7 @@ final class Event {
     commentsEnabled: json['commentsEnabled'] == true,
     cyom: json['cyom'] == true,
     showAllOutcomes: json['showAllOutcomes'] == true,
+    showMarketImages: json['showMarketImages'] == true,
     competitive: _double(json['competitive']),
     commentCount: _int(json['commentCount']),
     openInterest: _double(json['openInterest']),
@@ -563,6 +565,7 @@ final class Event {
   final bool commentsEnabled;
   final bool cyom;
   final bool showAllOutcomes;
+  final bool showMarketImages;
   final double competitive;
   final int commentCount;
   final double openInterest;
