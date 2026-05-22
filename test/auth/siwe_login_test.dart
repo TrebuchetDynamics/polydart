@@ -10,11 +10,13 @@ import 'package:polydart/src/errors/errors.dart';
 import 'package:test/test.dart';
 
 class _FakeSigner implements WalletSigner {
+  _FakeSigner({this.chainId = 137});
+
   @override
   String get address => '0x9d8a62f656a8d1615c1294fd71e9cfb3e4855a4f';
 
   @override
-  int get chainId => 137;
+  final int chainId;
 
   Uint8List? lastSignedMessage;
 
@@ -105,6 +107,38 @@ void main() {
         isTrue,
       );
     });
+
+    test(
+      'rejects non-Polygon signer before nonce fetch or wallet signing',
+      () async {
+        var requestCount = 0;
+        final mock = MockClient((req) async {
+          requestCount++;
+          return http.Response(jsonEncode({'nonce': 'test-nonce-abc'}), 200);
+        });
+        final signer = _FakeSigner(chainId: 1);
+        final session = SIWESession(
+          signer: signer,
+          gammaBaseUrl: 'https://gamma-api.example.com',
+          httpClient: mock,
+        );
+
+        await expectLater(
+          session.login(),
+          throwsA(
+            isA<ValidationException>()
+                .having(
+                  (error) => error.message,
+                  'message',
+                  contains('SIWE login requires Polygon chainId=137'),
+                )
+                .having((error) => error.field, 'field', 'chainId'),
+          ),
+        );
+        expect(requestCount, 0);
+        expect(signer.lastSignedMessage, isNull);
+      },
+    );
 
     test('throws TransportException when /nonce returns 500', () async {
       final mock = MockClient((req) async => http.Response('boom', 500));

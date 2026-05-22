@@ -23,6 +23,8 @@ import '../errors/errors.dart';
 import 'siwe.dart';
 import 'wallet_signer.dart';
 
+const int _polymarketChainId = 137;
+
 /// Holds the cookies captured by [SIWESession.login] and exposes them as
 /// a `Cookie:` header for downstream relayer calls.
 final class SIWESession {
@@ -60,6 +62,13 @@ final class SIWESession {
   /// Runs the SIWE login. On success the polymarket session cookie is
   /// captured and returned via [cookieHeader].
   Future<void> login() async {
+    if (signer.chainId != _polymarketChainId) {
+      throw const ValidationException(
+        code: ErrorCode.invalidValue,
+        message: 'SIWE login requires Polygon chainId=137',
+        field: 'chainId',
+      );
+    }
     final nonce = await _fetchNonce();
     final msg = buildPolymarketSIWE(
       address: signer.address,
