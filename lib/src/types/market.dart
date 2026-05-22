@@ -389,6 +389,7 @@ final class Event {
     required this.featured,
     this.restricted = false,
     this.commentsEnabled = false,
+    this.competitive = 0,
     this.commentCount = 0,
     this.openInterest = 0,
     this.sortBy = '',
@@ -441,6 +442,7 @@ final class Event {
     featured: json['featured'] == true,
     restricted: json['restricted'] == true,
     commentsEnabled: json['commentsEnabled'] == true,
+    competitive: _double(json['competitive']),
     commentCount: _int(json['commentCount']),
     openInterest: _double(json['openInterest']),
     sortBy: json['sortBy']?.toString() ?? '',
@@ -492,6 +494,7 @@ final class Event {
   final bool featured;
   final bool restricted;
   final bool commentsEnabled;
+  final double competitive;
   final int commentCount;
   final double openInterest;
   final String sortBy;

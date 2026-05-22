@@ -154,6 +154,15 @@ void main() {
       expect(event.updatedBy, '0x2222222222222222222222222222222222222222');
     });
 
+    test('decodes Polygolem Gamma competitive score', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'competitive': 0.75,
+      });
+
+      expect(event.competitive, 0.75);
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
