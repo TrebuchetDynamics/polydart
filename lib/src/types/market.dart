@@ -389,6 +389,7 @@ final class Event {
     this.commentsEnabled = false,
     this.commentCount = 0,
     this.openInterest = 0,
+    this.sortBy = '',
     this.enableOrderBook = false,
     required this.liquidity,
     required this.volume,
@@ -436,6 +437,7 @@ final class Event {
     commentsEnabled: json['commentsEnabled'] == true,
     commentCount: _int(json['commentCount']),
     openInterest: _double(json['openInterest']),
+    sortBy: json['sortBy']?.toString() ?? '',
     enableOrderBook: json['enableOrderBook'] == true,
     liquidity: _double(json['liquidity']),
     volume: _double(json['volume']),
@@ -482,6 +484,7 @@ final class Event {
   final bool commentsEnabled;
   final int commentCount;
   final double openInterest;
+  final String sortBy;
   final bool enableOrderBook;
   final double liquidity;
   final double volume;

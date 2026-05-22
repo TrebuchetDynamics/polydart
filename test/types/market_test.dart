@@ -109,6 +109,15 @@ void main() {
       expect(event.subcategory, 'NBA');
     });
 
+    test('decodes Polygolem Gamma sort order hint', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'sortBy': 'volume',
+      });
+
+      expect(event.sortBy, 'volume');
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
