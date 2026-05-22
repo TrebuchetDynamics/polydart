@@ -202,6 +202,13 @@ Future<SignedOrder> signOrderV2({
   String? makerOverride,
 }) async {
   intent.validate();
+  if (signer.chainId != polymarketChainId) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'order signing requires Polygon chainId=137',
+      field: 'chainId',
+    );
+  }
   final amounts = computeAmounts(intent);
 
   final eoa = signer.address;

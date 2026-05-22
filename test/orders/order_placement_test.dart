@@ -8,6 +8,7 @@ import 'package:polydart/src/auth/create2.dart';
 import 'package:polydart/src/auth/l2.dart';
 import 'package:polydart/src/auth/wallet_signer.dart';
 import 'package:polydart/src/clob/clob_client.dart';
+import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/modes/modes.dart';
 import 'package:polydart/src/orders/deposit_wallet_order_signing.dart';
 import 'package:polydart/src/orders/order_builder.dart';
@@ -19,16 +20,18 @@ import 'package:polydart/src/types/enums.dart';
 import 'package:test/test.dart';
 
 class _CannedSigner implements WalletSigner {
-  _CannedSigner();
+  _CannedSigner({this.chainId = 137});
   @override
   String get address => '0x0000000000000000000000000000000000001234';
   @override
-  int get chainId => 137;
+  final int chainId;
 
   Map<String, dynamic>? lastTyped;
+  int signTypedDataCalls = 0;
 
   @override
   Future<Uint8List> signTypedData(Map<String, dynamic> typedData) async {
+    signTypedDataCalls++;
     lastTyped = typedData;
     final bytes = Uint8List(65);
     for (var i = 0; i < 65; i++) {
@@ -83,6 +86,31 @@ void main() {
       expect(signed.timestamp, isNotNull);
       // typed-data presented to the wallet should have primaryType=Order
       expect(signer.lastTyped!['primaryType'], 'Order');
+    });
+
+    test('rejects non-Polygon signer before wallet signing', () async {
+      final intent =
+          (OrderBuilder(tokenId: '12345', side: Side.buy)
+                ..price('0.50')
+                ..size('10')
+                ..tickSize('0.01'))
+              .build();
+
+      final signer = _CannedSigner(chainId: 1);
+
+      await expectLater(
+        signOrderV2(intent: intent, signer: signer),
+        throwsA(
+          isA<ValidationException>()
+              .having(
+                (error) => error.message,
+                'message',
+                contains('order signing requires Polygon chainId=137'),
+              )
+              .having((error) => error.field, 'field', 'chainId'),
+        ),
+      );
+      expect(signer.signTypedDataCalls, 0);
     });
 
     test('uses funder as maker for non-EOA signature types', () async {
