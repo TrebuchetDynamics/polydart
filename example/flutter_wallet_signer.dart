@@ -2,7 +2,9 @@
 ///
 /// This is a compiling skeleton, not a complete wallet integration. Wire
 /// [WalletRpcRequest] to Reown, WalletConnect, an embedded wallet, a hardware
-/// wallet bridge, or a platform channel in your Flutter app.
+/// wallet bridge, or a platform channel in your Flutter app. Reown and
+/// WalletConnect session chains can be passed as EIP-155 CAIP-2 strings such as
+/// `eip155:137`.
 ///
 /// It does not contain raw private keys and does not submit orders or funding
 /// transactions.
@@ -85,6 +87,29 @@ FlutterWalletSignerAdapter buildFlutterWalletSigner({
     chainId: chainId,
     walletRequest: walletRequest,
   );
+}
+
+FlutterWalletSignerAdapter buildFlutterWalletSignerFromEip155Chain({
+  required String address,
+  required String eip155ChainId,
+  required WalletRpcRequest walletRequest,
+}) {
+  return buildFlutterWalletSigner(
+    address: address,
+    chainId: parseEip155ChainId(eip155ChainId),
+    walletRequest: walletRequest,
+  );
+}
+
+int parseEip155ChainId(String eip155ChainId) {
+  final match = RegExp(r'^eip155:(\d+)$').firstMatch(eip155ChainId);
+  if (match == null) {
+    throw FormatException(
+      'Reown/WalletConnect chain id must use EIP-155 CAIP-2 format like eip155:137',
+      eip155ChainId,
+    );
+  }
+  return int.parse(match.group(1)!);
 }
 
 void _ensurePolymarketChain(int chainId) {
