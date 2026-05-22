@@ -396,6 +396,16 @@ void main() {
       );
     });
 
+    test('decodes Polygolem Gamma series slug', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'seriesSlug': 'fomc',
+      });
+
+      expect(event.seriesSlug, 'fomc');
+      expect(Event.fromJson(<String, dynamic>{'id': 'event-2'}).seriesSlug, '');
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
