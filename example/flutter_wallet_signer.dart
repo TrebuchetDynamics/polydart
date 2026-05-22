@@ -35,6 +35,7 @@ final class FlutterWalletSignerAdapter implements WalletSigner {
 
   @override
   Future<Uint8List> signTypedData(Map<String, dynamic> typedData) async {
+    _ensurePolymarketChain(chainId);
     final signature = await _walletRequest('eth_signTypedData_v4', <Object?>[
       address,
       jsonEncode(typedData),
@@ -44,6 +45,7 @@ final class FlutterWalletSignerAdapter implements WalletSigner {
 
   @override
   Future<Uint8List> personalSign(Uint8List message) async {
+    _ensurePolymarketChain(chainId);
     final signature = await _walletRequest('personal_sign', <Object?>[
       bytesToHex0x(message),
       address,
@@ -76,6 +78,16 @@ FlutterWalletSignerAdapter buildFlutterWalletSigner({
   required int chainId,
   required WalletRpcRequest walletRequest,
 }) {
+  _ensurePolymarketChain(chainId);
+
+  return FlutterWalletSignerAdapter(
+    address: address,
+    chainId: chainId,
+    walletRequest: walletRequest,
+  );
+}
+
+void _ensurePolymarketChain(int chainId) {
   if (chainId != polymarketChainId) {
     throw ArgumentError.value(
       chainId,
@@ -83,10 +95,4 @@ FlutterWalletSignerAdapter buildFlutterWalletSigner({
       'Polymarket signing expects Polygon mainnet',
     );
   }
-
-  return FlutterWalletSignerAdapter(
-    address: address,
-    chainId: chainId,
-    walletRequest: walletRequest,
-  );
 }
