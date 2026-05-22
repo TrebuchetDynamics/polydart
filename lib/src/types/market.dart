@@ -387,6 +387,7 @@ final class Event {
     required this.closed,
     required this.archived,
     required this.featured,
+    this.featuredImage = '',
     this.restricted = false,
     this.commentsEnabled = false,
     this.competitive = 0,
@@ -440,6 +441,7 @@ final class Event {
     closed: json['closed'] == true,
     archived: json['archived'] == true,
     featured: json['featured'] == true,
+    featuredImage: json['featuredImage']?.toString() ?? '',
     restricted: json['restricted'] == true,
     commentsEnabled: json['commentsEnabled'] == true,
     competitive: _double(json['competitive']),
@@ -492,6 +494,7 @@ final class Event {
   final bool closed;
   final bool archived;
   final bool featured;
+  final String featuredImage;
   final bool restricted;
   final bool commentsEnabled;
   final double competitive;

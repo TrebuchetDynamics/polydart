@@ -163,6 +163,15 @@ void main() {
       expect(event.competitive, 0.75);
     });
 
+    test('decodes Polygolem Gamma featured image', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'featuredImage': 'https://example.com/featured.png',
+      });
+
+      expect(event.featuredImage, 'https://example.com/featured.png');
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
