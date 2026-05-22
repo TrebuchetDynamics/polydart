@@ -46,10 +46,7 @@ void main() {
 
     test('Cancel nonexistent order throws', () {
       final executor = PaperExecutor(initialCash: '1000');
-      expect(
-        () => executor.cancel('nonexistent'),
-        throwsA(isA<StateError>()),
-      );
+      expect(() => executor.cancel('nonexistent'), throwsA(isA<StateError>()));
     });
 
     test('GetOrder returns order by ID', () {
@@ -90,10 +87,7 @@ void main() {
           tickSize: '0.01',
         ),
       );
-      expect(
-        () => executor.place(emptyIntent),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => executor.place(emptyIntent), throwsA(isA<Exception>()));
     });
 
     test('Cash balance is tracked', () {

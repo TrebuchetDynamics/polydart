@@ -59,14 +59,22 @@ void main() {
             {
               'market': 'condition-1',
               'asset_id': 'up-token',
-              'bids': [{'price': '0.44', 'size': '10'}],
-              'asks': [{'price': '0.46', 'size': '11'}],
+              'bids': [
+                {'price': '0.44', 'size': '10'},
+              ],
+              'asks': [
+                {'price': '0.46', 'size': '11'},
+              ],
             },
             {
               'market': 'condition-1',
               'asset_id': 'down-token',
-              'bids': [{'price': '0.54', 'size': '10'}],
-              'asks': [{'price': '0.56', 'size': '11'}],
+              'bids': [
+                {'price': '0.54', 'size': '10'},
+              ],
+              'asks': [
+                {'price': '0.56', 'size': '11'},
+              ],
             },
           ]),
           200,
@@ -100,10 +108,7 @@ void main() {
       });
 
       final reader = ClobOrderBookReader(httpClient: client);
-      expect(
-        () => reader.orderBook(''),
-        throwsA(isA<ValidationException>()),
-      );
+      expect(() => reader.orderBook(''), throwsA(isA<ValidationException>()));
       reader.close();
     });
 

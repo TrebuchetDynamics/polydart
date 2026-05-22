@@ -123,14 +123,7 @@ final class HttpTransport {
   }) async {
     Future<http.Response> operation() async {
       await _rateLimiter?.acquire();
-      return _doInner(
-        method,
-        path,
-        body,
-        query,
-        headers,
-        retry: retry,
-      );
+      return _doInner(method, path, body, query, headers, retry: retry);
     }
 
     if (_circuitBreaker != null) {
