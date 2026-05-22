@@ -398,6 +398,7 @@ final class Event {
     this.volume1yr = 0,
     this.negRisk = false,
     this.negRiskMarketId = '',
+    this.negRiskFeeBips = 0,
     required this.markets,
     this.series = const <Series>[],
     required this.tags,
@@ -442,6 +443,7 @@ final class Event {
     volume1yr: _double(json['volume1yr']),
     negRisk: json['negRisk'] == true,
     negRiskMarketId: json['negRiskMarketID']?.toString() ?? '',
+    negRiskFeeBips: _int(json['negRiskFeeBips']),
     markets: _markets(json['markets']),
     series: _seriesList(json['series']),
     tags: _tags(json['tags']),
@@ -485,6 +487,7 @@ final class Event {
   final double volume1yr;
   final bool negRisk;
   final String negRiskMarketId;
+  final int negRiskFeeBips;
   final List<Market> markets;
   final List<Series> series;
   final List<Tag> tags;

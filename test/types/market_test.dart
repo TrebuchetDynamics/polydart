@@ -86,6 +86,21 @@ void main() {
     });
   });
 
+  group('Event.fromJson', () {
+    test('decodes Polygolem Gamma negative-risk fee bips', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'negRisk': true,
+        'negRiskMarketID': 'neg-risk-market-1',
+        'negRiskFeeBips': 25,
+      });
+
+      expect(event.negRisk, isTrue);
+      expect(event.negRiskMarketId, 'neg-risk-market-1');
+      expect(event.negRiskFeeBips, 25);
+    });
+  });
+
   group('SearchResponse.fromJson', () {
     test('decodes events + tags + pagination', () {
       final r = SearchResponse.fromJson(<String, dynamic>{
