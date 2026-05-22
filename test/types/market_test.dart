@@ -329,6 +329,19 @@ void main() {
       expect(Event.fromJson(<String, dynamic>{'id': 'event-2'}).cyom, isFalse);
     });
 
+    test('decodes Polygolem Gamma show-all-outcomes flag', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'showAllOutcomes': true,
+      });
+
+      expect(event.showAllOutcomes, isTrue);
+      expect(
+        Event.fromJson(<String, dynamic>{'id': 'event-2'}).showAllOutcomes,
+        isFalse,
+      );
+    });
+
     test('decodes Polygolem Gamma negative-risk fee bips', () {
       final event = Event.fromJson(<String, dynamic>{
         'id': 'event-1',
