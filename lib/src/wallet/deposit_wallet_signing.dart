@@ -224,11 +224,21 @@ Map<String, dynamic> buildWalletBatchTypedData({
   };
 }
 
-/// Returns a deadline string (Unix seconds) `secondsFromNow` in the
-/// future. Polygolem defaults to 240; we mirror that.
-String defaultBatchDeadline({int secondsFromNow = 240, DateTime? now}) {
+const int minWalletBatchDeadlineSeconds = 1800;
+
+/// Returns a deadline string (Unix seconds) for a wallet batch.
+///
+/// Matches Polygolem `BuildDeadline`: default to now + 30 minutes and clamp
+/// shorter caller-provided windows to the relayer-safe minimum.
+String defaultBatchDeadline({
+  int secondsFromNow = minWalletBatchDeadlineSeconds,
+  DateTime? now,
+}) {
   final base = (now ?? DateTime.now()).millisecondsSinceEpoch ~/ 1000;
-  return (base + secondsFromNow).toString();
+  final delta = secondsFromNow < minWalletBatchDeadlineSeconds
+      ? minWalletBatchDeadlineSeconds
+      : secondsFromNow;
+  return (base + delta).toString();
 }
 
 /// Signs a deposit-wallet batch via [signer]. Returns the 0x-prefixed

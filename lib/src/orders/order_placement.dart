@@ -100,8 +100,9 @@ final class CreateDepositWalletLimitOrderParams {
   final String builderCode;
 }
 
-/// Inputs for [createMarketOrder]. `amount` is the USDC budget to fill;
-/// the helper computes maker/taker via [OrderIntent.amountUsdc].
+/// Inputs for [createMarketOrder]. For BUY, `amount` is the USDC budget to
+/// fill. For SELL, `amount` is the share size to sell. The helper computes
+/// maker/taker via [OrderIntent.amountUsdc].
 @immutable
 final class CreateMarketOrderParams {
   const CreateMarketOrderParams({
@@ -308,21 +309,14 @@ Future<BatchOrderResponse> createDepositWalletLimitOrders({
   );
 }
 
-/// End-to-end market-order placement. `amount` is the USDC budget to
-/// fill at the best available prices.
+/// End-to-end market-order placement. For BUY, `amount` is the USDC budget;
+/// for SELL, `amount` is the share size to sell at the best available bids.
 Future<OrderResponse> createMarketOrder({
   required ClobClient client,
   required WalletSigner signer,
   required ApiKey apiKey,
   required CreateMarketOrderParams params,
 }) async {
-  if (params.side != Side.buy) {
-    throw const ValidationException(
-      code: ErrorCode.invalidValue,
-      message: 'market-order amount is currently supported for BUY only',
-      field: 'side',
-    );
-  }
   final tick = await client.tickSize(params.tokenId);
   final price = params.price.trim().isEmpty
       ? await _marketOrderPrice(
@@ -423,12 +417,12 @@ Future<String> _marketOrderPrice({
     );
   }
 
-  var notional = 0.0;
+  var filled = 0.0;
   for (final level in levels) {
     final price = double.parse(level.price);
     final size = double.parse(level.size);
-    notional += price * size;
-    if (notional >= amountValue) {
+    filled += side == Side.buy ? price * size : size;
+    if (filled >= amountValue) {
       return level.price;
     }
   }

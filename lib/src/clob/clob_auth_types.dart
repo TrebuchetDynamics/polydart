@@ -21,6 +21,7 @@ final class OrderRecord {
     required this.price,
     required this.outcome,
     required this.type,
+    this.orderType = '',
     required this.signatureType,
     required this.createdAt,
     required this.expiration,
@@ -29,31 +30,39 @@ final class OrderRecord {
   });
 
   factory OrderRecord.fromJson(Map<String, dynamic> json) {
-    String pick(String k) => (json[k] ?? '').toString();
-    final at = json['associate_trades'];
+    String pick(List<String> keys) {
+      for (final key in keys) {
+        final value = json[key];
+        if (value != null) return value.toString();
+      }
+      return '';
+    }
+
+    final at = json['associate_trades'] ?? json['associateTrades'];
     final trades = at is List
         ? at.map((e) => e.toString()).toList(growable: false)
         : const <String>[];
-    final sigTypeRaw = json['signature_type'];
+    final sigTypeRaw = json['signature_type'] ?? json['signatureType'];
     final sigType = sigTypeRaw is num
         ? sigTypeRaw.toInt()
         : int.tryParse('${sigTypeRaw ?? 0}') ?? 0;
     return OrderRecord(
-      id: pick('id'),
-      status: pick('status'),
-      owner: pick('owner'),
-      market: pick('market'),
-      assetId: pick('asset_id'),
-      side: pick('side'),
-      originalSize: pick('original_size'),
-      sizeMatched: pick('size_matched'),
-      price: pick('price'),
-      outcome: pick('outcome'),
-      type: pick('type'),
+      id: pick(const ['id']),
+      status: pick(const ['status']),
+      owner: pick(const ['owner']),
+      market: pick(const ['market']),
+      assetId: pick(const ['asset_id', 'assetId']),
+      side: pick(const ['side']),
+      originalSize: pick(const ['original_size', 'originalSize']),
+      sizeMatched: pick(const ['size_matched', 'sizeMatched']),
+      price: pick(const ['price']),
+      outcome: pick(const ['outcome']),
+      type: pick(const ['type']),
+      orderType: pick(const ['order_type', 'orderType']),
       signatureType: sigType,
-      createdAt: pick('created_at'),
-      expiration: pick('expiration'),
-      makerAddress: pick('maker_address'),
+      createdAt: pick(const ['created_at', 'createdAt']),
+      expiration: pick(const ['expiration']),
+      makerAddress: pick(const ['maker_address', 'makerAddress']),
       associateTrades: trades,
     );
   }
@@ -69,6 +78,7 @@ final class OrderRecord {
   final String price;
   final String outcome;
   final String type;
+  final String orderType;
   final int signatureType;
   final String createdAt;
   final String expiration;
@@ -98,23 +108,30 @@ final class TradeRecord {
   });
 
   factory TradeRecord.fromJson(Map<String, dynamic> json) {
-    String pick(String k) => (json[k] ?? '').toString();
+    String pick(List<String> keys) {
+      for (final key in keys) {
+        final value = json[key];
+        if (value != null) return value.toString();
+      }
+      return '';
+    }
+
     return TradeRecord(
-      id: pick('id'),
-      status: pick('status'),
-      market: pick('market'),
-      assetId: pick('asset_id'),
-      side: pick('side'),
-      price: pick('price'),
-      size: pick('size'),
-      feeRateBps: pick('fee_rate_bps'),
-      outcome: pick('outcome'),
-      owner: pick('owner'),
-      builder: pick('builder'),
-      matchedAmount: pick('matched_amount'),
-      transactionHash: pick('transaction_hash'),
-      createdAt: pick('created_at'),
-      lastUpdated: pick('last_updated'),
+      id: pick(const ['id']),
+      status: pick(const ['status']),
+      market: pick(const ['market']),
+      assetId: pick(const ['asset_id', 'assetId']),
+      side: pick(const ['side']),
+      price: pick(const ['price']),
+      size: pick(const ['size']),
+      feeRateBps: pick(const ['fee_rate_bps', 'feeRateBps']),
+      outcome: pick(const ['outcome']),
+      owner: pick(const ['owner']),
+      builder: pick(const ['builder']),
+      matchedAmount: pick(const ['matched_amount', 'matchedAmount']),
+      transactionHash: pick(const ['transaction_hash', 'transactionHash']),
+      createdAt: pick(const ['created_at', 'createdAt']),
+      lastUpdated: pick(const ['last_updated', 'lastUpdated']),
     );
   }
 
@@ -142,7 +159,7 @@ final class BalanceAllowanceParams {
     this.asset = '',
     this.assetType = '',
     this.tokenId = '',
-    this.signatureType = 0,
+    this.signatureType = 3,
   });
 
   /// Concrete token contract for COLLATERAL queries (rarely needed).
@@ -154,16 +171,16 @@ final class BalanceAllowanceParams {
   /// Token id when [assetType] is `CONDITIONAL`.
   final String tokenId;
 
-  /// Polymarket signature scheme (`0` EOA, `1` POLY_PROXY, `2` POLY_GNOSIS_SAFE,
-  /// `3` POLY_1271 deposit wallet).
+  /// Retained for source compatibility. Polymarket V2 balance-allowance reads
+  /// are pinned to `3` (`POLY_1271` deposit wallet), matching Polygolem.
   final int signatureType;
 
   Map<String, String> toQuery() {
     final out = <String, String>{};
     if (asset.isNotEmpty) out['asset'] = asset;
-    if (assetType.isNotEmpty) out['asset_type'] = assetType;
+    if (assetType.isNotEmpty) out['asset_type'] = assetType.toUpperCase();
     if (tokenId.isNotEmpty) out['token_id'] = tokenId;
-    out['signature_type'] = signatureType.toString();
+    out['signature_type'] = '3';
     return out;
   }
 }
@@ -177,6 +194,7 @@ final class BuilderFeeKeyRecord {
     this.secret = '',
     this.passphrase = '',
     this.createdAt = '',
+    this.updatedAt = '',
   });
 
   factory BuilderFeeKeyRecord.fromJson(Map<String, dynamic> json) {
@@ -185,6 +203,7 @@ final class BuilderFeeKeyRecord {
       secret: (json['secret'] ?? '').toString(),
       passphrase: (json['passphrase'] ?? '').toString(),
       createdAt: (json['created_at'] ?? json['createdAt'] ?? '').toString(),
+      updatedAt: (json['updated_at'] ?? json['updatedAt'] ?? '').toString(),
     );
   }
 
@@ -192,6 +211,7 @@ final class BuilderFeeKeyRecord {
   final String secret;
   final String passphrase;
   final String createdAt;
+  final String updatedAt;
 }
 
 /// Authenticated CLOB collateral or token balance + allowances.

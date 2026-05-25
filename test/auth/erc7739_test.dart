@@ -2,7 +2,8 @@
 // Inputs: canonical OrderV2Draft (salt=1, maker=signer=depositWallet,
 // tokenId=12345, makerAmount=5500000, takerAmount=10000000, side=BUY,
 // signatureType=poly1271, timestamp=1700000000000), depositWallet=
-// 0xfd5041047be8c192c725a66228f141196fa3cf9c, negRisk=false, chainId=137.
+// 0xfd5041047be8c192c725a66228f141196fa3cf9c, negRisk=false/true,
+// chainId=137.
 import 'dart:typed_data';
 
 import 'package:polydart/src/auth/erc7739.dart';
@@ -57,7 +58,7 @@ void main() {
       );
     });
 
-    test('final hash for canonical sample', () {
+    test('final hash for canonical regular-market sample', () {
       final digest = computePoly1271FinalHash(
         draft: _draft(),
         depositWalletAddress: _depositWallet,
@@ -65,6 +66,18 @@ void main() {
       expect(
         bytesToHex(digest),
         '495e95c0ae70519abcebd1cb85594e404bea1255b2efb80067c2200e9f74c054',
+      );
+    });
+
+    test('final hash for canonical neg-risk-market sample', () {
+      final digest = computePoly1271FinalHash(
+        draft: _draft(),
+        depositWalletAddress: _depositWallet,
+        negRisk: true,
+      );
+      expect(
+        bytesToHex(digest),
+        '591a51c2e3500129b6955abe546a788b2815a909dff55acf7c132b13058127b1',
       );
     });
 
@@ -121,6 +134,33 @@ void main() {
           // contentsType (186 bytes ASCII)
           '4f726465722875696e743235362073616c742c61646472657373206d616b65722c61646472657373207369676e65722c75696e7432353620746f6b656e49642c75696e74323536206d616b6572416d6f756e742c75696e743235362074616b6572416d6f756e742c75696e743820736964652c75696e7438207369676e6174757265547970652c75696e743235362074696d657374616d702c62797465733332206d657461646174612c62797465733332206275696c64657229'
           // uint16BE(186) = 0x00ba
+          '00ba';
+      expect(assembled, expected);
+    });
+
+    test('neg-risk wrap swaps only the app domain separator', () {
+      final placeholder = Uint8List(65);
+      for (var i = 0; i < 65; i++) {
+        placeholder[i] = 0xa0 + (i % 16);
+      }
+      final assembled = assemblePoly1271WrappedSignature(
+        innerSignature: placeholder,
+        draft: _draft(),
+        negRisk: true,
+      );
+      const expected =
+          '0x'
+          'a0a1a2a3a4a5a6a7a8a9aaabacadaeaf'
+          'a0a1a2a3a4a5a6a7a8a9aaabacadaeaf'
+          'a0a1a2a3a4a5a6a7a8a9aaabacadaeaf'
+          'a0a1a2a3a4a5a6a7a8a9aaabacadaeaf'
+          'a0'
+          // neg-risk appDomainSep
+          '9b858f53327b0bd13af8ec14cfb35234fb9eb7b0504d1a4e61f433840d30e81a'
+          // contents (unchanged Order struct hash)
+          '662e2e1befa43fad015c08b6b0832c68fa42980e84e5f4a8b71c8ff532e14e03'
+          // contentsType (186 bytes ASCII)
+          '4f726465722875696e743235362073616c742c61646472657373206d616b65722c61646472657373207369676e65722c75696e7432353620746f6b656e49642c75696e74323536206d616b6572416d6f756e742c75696e743235362074616b6572416d6f756e742c75696e743820736964652c75696e7438207369676e6174757265547970652c75696e743235362074696d657374616d702c62797465733332206d657461646174612c62797465733332206275696c64657229'
           '00ba';
       expect(assembled, expected);
     });

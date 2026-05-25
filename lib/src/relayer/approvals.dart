@@ -12,6 +12,10 @@ const String ctfAddress = '0x4D97DCd97eC945f40cF65F87097ACe5EA0476045';
 const String ctfExchangeV2 = '0xE111180000d2663C0091e4f400237545B87B996B';
 const String negRiskExchangeV2 = '0xe2222d279d744050d28e00520010520000310F59';
 const String negRiskAdapterV2 = '0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296';
+const String ctfCollateralAdapter =
+    '0xAdA100Db00Ca00073811820692005400218FcE1f';
+const String negRiskCtfCollateralAdapter =
+    '0xadA2005600Dec949baf300f4C6120000bDB6eAab';
 
 const String _erc20ApproveSelector = '095ea7b3';
 const String _erc1155SetApprovalForAllSelector = 'a22cb465';
@@ -22,6 +26,11 @@ const List<String> _v2Spenders = <String>[
   ctfExchangeV2,
   negRiskExchangeV2,
   negRiskAdapterV2,
+];
+
+const List<String> _adapterSpenders = <String>[
+  ctfCollateralAdapter,
+  negRiskCtfCollateralAdapter,
 ];
 
 String _strip0x(String s) {
@@ -50,6 +59,19 @@ String _checksum(String addr) {
 List<DepositWalletCall> buildApprovalCalls() {
   final calls = <DepositWalletCall>[];
   for (final spender in _v2Spenders) {
+    calls.add(_buildApproveCall(pusdAddress, spender));
+    calls.add(_buildCtfApprovalCall(spender));
+  }
+  return calls;
+}
+
+/// Returns the four adapter approval calls needed before V2
+/// split/merge/redeem can succeed from a deposit wallet. Order matches
+/// Polygolem: `(pUSD→adapter, CTF→adapter)` for standard and neg-risk
+/// collateral adapters.
+List<DepositWalletCall> buildAdapterApprovalCalls() {
+  final calls = <DepositWalletCall>[];
+  for (final spender in _adapterSpenders) {
     calls.add(_buildApproveCall(pusdAddress, spender));
     calls.add(_buildCtfApprovalCall(spender));
   }

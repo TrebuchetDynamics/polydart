@@ -242,7 +242,11 @@ void main() {
         capturedMethod = req.method;
         return http.Response(
           jsonEncode(<Map<String, dynamic>>[
-            {'key': 'fee-1', 'created_at': '2026-05-08T00:00:00Z'},
+            {
+              'key': 'fee-1',
+              'created_at': '2026-05-08T00:00:00Z',
+              'updatedAt': '2026-05-08T01:00:00Z',
+            },
             {'key': 'fee-2'},
           ]),
           200,
@@ -256,6 +260,7 @@ void main() {
       expect(rows, hasLength(2));
       expect(rows[0].key, 'fee-1');
       expect(rows[0].createdAt, '2026-05-08T00:00:00Z');
+      expect(rows[0].updatedAt, '2026-05-08T01:00:00Z');
       expect(rows[1].key, 'fee-2');
     });
   });

@@ -95,11 +95,11 @@ void main() {
               'totalBought': '10.0',
               'realizedPnl': '1.50',
               'percentRealizedPnl': '0.12',
-              'redeemable': true,
-              'mergeable': false,
-              'negativeRisk': true,
+              'redeemable': 'true',
+              'mergeable': 'false',
+              'negativeRisk': 'true',
               'outcome': 'Yes',
-              'outcomeIndex': 1,
+              'outcomeIndex': '1',
               'oppositeOutcome': 'No',
               'oppositeAsset': 'asset-2',
               'endDate': '2026-06-01T00:00:00Z',
@@ -187,7 +187,7 @@ void main() {
               'icon': 'https://example.com/closed.png',
               'eventSlug': 'closed-event',
               'outcome': 'No',
-              'outcomeIndex': 0,
+              'outcomeIndex': '0',
               'oppositeOutcome': 'Yes',
               'oppositeAsset': 'asset-open',
               'endDate': '2026-07-01T00:00:00Z',
@@ -261,7 +261,7 @@ void main() {
               'size': '12.5',
               'feeRateBps': '25',
               'outcome': 'Yes',
-              'outcomeIndex': 1,
+              'outcomeIndex': '1',
               'title': 'Trade market',
               'slug': 'trade-market',
               'eventSlug': 'trade-event',
@@ -339,7 +339,7 @@ void main() {
             <String, dynamic>{
               'type': 'TRADE',
               'market': '0xabc',
-              'asset_id': 'tok',
+              'assetId': 'tok',
               'side': 'SELL',
               'price': '0.42',
               'size': '100',
@@ -354,6 +354,7 @@ void main() {
       expect(captured!.queryParameters['user'], '0xuser');
       expect(captured!.queryParameters['limit'], '3');
       expect(acts.first.type, 'TRADE');
+      expect(acts.first.assetId, 'tok');
       expect(acts.first.price, '0.42');
       expect(acts.first.size, '100');
     });
@@ -371,9 +372,9 @@ void main() {
               'holders': [
                 <String, dynamic>{
                   'proxyWallet': '0xholder',
-                  'amount': 500.0,
-                  'pnl': 25.5,
-                  'volume': 2000.0,
+                  'amount': '500.0',
+                  'pnl': '25.5',
+                  'volume': '2000.0',
                 },
               ],
             },
@@ -398,8 +399,8 @@ void main() {
         return http.Response(
           jsonEncode(<String, dynamic>{
             'user': '0xuser',
-            'value': 1234.56,
-            'timestamp': '1714000000',
+            'value': '1234.56',
+            'timestamp': 1714000000,
           }),
           200,
         );
@@ -435,7 +436,10 @@ void main() {
       final client = _client((req) async {
         captured = req.url;
         return http.Response(
-          jsonEncode(<String, dynamic>{'user': '0xuser', 'markets_traded': 42}),
+          jsonEncode(<String, dynamic>{
+            'user': '0xuser',
+            'markets_traded': '42',
+          }),
           200,
         );
       });
@@ -457,7 +461,7 @@ void main() {
             <String, dynamic>{
               'market': '0xabc',
               'asset_id': 'tok',
-              'value': 9999.99,
+              'open_value': '9999.99',
             },
           ]),
           200,
@@ -482,9 +486,9 @@ void main() {
             <String, dynamic>{
               'rank': '1',
               'userName': '0xking',
-              'vol': 1000000.0,
-              'pnl': 50000.0,
-              'roi': 0.05,
+              'vol': '1000000.0',
+              'pnl': '50000.0',
+              'roi': '0.05',
             },
           ]),
           200,
@@ -509,9 +513,9 @@ void main() {
           captured = req.url;
           return http.Response(
             jsonEncode(<String, dynamic>{
-              'total': 42.5,
+              'total': '42.5',
               'markets': [
-                <String, dynamic>{'market': '0xcondition', 'value': 42.5},
+                <String, dynamic>{'market': '0xcondition', 'value': '42.5'},
               ],
             }),
             200,

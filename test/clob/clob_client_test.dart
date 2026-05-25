@@ -23,6 +23,30 @@ ClobClient _client(Future<http.Response> Function(http.BaseRequest) handler) {
 }
 
 void main() {
+  group('marketByToken', () {
+    test('GETs /markets-by-token/{tokenId}', () async {
+      Uri? captured;
+      final client = _client((req) async {
+        captured = req.url;
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'condition_id': 'condition-1',
+            'primary_token_id': 'token-yes',
+            'secondary_token_id': 'token-no',
+          }),
+          200,
+        );
+      });
+
+      final market = await client.marketByToken('token-1');
+
+      expect(captured!.path, '/markets-by-token/token-1');
+      expect(market.conditionId, 'condition-1');
+      expect(market.primaryTokenId, 'token-yes');
+      expect(market.secondaryTokenId, 'token-no');
+    });
+  });
+
   group('orderBook', () {
     test('GETs /book?token_id=...', () async {
       Uri? captured;
@@ -150,6 +174,36 @@ void main() {
     });
   });
 
+  group('negRiskInfo', () {
+    test(
+      'decodes full Polygolem neg-risk metadata while preserving bool helper',
+      () async {
+        Uri? captured;
+        final client = _client((req) async {
+          captured = req.url;
+          return http.Response(
+            jsonEncode(<String, dynamic>{
+              'neg_risk': true,
+              'neg_risk_market_id': 'neg-market-1',
+              'neg_risk_fee_bips': '25',
+            }),
+            200,
+          );
+        });
+
+        final info = await client.negRiskInfo('12345');
+        final flag = await client.negRisk('12345');
+
+        expect(captured!.path, '/neg-risk');
+        expect(captured!.queryParameters['token_id'], '12345');
+        expect(info.negRisk, isTrue);
+        expect(info.negRiskMarketId, 'neg-market-1');
+        expect(info.negRiskFeeBips, 25);
+        expect(flag, isTrue);
+      },
+    );
+  });
+
   group('tickSize', () {
     test('decodes string fields', () async {
       final client = _client((req) async {
@@ -223,6 +277,76 @@ void main() {
       expect(captured!.queryParameters['fidelity'], '100');
       expect(captured!.queryParameters['startTs'], '1000');
       expect(captured!.queryParameters['endTs'], '2000');
+    });
+  });
+
+  group('builderTrades', () {
+    test(
+      'GETs /builder-trades with limit and decodes wrapped trades',
+      () async {
+        Uri? captured;
+        final client = _client((req) async {
+          captured = req.url;
+          return http.Response(
+            jsonEncode(<String, dynamic>{
+              'trades': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'trade_id': 'trade-1',
+                  'order_id': 'order-1',
+                  'market': '0xcondition',
+                  'asset_id': '12345',
+                  'side': 'BUY',
+                  'size': 10,
+                  'price': '0.52',
+                  'timestamp': '1714000000',
+                },
+              ],
+            }),
+            200,
+          );
+        });
+
+        final trades = await client.builderTrades(limit: 25);
+
+        expect(captured!.path, '/builder-trades');
+        expect(captured!.queryParameters['limit'], '25');
+        expect(trades, hasLength(1));
+        expect(trades.single.tradeId, 'trade-1');
+        expect(trades.single.orderId, 'order-1');
+        expect(trades.single.size, '10');
+        expect(trades.single.price, '0.52');
+      },
+    );
+
+    test('decodes camel aliases and numeric fields', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'trades': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'tradeId': 'trade-1',
+                'orderId': 'order-1',
+                'market': '0xcondition',
+                'assetId': 12345,
+                'side': 'BUY',
+                'size': 10,
+                'price': 0.52,
+                'timestamp': 1714000000,
+              },
+            ],
+          }),
+          200,
+        );
+      });
+
+      final trades = await client.builderTrades(limit: 25);
+
+      expect(trades.single.tradeId, 'trade-1');
+      expect(trades.single.orderId, 'order-1');
+      expect(trades.single.assetId, '12345');
+      expect(trades.single.size, '10');
+      expect(trades.single.price, '0.52');
+      expect(trades.single.timestamp, '1714000000');
     });
   });
 

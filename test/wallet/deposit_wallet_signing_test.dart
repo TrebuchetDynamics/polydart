@@ -206,10 +206,22 @@ void main() {
   });
 
   group('defaultBatchDeadline', () {
-    test('produces an integer-string `secondsFromNow` ahead of `now`', () {
+    test('defaults to Polygolem relayer-safe minimum window', () {
+      final base = DateTime.fromMillisecondsSinceEpoch(1700000000000);
+      final d = defaultBatchDeadline(now: base);
+      expect(int.parse(d), 1700000000 + minWalletBatchDeadlineSeconds);
+    });
+
+    test('clamps short windows to Polygolem relayer-safe minimum', () {
       final base = DateTime.fromMillisecondsSinceEpoch(1700000000000);
       final d = defaultBatchDeadline(secondsFromNow: 240, now: base);
-      expect(int.parse(d), 1700000000 + 240);
+      expect(int.parse(d), 1700000000 + minWalletBatchDeadlineSeconds);
+    });
+
+    test('preserves longer caller-provided windows', () {
+      final base = DateTime.fromMillisecondsSinceEpoch(1700000000000);
+      final d = defaultBatchDeadline(secondsFromNow: 3600, now: base);
+      expect(int.parse(d), 1700000000 + 3600);
     });
   });
 }

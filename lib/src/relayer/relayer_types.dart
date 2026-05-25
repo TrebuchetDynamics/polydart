@@ -116,21 +116,32 @@ final class RelayerTransaction {
   });
 
   factory RelayerTransaction.fromJson(Map<String, dynamic> json) {
-    String pick(String k) => (json[k] ?? '').toString();
+    String pick(List<String> keys) {
+      for (final key in keys) {
+        final value = json[key];
+        if (value != null) return value.toString();
+      }
+      return '';
+    }
+
     return RelayerTransaction(
-      transactionId: pick('transactionID'),
-      transactionHash: pick('transactionHash'),
-      from: pick('from'),
-      to: pick('to'),
-      proxyAddress: pick('proxyAddress'),
-      data: pick('data'),
-      nonce: pick('nonce'),
-      value: pick('value'),
-      state: pick('state'),
-      type: pick('type'),
-      metadata: pick('metadata'),
-      createdAt: pick('createdAt'),
-      updatedAt: pick('updatedAt'),
+      transactionId: pick(const [
+        'transactionID',
+        'transactionId',
+        'transaction_id',
+      ]),
+      transactionHash: pick(const ['transactionHash', 'transaction_hash']),
+      from: pick(const ['from']),
+      to: pick(const ['to']),
+      proxyAddress: pick(const ['proxyAddress', 'proxy_address']),
+      data: pick(const ['data']),
+      nonce: pick(const ['nonce']),
+      value: pick(const ['value']),
+      state: pick(const ['state']),
+      type: pick(const ['type']),
+      metadata: pick(const ['metadata']),
+      createdAt: pick(const ['createdAt', 'created_at']),
+      updatedAt: pick(const ['updatedAt', 'updated_at']),
     );
   }
 
@@ -171,11 +182,17 @@ final class DeployedResponse {
 
   factory DeployedResponse.fromJson(Map<String, dynamic> json) {
     return DeployedResponse(
-      deployed: json['deployed'] == true,
+      deployed: _bool(json['deployed']),
       address: (json['address'] ?? '').toString(),
     );
   }
 
   final bool deployed;
   final String address;
+}
+
+bool _bool(Object? value) {
+  if (value is bool) return value;
+  final text = value?.toString().toLowerCase() ?? '';
+  return text == 'true' || text == '1';
 }

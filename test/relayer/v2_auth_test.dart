@@ -70,6 +70,7 @@ void main() {
               'apiKey': '019e0650-uuid',
               'address': '0xabc',
               'createdAt': '2026-05-08T00:00:00Z',
+              'updatedAt': '2026-05-08T00:00:00Z',
             }),
             200,
           );
@@ -89,6 +90,7 @@ void main() {
         expect(key.key, '019e0650-uuid');
         expect(key.address, '0xabc');
         expect(key.createdAt, '2026-05-08T00:00:00Z');
+        expect(key.updatedAt, '2026-05-08T00:00:00Z');
       },
     );
 

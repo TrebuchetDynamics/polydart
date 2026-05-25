@@ -22,13 +22,14 @@ import '../errors/errors.dart';
 const String defaultRelayerV2BaseUrl = 'https://relayer-v2.polymarket.com';
 
 /// V2 Relayer API key triple (the "triple" is misleading — V2 uses two
-/// fields). [createdAt] is captured for diagnostics.
+/// fields). Timestamp fields are captured for diagnostics.
 @immutable
 final class V2APIKey {
   const V2APIKey({
     required this.key,
     required this.address,
     this.createdAt = '',
+    this.updatedAt = '',
   });
 
   factory V2APIKey.fromJson(Map<String, dynamic> json) {
@@ -36,12 +37,14 @@ final class V2APIKey {
       key: (json['apiKey'] ?? '').toString(),
       address: (json['address'] ?? '').toString(),
       createdAt: (json['createdAt'] ?? '').toString(),
+      updatedAt: (json['updatedAt'] ?? '').toString(),
     );
   }
 
   final String key;
   final String address;
   final String createdAt;
+  final String updatedAt;
 
   /// Plain headers the V2 relayer expects on every authenticated request.
   Map<String, String> v2Headers() => <String, String>{

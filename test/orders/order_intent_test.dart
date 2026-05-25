@@ -140,4 +140,42 @@ void main() {
     expect(fail.success, isFalse);
     expect(fail.errorMessage, 'price out of band');
   });
+
+  test('OrderResponse.fromJson decodes camel response aliases', () {
+    final resp = OrderResponse.fromJson(<String, dynamic>{
+      'success': true,
+      'orderID': 'O-3',
+      'status': 'matched',
+      'transactionHash': '0xtx',
+      'tradeIds': <String>['trade-1'],
+    });
+
+    expect(resp.transactionHash, '0xtx');
+    expect(resp.transactionHashes, ['0xtx']);
+    expect(resp.tradeIds, ['trade-1']);
+  });
+
+  test('OrderResponse.fromJson decodes transactionHashes alias', () {
+    final resp = OrderResponse.fromJson(<String, dynamic>{
+      'success': true,
+      'orderID': 'O-2',
+      'status': 'matched',
+      'transactionHashes': <String>['0xtx'],
+    });
+
+    expect(resp.transactionHashes, ['0xtx']);
+  });
+
+  test('OrderResponse.fromJson stringifies numeric list aliases', () {
+    final resp = OrderResponse.fromJson(<String, dynamic>{
+      'success': true,
+      'orderID': 'O-4',
+      'status': 'matched',
+      'transactionHashes': <Object>[1, '0xtx'],
+      'tradeIDs': <Object>[2, 'trade-3'],
+    });
+
+    expect(resp.transactionHashes, ['1', '0xtx']);
+    expect(resp.tradeIds, ['2', 'trade-3']);
+  });
 }

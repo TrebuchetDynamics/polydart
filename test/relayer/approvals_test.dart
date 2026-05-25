@@ -2,6 +2,33 @@ import 'package:polydart/src/relayer/approvals.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('buildAdapterApprovalCalls', () {
+    final calls = buildAdapterApprovalCalls();
+
+    test('returns exactly four calls — pUSD + CTF for each V2 adapter', () {
+      expect(calls, hasLength(4));
+    });
+
+    test('spender ordering is [CTF collateral adapter, NegRisk adapter]', () {
+      final spenders = <String>[
+        ctfCollateralAdapter,
+        negRiskCtfCollateralAdapter,
+      ];
+      for (var i = 0; i < spenders.length; i++) {
+        final approveCall = calls[i * 2];
+        final ctfCall = calls[i * 2 + 1];
+        final spenderHex = spenders[i]
+            .substring(2)
+            .toLowerCase()
+            .padLeft(64, '0');
+        expect(approveCall.target.toLowerCase(), pusdAddress.toLowerCase());
+        expect(ctfCall.target.toLowerCase(), ctfAddress.toLowerCase());
+        expect(approveCall.data.toLowerCase().contains(spenderHex), isTrue);
+        expect(ctfCall.data.toLowerCase().contains(spenderHex), isTrue);
+      }
+    });
+  });
+
   group('buildApprovalCalls', () {
     final calls = buildApprovalCalls();
 

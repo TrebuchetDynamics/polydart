@@ -30,6 +30,29 @@ ClobClient _client(Future<http.Response> Function(http.BaseRequest) handler) {
 
 void main() {
   group('listOrders', () {
+    test('decodes Polygolem-style camelCase order aliases', () {
+      final order = OrderRecord.fromJson(<String, dynamic>{
+        'id': 'ord-camel',
+        'assetId': 'token-1',
+        'originalSize': 10,
+        'sizeMatched': 5,
+        'orderType': 'GTC',
+        'signatureType': '3',
+        'createdAt': 1710000000,
+        'makerAddress': '0xmaker',
+        'associateTrades': <Object>[1, 'trade-2'],
+      });
+
+      expect(order.assetId, 'token-1');
+      expect(order.originalSize, '10');
+      expect(order.sizeMatched, '5');
+      expect(order.orderType, 'GTC');
+      expect(order.signatureType, 3);
+      expect(order.createdAt, '1710000000');
+      expect(order.makerAddress, '0xmaker');
+      expect(order.associateTrades, ['1', 'trade-2']);
+    });
+
     test(
       'GETs /data/orders with POLY_API_KEY headers and parses records',
       () async {
@@ -52,7 +75,8 @@ void main() {
                 'size_matched': '0',
                 'price': '0.50',
                 'outcome': 'YES',
-                'type': 'GTC',
+                'type': 'limit',
+                'order_type': 'GTC',
                 'signature_type': 0,
                 'created_at': '2026-05-07T00:00:00Z',
                 'expiration': '0',
@@ -71,12 +95,32 @@ void main() {
         expect(capturedHeaders!['POLY_SIGNATURE'], isNotNull);
         expect(orders, hasLength(1));
         expect(orders.first.id, 'ord-1');
+        expect(orders.first.orderType, 'GTC');
         expect(orders.first.associateTrades, hasLength(2));
       },
     );
   });
 
   group('listTrades', () {
+    test('decodes Polygolem-style camelCase trade aliases', () {
+      final trade = TradeRecord.fromJson(<String, dynamic>{
+        'id': 't-camel',
+        'assetId': 'token-1',
+        'feeRateBps': 10,
+        'matchedAmount': 5,
+        'transactionHash': '0xhash',
+        'createdAt': 1710000000,
+        'lastUpdated': 1710000060,
+      });
+
+      expect(trade.assetId, 'token-1');
+      expect(trade.feeRateBps, '10');
+      expect(trade.matchedAmount, '5');
+      expect(trade.transactionHash, '0xhash');
+      expect(trade.createdAt, '1710000000');
+      expect(trade.lastUpdated, '1710000060');
+    });
+
     test('GETs /data/trades with HMAC headers', () async {
       String? capturedPath;
       final client = _client((req) async {
@@ -174,6 +218,24 @@ void main() {
       expect(capturedUrl!.queryParameters['signature_type'], '3');
       expect(resp.balance, '1000000');
       expect(resp.allowances['0xCtfExchangeV2'], '999999999');
+    });
+
+    test('uppercases asset_type like polygolem', () {
+      const params = BalanceAllowanceParams(assetType: 'collateral');
+      expect(params.toQuery()['asset_type'], 'COLLATERAL');
+    });
+
+    test('defaults signature_type to POLY_1271 like polygolem', () {
+      const params = BalanceAllowanceParams(assetType: 'COLLATERAL');
+      expect(params.toQuery()['signature_type'], '3');
+    });
+
+    test('pins signature_type to POLY_1271 like polygolem', () {
+      const params = BalanceAllowanceParams(
+        assetType: 'COLLATERAL',
+        signatureType: 0,
+      );
+      expect(params.toQuery()['signature_type'], '3');
     });
   });
 

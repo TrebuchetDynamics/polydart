@@ -1,8 +1,7 @@
 /// Composes Gamma + CLOB for "find liquid markets and price them" flows.
 ///
-/// Mirrors `internal/marketdiscovery`. Phase 1 covers tick size, midpoint,
-/// spread, last price, and order book. Neg-risk and fee-rate enrichment
-/// land alongside the corresponding CLOB types in Phase 2.
+/// Mirrors `internal/marketdiscovery`: tick size, neg-risk, fee-rate,
+/// midpoint, spread, last price, and order book enrichment.
 library;
 
 import 'package:meta/meta.dart';
@@ -23,6 +22,8 @@ final class EnrichedMarket {
     this.spread,
     this.lastPrice,
     this.orderBook,
+    this.negRisk,
+    this.feeRateBps,
   });
 
   /// The Gamma view of the market.
@@ -42,6 +43,12 @@ final class EnrichedMarket {
 
   /// Top-of-book snapshot, when fetched.
   final OrderBook? orderBook;
+
+  /// Whether the market is negative-risk, when fetched.
+  final bool? negRisk;
+
+  /// Maker fee rate in basis points, when fetched.
+  final int? feeRateBps;
 }
 
 final class MarketDiscovery {
@@ -67,6 +74,8 @@ final class MarketDiscovery {
     final tokenId = tokenIds.first;
 
     final tickSize = _safe(() => _clob.tickSize(tokenId));
+    final negRisk = _safe(() => _clob.negRisk(tokenId));
+    final feeRateBps = _safe(() => _clob.feeRateBps(tokenId));
     final midpoint = _safe(() => _clob.midpoint(tokenId));
     final spread = _safe(() => _clob.spread(tokenId));
     final lastPrice = _safe(() => _clob.lastTradePrice(tokenId));
@@ -79,6 +88,8 @@ final class MarketDiscovery {
       spread: await spread,
       lastPrice: await lastPrice,
       orderBook: await orderBook,
+      negRisk: await negRisk,
+      feeRateBps: await feeRateBps,
     );
   }
 
@@ -98,7 +109,9 @@ final class MarketDiscovery {
     return out;
   }
 
-  /// Searches Gamma and enriches markets attached to matching events.
+  /// Searches Gamma, fetches each full event by slug, then enriches attached
+  /// markets. This mirrors polygolem because Gamma search events may omit the
+  /// complete market list.
   Future<List<EnrichedMarket>> searchAndEnrich(
     String query, {
     int limit = 5,
@@ -108,7 +121,9 @@ final class MarketDiscovery {
     );
     final out = <EnrichedMarket>[];
     for (final evt in resp.events) {
-      for (final m in evt.markets) {
+      final fullEvent = await _safe(() => _gamma.eventBySlug(evt.slug));
+      if (fullEvent == null) continue;
+      for (final m in fullEvent.markets) {
         if (!m.active || !m.enableOrderBook) continue;
         out.add(await enrichMarket(m));
       }

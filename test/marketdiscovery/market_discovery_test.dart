@@ -49,6 +49,16 @@ void main() {
             }),
             200,
           );
+        case '/neg-risk':
+          return http.Response(
+            jsonEncode(<String, dynamic>{'neg_risk': true}),
+            200,
+          );
+        case '/fee-rate':
+          return http.Response(
+            jsonEncode(<String, dynamic>{'fee_rate_bps': 12}),
+            200,
+          );
         case '/midpoint':
           return http.Response(
             jsonEncode(<String, dynamic>{'mid': '0.5'}),
@@ -99,10 +109,14 @@ void main() {
     expect(enriched.spread, '0.02');
     expect(enriched.lastPrice, '0.5');
     expect(enriched.orderBook?.assetId, 't1');
+    expect(enriched.negRisk, isTrue);
+    expect(enriched.feeRateBps, 12);
     expect(
       hit,
       containsAll(<String>[
         '/tick-size',
+        '/neg-risk',
+        '/fee-rate',
         '/midpoint',
         '/spread',
         '/last-trade-price',
@@ -122,6 +136,8 @@ void main() {
     expect(enriched.tickSize, isNull);
     expect(enriched.midpoint, isNull);
     expect(enriched.orderBook, isNull);
+    expect(enriched.negRisk, isNull);
+    expect(enriched.feeRateBps, isNull);
   });
 
   test('CLOB failures are non-fatal', () async {
@@ -135,91 +151,142 @@ void main() {
     expect(enriched.tickSize, isNull);
     expect(enriched.midpoint, isNull);
     expect(enriched.orderBook, isNull);
+    expect(enriched.negRisk, isNull);
+    expect(enriched.feeRateBps, isNull);
     expect(enriched.market.id, '1');
   });
 
-  test('searchAndEnrich walks events × markets', () async {
-    var clobHits = 0;
-    final gamma = _gamma((req) async {
-      return http.Response(
-        jsonEncode(<String, dynamic>{
-          'events': <Map<String, dynamic>>[
-            <String, dynamic>{
-              'id': 'e1',
-              'ticker': 'BTC',
-              'slug': 'btc',
-              'title': '',
-              'description': '',
-              'image': '',
-              'icon': '',
-              'active': true,
-              'closed': false,
-              'archived': false,
-              'featured': false,
-              'liquidity': 0,
-              'volume': 0,
-              'tags': <Object>[],
-              'markets': <Map<String, dynamic>>[
-                <String, dynamic>{
-                  'id': 'm1',
-                  'question': 'q',
-                  'slug': 's',
-                  'clobTokenIds': '["t1"]',
-                  'active': true,
-                  'enableOrderBook': true,
-                },
-              ],
-            },
-          ],
-          'tags': <Object>[],
-          'profiles': <Object>[],
-          'pagination': <String, dynamic>{'hasMore': false, 'totalResults': 1},
-        }),
-        200,
-      );
-    });
-
-    final clob = _clob((req) async {
-      clobHits++;
-      // Always 200 with empty payloads — enough to hit the success path.
-      switch (req.url.path) {
-        case '/tick-size':
-          return http.Response(jsonEncode(<String, dynamic>{}), 200);
-        case '/midpoint':
-          return http.Response(
-            jsonEncode(<String, dynamic>{'mid': '0.5'}),
-            200,
-          );
-        case '/spread':
-          return http.Response(
-            jsonEncode(<String, dynamic>{'spread': '0.02'}),
-            200,
-          );
-        case '/last-trade-price':
-          return http.Response(
-            jsonEncode(<String, dynamic>{'price': '0.5'}),
-            200,
-          );
-        case '/book':
+  test(
+    'searchAndEnrich fetches full events before enriching markets',
+    () async {
+      var clobHits = 0;
+      var eventLookupCalled = false;
+      final gamma = _gamma((req) async {
+        if (req.url.path == '/public-search') {
           return http.Response(
             jsonEncode(<String, dynamic>{
-              'market': '',
-              'asset_id': 't1',
-              'timestamp': '0',
-              'hash': '0x',
-              'bids': <Object>[],
-              'asks': <Object>[],
+              'events': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'id': 'e1',
+                  'ticker': 'BTC',
+                  'slug': 'btc',
+                  'title': '',
+                  'description': '',
+                  'image': '',
+                  'icon': '',
+                  'active': true,
+                  'closed': false,
+                  'archived': false,
+                  'featured': false,
+                  'liquidity': 0,
+                  'volume': 0,
+                  'tags': <Object>[],
+                  'markets': <Map<String, dynamic>>[],
+                },
+              ],
+              'tags': <Object>[],
+              'profiles': <Object>[],
+              'pagination': <String, dynamic>{
+                'hasMore': false,
+                'totalResults': 1,
+              },
             }),
             200,
           );
-      }
-      return http.Response('?', 404);
-    });
+        }
+        if (req.url.path == '/events') {
+          eventLookupCalled = true;
+          expect(req.url.queryParameters['slug'], 'btc');
+          return http.Response(
+            jsonEncode(<Map<String, dynamic>>[
+              <String, dynamic>{
+                'id': 'e1',
+                'ticker': 'BTC',
+                'slug': 'btc',
+                'title': '',
+                'description': '',
+                'image': '',
+                'icon': '',
+                'active': true,
+                'closed': false,
+                'archived': false,
+                'featured': false,
+                'liquidity': 0,
+                'volume': 0,
+                'tags': <Object>[],
+                'markets': <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'id': 'm1',
+                    'question': 'q',
+                    'slug': 's',
+                    'clobTokenIds': '["t1"]',
+                    'active': true,
+                    'enableOrderBook': true,
+                  },
+                ],
+              },
+            ]),
+            200,
+          );
+        }
+        return http.Response('not found', 404);
+      });
 
-    final discovery = MarketDiscovery(gamma: gamma, clob: clob);
-    final out = await discovery.searchAndEnrich('btc');
-    expect(out, hasLength(1));
-    expect(out.first.midpoint, '0.5');
-    expect(clobHits, greaterThanOrEqualTo(5));
-  });
+      final clob = _clob((req) async {
+        clobHits++;
+        // Always 200 with empty payloads — enough to hit the success path.
+        switch (req.url.path) {
+          case '/tick-size':
+            return http.Response(jsonEncode(<String, dynamic>{}), 200);
+          case '/neg-risk':
+            return http.Response(
+              jsonEncode(<String, dynamic>{'neg_risk': false}),
+              200,
+            );
+          case '/fee-rate':
+            return http.Response(
+              jsonEncode(<String, dynamic>{'fee_rate_bps': 0}),
+              200,
+            );
+          case '/midpoint':
+            return http.Response(
+              jsonEncode(<String, dynamic>{'mid': '0.5'}),
+              200,
+            );
+          case '/spread':
+            return http.Response(
+              jsonEncode(<String, dynamic>{'spread': '0.02'}),
+              200,
+            );
+          case '/last-trade-price':
+            return http.Response(
+              jsonEncode(<String, dynamic>{'price': '0.5'}),
+              200,
+            );
+          case '/book':
+            return http.Response(
+              jsonEncode(<String, dynamic>{
+                'market': '',
+                'asset_id': 't1',
+                'timestamp': '0',
+                'hash': '0x',
+                'bids': <Object>[],
+                'asks': <Object>[],
+              }),
+              200,
+            );
+        }
+        return http.Response('?', 404);
+      });
+
+      final discovery = MarketDiscovery(gamma: gamma, clob: clob);
+      final out = await discovery.searchAndEnrich('btc');
+      expect(out, hasLength(1));
+      expect(eventLookupCalled, isTrue);
+      expect(out.first.midpoint, '0.5');
+      expect(out.first.negRisk, isFalse);
+      expect(out.first.feeRateBps, 0);
+      expect(clobHits, greaterThanOrEqualTo(7));
+    },
+  );
 }

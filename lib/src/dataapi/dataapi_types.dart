@@ -271,7 +271,7 @@ final class Activity {
   factory Activity.fromJson(Map<String, dynamic> json) => Activity(
     type: json['type']?.toString() ?? '',
     market: json['market']?.toString() ?? '',
-    assetId: json['asset_id']?.toString() ?? '',
+    assetId: _stringOf(json, const ['asset_id', 'assetId']),
     side: json['side']?.toString() ?? '',
     price: json['price']?.toString() ?? '',
     size: json['size']?.toString() ?? '',

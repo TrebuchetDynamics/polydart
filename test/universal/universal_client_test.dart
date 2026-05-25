@@ -108,6 +108,131 @@ void main() {
       },
     );
 
+    test('delegates CLOB market-by-token to the CLOB client', () async {
+      Uri? clobUrl;
+      final client = UniversalClient(
+        config: UniversalConfig(
+          clobTransport: _transport(ClobClient.defaultBaseUrl, (req) async {
+            clobUrl = req.url;
+            return http.Response(
+              jsonEncode(<String, dynamic>{
+                'condition_id': 'condition-1',
+                'primary_token_id': 'token-yes',
+                'secondary_token_id': 'token-no',
+              }),
+              200,
+            );
+          }),
+        ),
+      );
+
+      addTearDown(client.close);
+
+      final market = await client.clobMarketByToken('token-1');
+
+      expect(clobUrl!.path, '/markets-by-token/token-1');
+      expect(market.conditionId, 'condition-1');
+      expect(market.primaryTokenId, 'token-yes');
+    });
+
+    test('delegates full neg-risk metadata to the CLOB client', () async {
+      Uri? clobUrl;
+      final client = UniversalClient(
+        config: UniversalConfig(
+          clobTransport: _transport(ClobClient.defaultBaseUrl, (req) async {
+            clobUrl = req.url;
+            return http.Response(
+              jsonEncode(<String, dynamic>{
+                'neg_risk': true,
+                'neg_risk_market_id': 'neg-market-1',
+                'neg_risk_fee_bips': 25,
+              }),
+              200,
+            );
+          }),
+        ),
+      );
+
+      addTearDown(client.close);
+
+      final info = await client.negRiskInfo('token-1');
+
+      expect(clobUrl!.path, '/neg-risk');
+      expect(clobUrl!.queryParameters['token_id'], 'token-1');
+      expect(info.negRisk, isTrue);
+      expect(info.negRiskMarketId, 'neg-market-1');
+      expect(info.negRiskFeeBips, 25);
+    });
+
+    test('delegates public CLOB trades to the CLOB client', () async {
+      Uri? clobUrl;
+      final client = UniversalClient(
+        config: UniversalConfig(
+          clobTransport: _transport(ClobClient.defaultBaseUrl, (req) async {
+            clobUrl = req.url;
+            return http.Response(
+              jsonEncode(<String, dynamic>{
+                'trades': <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'id': 'trade-1',
+                    'status': 'MATCHED',
+                    'market': 'condition-1',
+                    'asset_id': 'token-1',
+                    'side': 'BUY',
+                    'price': '0.52',
+                    'size': '10',
+                    'transaction_hash': '0xtx',
+                  },
+                ],
+              }),
+              200,
+            );
+          }),
+        ),
+      );
+
+      addTearDown(client.close);
+
+      final trades = await client.publicTrades(market: 'condition-1');
+
+      expect(clobUrl!.path, '/trades');
+      expect(clobUrl!.queryParameters['market'], 'condition-1');
+      expect(trades.single.id, 'trade-1');
+      expect(trades.single.transactionHash, '0xtx');
+    });
+
+    test('delegates builder trades to the CLOB client', () async {
+      Uri? clobUrl;
+      final client = UniversalClient(
+        config: UniversalConfig(
+          clobTransport: _transport(ClobClient.defaultBaseUrl, (req) async {
+            clobUrl = req.url;
+            return http.Response(
+              jsonEncode(<String, dynamic>{
+                'trades': <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'trade_id': 'trade-1',
+                    'order_id': 'order-1',
+                    'price': '0.52',
+                  },
+                ],
+              }),
+              200,
+            );
+          }),
+        ),
+      );
+
+      addTearDown(client.close);
+
+      final trades = await client.builderTrades(limit: 25);
+
+      expect(clobUrl!.path, '/builder-trades');
+      expect(clobUrl!.queryParameters['limit'], '25');
+      expect(trades.single.tradeId, 'trade-1');
+      expect(trades.single.price, '0.52');
+    });
+
     test(
       'delegates market trades to the public Data API market filter',
       () async {

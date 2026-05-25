@@ -51,18 +51,199 @@ void main() {
         'id': '7',
         'marketType': 'normal',
         'umaResolutionStatus': 'proposed',
+        'umaEndDateIso': '2026-05-22T00:00:00Z',
+        'lowerBoundDate': '2026-05-20T00:00:00Z',
+        'upperBoundDate': '2026-05-23T00:00:00Z',
+        'wideFormat': true,
+        'formatType': 'range',
+        'lowerBound': '10',
+        'upperBound': '20',
+        'groupItemThreshold': 'threshold-1',
+        'ammType': 'fpmm',
+        'fee': '2',
+        'denominationToken': 'USDC',
+        'sponsorName': 'A Sponsor',
+        'sponsorImage': 'https://example.com/sponsor.png',
+        'xAxisValue': 'time',
+        'yAxisValue': 'price',
+        'marketMakerAddress': '0xmaker',
+        'mailchimpTag': 'tag-1',
+        'resolvedBy': '0xresolver',
+        'disqusThread': 'thread-1',
+        'creator': 'creator-1',
+        'pastSlugs': 'old-slug',
+        'createdBy': '3',
+        'updatedBy': 4,
+        'umaResolutionStatuses': 'proposed,settled',
+        'umaBond': '500',
+        'umaReward': '25',
+        'marketGroup': '8',
         'rewardsMinSize': '25.5',
         'rewardsMaxSpread': 0.03,
         'readyTimestamp': '2026-05-21T12:34:56Z',
         'negRiskFeeBips': 15,
+        'twitterCardImage': 'https://example.com/card.png',
+        'shortOutcomes': '["Y","N"]',
+        'imageOptimized': <String, dynamic>{
+          'id': 'image-1',
+          'imageUrlSource': 'https://example.com/image.png',
+          'imageUrlOptimized': 'https://example.com/image.webp',
+          'imageSizeKbSource': 128,
+          'imageSizeKbOptimized': 32,
+          'imageOptimizedComplete': true,
+          'relID': 77,
+          'field': 'image',
+          'relname': 'markets',
+        },
+        'iconOptimized': <String, dynamic>{
+          'id': 'icon-1',
+          'imageUrlSource': 'https://example.com/icon.png',
+          'imageUrlOptimized': 'https://example.com/icon.webp',
+          'field': 'icon',
+        },
+        'events': <Map<String, dynamic>>[
+          <String, dynamic>{'id': 'event-1', 'title': 'Parent event'},
+        ],
+        'teamAID': 'team-a',
+        'teamBID': 'team-b',
+        'gameId': 'game-1',
+        'sportsMarketType': 'spread',
+        'line': '-2.5',
+        'secondsDelay': '15',
+        'fpmmLive': true,
+        'customLiveness': '120',
+        'notificationsEnabled': true,
+        'hasReviewedDates': true,
+        'readyForCron': true,
+        'commentsEnabled': true,
+        'curationOrder': '9',
+        'score': '0.42',
+        'volume24hrAmm': '1.1',
+        'volume1wkAmm': '2.2',
+        'volume1moAmm': '3.3',
+        'volume1yrAmm': '4.4',
+        'volume24hrClob': '5.5',
+        'volume1wkClob': '6.6',
+        'volume1moClob': '7.7',
+        'volume1yrClob': '8.8',
+        'volumeAmm': '9.9',
+        'liquidityAmm': '10.1',
       });
 
       expect(m.marketType, 'normal');
       expect(m.umaResolutionStatus, 'proposed');
+      expect(m.umaEndDateIso, '2026-05-22T00:00:00Z');
+      expect(m.lowerBoundDate, DateTime.utc(2026, 5, 20));
+      expect(m.upperBoundDate, DateTime.utc(2026, 5, 23));
+      expect(m.wideFormat, isTrue);
+      expect(m.formatType, 'range');
+      expect(m.lowerBound, '10');
+      expect(m.upperBound, '20');
+      expect(m.groupItemThreshold, 'threshold-1');
+      expect(m.ammType, 'fpmm');
+      expect(m.fee, '2');
+      expect(m.denominationToken, 'USDC');
+      expect(m.sponsorName, 'A Sponsor');
+      expect(m.sponsorImage, 'https://example.com/sponsor.png');
+      expect(m.xAxisValue, 'time');
+      expect(m.yAxisValue, 'price');
+      expect(m.marketMakerAddress, '0xmaker');
+      expect(m.mailchimpTag, 'tag-1');
+      expect(m.resolvedBy, '0xresolver');
+      expect(m.disqusThread, 'thread-1');
+      expect(m.creator, 'creator-1');
+      expect(m.pastSlugs, 'old-slug');
+      expect(m.createdBy, 3);
+      expect(m.updatedBy, 4);
+      expect(m.umaResolutionStatuses, 'proposed,settled');
+      expect(m.umaBond, '500');
+      expect(m.umaReward, '25');
+      expect(m.marketGroup, 8);
       expect(m.rewardsMinSize, 25.5);
       expect(m.rewardsMaxSpread, 0.03);
       expect(m.readyTimestamp, DateTime.utc(2026, 5, 21, 12, 34, 56));
       expect(m.negRiskFeeBips, 15);
+      expect(m.twitterCardImage, 'https://example.com/card.png');
+      expect(m.shortOutcomes, <String>['Y', 'N']);
+      expect(m.imageOptimized, isNotNull);
+      expect(
+        m.imageOptimized!.imageUrlOptimized,
+        'https://example.com/image.webp',
+      );
+      expect(m.iconOptimized, isNotNull);
+      expect(m.iconOptimized!.field, 'icon');
+      expect(m.events.single.id, 'event-1');
+      expect(m.teamAId, 'team-a');
+      expect(m.teamBId, 'team-b');
+      expect(m.gameId, 'game-1');
+      expect(m.sportsMarketType, 'spread');
+      expect(m.line, -2.5);
+      expect(m.secondsDelay, 15);
+      expect(m.fpmmLive, isTrue);
+      expect(m.customLiveness, 120);
+      expect(m.notificationsEnabled, isTrue);
+      expect(m.hasReviewedDates, isTrue);
+      expect(m.readyForCron, isTrue);
+      expect(m.commentsEnabled, isTrue);
+      expect(m.curationOrder, 9);
+      expect(m.score, 0.42);
+      expect(m.volume24hrAmm, 1.1);
+      expect(m.volume1wkAmm, 2.2);
+      expect(m.volume1moAmm, 3.3);
+      expect(m.volume1yrAmm, 4.4);
+      expect(m.volume24hrClob, 5.5);
+      expect(m.volume1wkClob, 6.6);
+      expect(m.volume1moClob, 7.7);
+      expect(m.volume1yrClob, 8.8);
+      expect(m.volumeAmm, 9.9);
+      expect(m.liquidityAmm, 10.1);
+    });
+
+    test('decodes Polygolem Gamma market price/deployment metadata', () {
+      final m = Market.fromJson(<String, dynamic>{
+        'id': '7',
+        'fundedTimestamp': '2026-05-21T12:35:00Z',
+        'competitive': '0.9',
+        'oneDayPriceChange': '0.01',
+        'oneHourPriceChange': 0.02,
+        'oneWeekPriceChange': '0.03',
+        'oneMonthPriceChange': 0.04,
+        'oneYearPriceChange': '0.05',
+        'automaticallyResolved': true,
+        'automaticallyActive': true,
+        'clearBookOnStart': true,
+        'manualActivation': true,
+        'chartColor': '#123456',
+        'seriesColor': '#abcdef',
+        'showGmpSeries': true,
+        'showGmpOutcome': true,
+        'negRiskOther': true,
+        'pendingDeployment': true,
+        'deploying': true,
+        'deployingTimestamp': '2026-05-21T12:36:00Z',
+        'scheduledDeploymentTimestamp': '2026-05-21T12:37:00Z',
+      });
+
+      expect(m.fundedTimestamp, DateTime.utc(2026, 5, 21, 12, 35));
+      expect(m.competitive, 0.9);
+      expect(m.oneDayPriceChange, 0.01);
+      expect(m.oneHourPriceChange, 0.02);
+      expect(m.oneWeekPriceChange, 0.03);
+      expect(m.oneMonthPriceChange, 0.04);
+      expect(m.oneYearPriceChange, 0.05);
+      expect(m.automaticallyResolved, isTrue);
+      expect(m.automaticallyActive, isTrue);
+      expect(m.clearBookOnStart, isTrue);
+      expect(m.manualActivation, isTrue);
+      expect(m.chartColor, '#123456');
+      expect(m.seriesColor, '#abcdef');
+      expect(m.showGmpSeries, isTrue);
+      expect(m.showGmpOutcome, isTrue);
+      expect(m.negRiskOther, isTrue);
+      expect(m.pendingDeployment, isTrue);
+      expect(m.deploying, isTrue);
+      expect(m.deployingTimestamp, DateTime.utc(2026, 5, 21, 12, 36));
+      expect(m.scheduledDeploymentTimestamp, DateTime.utc(2026, 5, 21, 12, 37));
     });
 
     test('preserves uncommon fields on raw', () {
@@ -457,6 +638,339 @@ void main() {
       expect(event.negRisk, isTrue);
       expect(event.negRiskMarketId, 'neg-risk-market-1');
       expect(event.negRiskFeeBips, 25);
+    });
+
+    test('decodes Polygolem Gamma live/deployment event metadata', () {
+      final event = Event.fromJson(<String, dynamic>{
+        'id': 'event-1',
+        'live': true,
+        'ended': true,
+        'finishedTimestamp': '2026-05-21T15:00:00Z',
+        'gmpChartMode': 'scoreboard',
+        'tweetCount': '7',
+        'featuredOrder': 3,
+        'estimateValue': true,
+        'cantEstimate': true,
+        'estimatedValue': '123.45',
+        'spreadsMainLine': '1.5',
+        'totalsMainLine': 47.5,
+        'carouselMap': 'main',
+        'pendingDeployment': true,
+        'deploying': true,
+        'deployingTimestamp': '2026-05-21T16:00:00Z',
+        'scheduledDeploymentTimestamp': '2026-05-21T17:00:00Z',
+        'gameStatus': 'final',
+      });
+
+      expect(event.live, isTrue);
+      expect(event.ended, isTrue);
+      expect(event.finishedTimestamp, DateTime.utc(2026, 5, 21, 15));
+      expect(event.gmpChartMode, 'scoreboard');
+      expect(event.tweetCount, 7);
+      expect(event.featuredOrder, 3);
+      expect(event.estimateValue, isTrue);
+      expect(event.cantEstimate, isTrue);
+      expect(event.estimatedValue, '123.45');
+      expect(event.spreadsMainLine, 1.5);
+      expect(event.totalsMainLine, 47.5);
+      expect(event.carouselMap, 'main');
+      expect(event.pendingDeployment, isTrue);
+      expect(event.deploying, isTrue);
+      expect(event.deployingTimestamp, DateTime.utc(2026, 5, 21, 16));
+      expect(event.scheduledDeploymentTimestamp, DateTime.utc(2026, 5, 21, 17));
+      expect(event.gameStatus, 'final');
+    });
+  });
+
+  group('Category/Collection/EventCreator.fromJson', () {
+    test('decodes Polygolem Gamma category metadata', () {
+      final category = Category.fromJson(<String, dynamic>{
+        'id': 'category-1',
+        'label': 'Politics',
+        'parentCategory': 'News',
+        'slug': 'politics',
+        'publishedAt': '2026-05-21T06:00:00Z',
+        'createdBy': 'alice',
+        'updatedBy': 'bob',
+        'createdAt': '2026-05-21T07:00:00Z',
+        'updatedAt': '2026-05-21T08:00:00Z',
+      });
+
+      expect(category.parentCategory, 'News');
+      expect(category.publishedAt, DateTime.utc(2026, 5, 21, 6));
+      expect(category.createdBy, 'alice');
+      expect(category.updatedBy, 'bob');
+      expect(category.createdAt, DateTime.utc(2026, 5, 21, 7));
+      expect(category.updatedAt, DateTime.utc(2026, 5, 21, 8));
+    });
+
+    test('decodes Polygolem Gamma collection metadata', () {
+      final collection = Collection.fromJson(<String, dynamic>{
+        'id': 'collection-1',
+        'ticker': 'ELECTION',
+        'slug': 'election',
+        'title': 'Election',
+        'subtitle': '2026',
+        'collectionType': 'topic',
+        'description': 'Election markets',
+        'tags': 'politics,election',
+        'image': 'https://example.com/image.png',
+        'icon': 'https://example.com/icon.png',
+        'headerImage': 'https://example.com/header.png',
+        'layout': 'grid',
+        'active': true,
+        'closed': true,
+        'archived': true,
+        'new': true,
+        'featured': true,
+        'restricted': true,
+        'isTemplate': true,
+        'templateVariables': '{"year":2026}',
+        'publishedAt': '2026-05-21T06:00:00Z',
+        'createdBy': 'alice',
+        'updatedBy': 'bob',
+        'createdAt': '2026-05-21T07:00:00Z',
+        'updatedAt': '2026-05-21T08:00:00Z',
+        'commentsEnabled': true,
+        'headerImageOptimized': <String, dynamic>{
+          'id': 'header-image-1',
+          'imageUrlSource': 'https://example.com/header.png',
+          'imageUrlOptimized': 'https://example.com/header.webp',
+          'imageSizeKbSource': 200,
+          'imageSizeKbOptimized': 50,
+          'imageOptimizedComplete': true,
+          'relID': 6,
+          'field': 'headerImage',
+          'relname': 'collections',
+        },
+      });
+
+      expect(collection.collectionType, 'topic');
+      expect(collection.headerImage, 'https://example.com/header.png');
+      expect(collection.layout, 'grid');
+      expect(collection.active, isTrue);
+      expect(collection.closed, isTrue);
+      expect(collection.archived, isTrue);
+      expect(collection.isNew, isTrue);
+      expect(collection.featured, isTrue);
+      expect(collection.restricted, isTrue);
+      expect(collection.isTemplate, isTrue);
+      expect(collection.templateVariables, '{"year":2026}');
+      expect(collection.publishedAt, DateTime.utc(2026, 5, 21, 6));
+      expect(collection.createdBy, 'alice');
+      expect(collection.updatedBy, 'bob');
+      expect(collection.createdAt, DateTime.utc(2026, 5, 21, 7));
+      expect(collection.updatedAt, DateTime.utc(2026, 5, 21, 8));
+      expect(collection.commentsEnabled, isTrue);
+      expect(collection.headerImageOptimized, isNotNull);
+      expect(collection.headerImageOptimized!.field, 'headerImage');
+    });
+
+    test(
+      'decodes Event nested categories, collections, creators, and subEvents',
+      () {
+        final event = Event.fromJson(<String, dynamic>{
+          'id': 'event-1',
+          'categories': <Map<String, dynamic>>[
+            <String, dynamic>{'id': 'category-1', 'label': 'Politics'},
+          ],
+          'collections': <Map<String, dynamic>>[
+            <String, dynamic>{'id': 'collection-1', 'title': 'Election'},
+          ],
+          'eventCreators': <Map<String, dynamic>>[
+            <String, dynamic>{
+              'id': 'creator-1',
+              'creatorName': 'A Creator',
+              'creatorHandle': '@creator',
+              'creatorUrl': 'https://example.com/creator',
+              'creatorImage': 'https://example.com/creator.png',
+              'createdAt': '2026-05-21T09:00:00Z',
+              'updatedAt': '2026-05-21T10:00:00Z',
+            },
+          ],
+          'subEvents': <Object>['sub-event-1', 2],
+        });
+
+        expect(event.categories.single.id, 'category-1');
+        expect(event.collections.single.id, 'collection-1');
+        expect(event.eventCreators.single.creatorHandle, '@creator');
+        expect(event.subEvents, <String>['sub-event-1', '2']);
+        expect(
+          event.eventCreators.single.createdAt,
+          DateTime.utc(2026, 5, 21, 9),
+        );
+        expect(
+          event.eventCreators.single.updatedAt,
+          DateTime.utc(2026, 5, 21, 10),
+        );
+      },
+    );
+  });
+
+  group('Tag.fromJson', () {
+    test('decodes Polygolem Gamma tag audit metadata', () {
+      final tag = Tag.fromJson(<String, dynamic>{
+        'id': 'tag-1',
+        'label': 'Crypto',
+        'slug': 'crypto',
+        'forceShow': true,
+        'forceHide': true,
+        'isCarousel': true,
+        'publishedAt': '2026-05-21T07:00:00Z',
+        'createdBy': '3',
+        'updatedBy': 4,
+        'createdAt': '2026-05-21T08:00:00Z',
+        'updatedAt': '2026-05-21T09:00:00Z',
+      });
+
+      expect(tag.forceShow, isTrue);
+      expect(tag.forceHide, isTrue);
+      expect(tag.isCarousel, isTrue);
+      expect(tag.publishedAt, DateTime.utc(2026, 5, 21, 7));
+      expect(tag.createdBy, 3);
+      expect(tag.updatedBy, 4);
+      expect(tag.createdAt, DateTime.utc(2026, 5, 21, 8));
+      expect(tag.updatedAt, DateTime.utc(2026, 5, 21, 9));
+    });
+  });
+
+  group('Profile.fromJson', () {
+    test('decodes Polygolem Gamma search profile metadata', () {
+      final profile = Profile.fromJson(<String, dynamic>{
+        'id': 'profile-1',
+        'name': 'Trader',
+        'user': '42',
+        'referral': 'friend',
+        'createdBy': 1,
+        'updatedBy': '2',
+        'createdAt': '2026-05-21T10:00:00Z',
+        'updatedAt': '2026-05-21T11:00:00Z',
+        'utmSource': 'newsletter',
+        'utmMedium': 'email',
+        'utmCampaign': 'launch',
+        'utmContent': 'hero',
+        'utmTerm': 'markets',
+        'walletActivated': true,
+        'pseudonym': 'anon-trader',
+        'displayUsernamePublic': true,
+        'profileImage': 'https://example.com/profile.png',
+        'bio': 'prediction-market user',
+        'proxyWallet': '0x1111111111111111111111111111111111111111',
+        'profileImageOptimized': <String, dynamic>{
+          'id': 'profile-image-1',
+          'imageUrlSource': 'https://example.com/profile.png',
+          'imageUrlOptimized': 'https://example.com/profile.webp',
+          'imageSizeKbSource': 100,
+          'imageSizeKbOptimized': 20,
+          'imageOptimizedComplete': true,
+          'relID': 5,
+          'field': 'profileImage',
+          'relname': 'profiles',
+        },
+        'isCloseOnly': true,
+        'isCertReq': true,
+        'certReqDate': '2026-05-21T12:00:00Z',
+      });
+
+      expect(profile.id, 'profile-1');
+      expect(profile.user, 42);
+      expect(profile.referral, 'friend');
+      expect(profile.createdBy, 1);
+      expect(profile.updatedBy, 2);
+      expect(profile.createdAt, DateTime.utc(2026, 5, 21, 10));
+      expect(profile.updatedAt, DateTime.utc(2026, 5, 21, 11));
+      expect(profile.utmSource, 'newsletter');
+      expect(profile.utmMedium, 'email');
+      expect(profile.utmCampaign, 'launch');
+      expect(profile.utmContent, 'hero');
+      expect(profile.utmTerm, 'markets');
+      expect(profile.walletActivated, isTrue);
+      expect(profile.pseudonym, 'anon-trader');
+      expect(profile.displayUsernamePublic, isTrue);
+      expect(profile.bio, 'prediction-market user');
+      expect(profile.profileImageOptimized, isNotNull);
+      expect(profile.profileImageOptimized!.field, 'profileImage');
+      expect(profile.isCloseOnly, isTrue);
+      expect(profile.isCertReq, isTrue);
+      expect(profile.certReqDate, DateTime.utc(2026, 5, 21, 12));
+    });
+  });
+
+  group('Team.fromJson', () {
+    test('decodes Polygolem Gamma team audit metadata', () {
+      final team = Team.fromJson(<String, dynamic>{
+        'id': '9',
+        'name': 'Lions',
+        'league': 'NFL',
+        'record': '10-6',
+        'logo': 'https://example.com/logo.png',
+        'abbreviation': 'LIO',
+        'alias': 'lions',
+        'createdAt': '2026-05-21T10:00:00Z',
+        'updatedAt': '2026-05-21T11:00:00Z',
+      });
+
+      expect(team.id, 9);
+      expect(team.createdAt, DateTime.utc(2026, 5, 21, 10));
+      expect(team.updatedAt, DateTime.utc(2026, 5, 21, 11));
+    });
+  });
+
+  group('Series.fromJson', () {
+    test('decodes Polygolem Gamma series scalar metadata', () {
+      final series = Series.fromJson(<String, dynamic>{
+        'id': 'series-1',
+        'ticker': 'FOMC',
+        'slug': 'fomc',
+        'title': 'Fed rates',
+        'subtitle': 'Monthly',
+        'seriesType': 'recurring',
+        'recurrence': 'monthly',
+        'description': 'Rate decisions',
+        'image': 'https://example.com/image.png',
+        'icon': 'https://example.com/icon.png',
+        'layout': 'grid',
+        'active': true,
+        'closed': false,
+        'archived': false,
+        'new': true,
+        'featured': true,
+        'restricted': true,
+        'isTemplate': true,
+        'templateVariables': true,
+        'publishedAt': '2026-05-21T08:00:00Z',
+        'createdBy': '0x1111111111111111111111111111111111111111',
+        'updatedBy': '0x2222222222222222222222222222222222222222',
+        'createdAt': '2026-05-21T09:00:00Z',
+        'updatedAt': '2026-05-21T10:00:00Z',
+        'commentsEnabled': true,
+        'competitive': '0.8',
+        'startDate': '2026-06-01T00:00:00Z',
+        'pythTokenID': 'pyth-btc',
+        'cgAssetName': 'bitcoin',
+        'score': '2.5',
+        'volume': 100,
+        'volume24hr': 10,
+        'liquidity': 20,
+        'commentCount': 4,
+      });
+
+      expect(series.layout, 'grid');
+      expect(series.isNew, isTrue);
+      expect(series.featured, isTrue);
+      expect(series.restricted, isTrue);
+      expect(series.isTemplate, isTrue);
+      expect(series.templateVariables, isTrue);
+      expect(series.publishedAt, DateTime.utc(2026, 5, 21, 8));
+      expect(series.createdBy, '0x1111111111111111111111111111111111111111');
+      expect(series.updatedBy, '0x2222222222222222222222222222222222222222');
+      expect(series.createdAt, DateTime.utc(2026, 5, 21, 9));
+      expect(series.updatedAt, DateTime.utc(2026, 5, 21, 10));
+      expect(series.commentsEnabled, isTrue);
+      expect(series.competitive, '0.8');
+      expect(series.pythTokenId, 'pyth-btc');
+      expect(series.cgAssetName, 'bitcoin');
+      expect(series.score, 2.5);
     });
   });
 

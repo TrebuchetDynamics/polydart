@@ -21,11 +21,15 @@ final class RewardsConfig {
   });
 
   factory RewardsConfig.fromJson(Map<String, dynamic> json) => RewardsConfig(
-    market: json['market']?.toString() ?? '',
-    assetAddress: json['asset_address']?.toString() ?? '',
-    rewardsMinSize: _double(json['rewards_min_size']),
-    rewardsMaxSpread: _double(json['rewards_max_spread']),
-    active: json['active'] == true,
+    market: _stringOf(json, const ['market']),
+    assetAddress: _stringOf(json, const ['asset_address', 'assetAddress']),
+    rewardsMinSize: _double(
+      _firstOf(json, const ['rewards_min_size', 'rewardsMinSize']),
+    ),
+    rewardsMaxSpread: _double(
+      _firstOf(json, const ['rewards_max_spread', 'rewardsMaxSpread']),
+    ),
+    active: _bool(json['active']),
   );
 
   final String market;
@@ -46,9 +50,9 @@ final class RawRewards {
   });
 
   factory RawRewards.fromJson(Map<String, dynamic> json) => RawRewards(
-    market: json['market']?.toString() ?? '',
-    date: json['date']?.toString() ?? '',
-    rewardsPaid: _double(json['rewards_paid']),
+    market: _stringOf(json, const ['market']),
+    date: _stringOf(json, const ['date']),
+    rewardsPaid: _double(_firstOf(json, const ['rewards_paid', 'rewardsPaid'])),
     volume: _double(json['volume']),
   );
 
@@ -103,8 +107,10 @@ final class RewardPercentages {
 
   factory RewardPercentages.fromJson(Map<String, dynamic> json) =>
       RewardPercentages(
-        market: json['market']?.toString() ?? '',
-        rewardPercentage: _double(json['reward_percentage']),
+        market: _stringOf(json, const ['market']),
+        rewardPercentage: _double(
+          _firstOf(json, const ['reward_percentage', 'rewardPercentage']),
+        ),
       );
 
   final String market;
@@ -122,9 +128,13 @@ final class UserRewardsMarket {
 
   factory UserRewardsMarket.fromJson(Map<String, dynamic> json) =>
       UserRewardsMarket(
-        market: json['market']?.toString() ?? '',
-        totalRewards: _double(json['total_rewards']),
-        rewardPercentage: _double(json['reward_percentage']),
+        market: _stringOf(json, const ['market']),
+        totalRewards: _double(
+          _firstOf(json, const ['total_rewards', 'totalRewards']),
+        ),
+        rewardPercentage: _double(
+          _firstOf(json, const ['reward_percentage', 'rewardPercentage']),
+        ),
       );
 
   final String market;
@@ -176,9 +186,11 @@ final class RebatedFees {
   factory RebatedFees.fromJson(Map<String, dynamic> json) {
     final market = json['market']?.toString();
     return RebatedFees(
-      makerAddress: json['maker_address']?.toString() ?? '',
+      makerAddress: _stringOf(json, const ['maker_address', 'makerAddress']),
       market: (market == null || market.isEmpty) ? null : market,
-      totalRebated: _double(json['total_rebated']),
+      totalRebated: _double(
+        _firstOf(json, const ['total_rebated', 'totalRebated']),
+      ),
       date: json['date']?.toString() ?? '',
     );
   }
@@ -187,6 +199,27 @@ final class RebatedFees {
   final String? market;
   final double totalRebated;
   final String date;
+}
+
+Object? _firstOf(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    if (json.containsKey(key)) return json[key];
+  }
+  return null;
+}
+
+String _stringOf(Map<String, dynamic> json, List<String> keys) {
+  return _firstOf(json, keys)?.toString() ?? '';
+}
+
+bool _bool(Object? raw) {
+  if (raw is bool) return raw;
+  if (raw is num) return raw != 0;
+  if (raw is String) {
+    final normalized = raw.toLowerCase();
+    return normalized == 'true' || normalized == '1';
+  }
+  return false;
 }
 
 double _double(Object? raw) {

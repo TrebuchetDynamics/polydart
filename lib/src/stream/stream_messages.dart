@@ -365,3 +365,93 @@ final class MarketResolvedMessage {
   final String timestamp;
   final List<String> tags;
 }
+
+/// Authenticated user-channel order event (`event_type: "order"`).
+@immutable
+final class UserOrderMessage {
+  const UserOrderMessage({
+    required this.eventType,
+    this.id = '',
+    this.orderId = '',
+    this.market = '',
+    this.assetId = '',
+    this.side = '',
+    this.price = '',
+    this.size = '',
+    this.status = '',
+    this.timestamp = '',
+  });
+
+  factory UserOrderMessage.fromJson(Map<String, dynamic> json) =>
+      UserOrderMessage(
+        eventType: _str(json['event_type'] ?? json['type']),
+        id: _str(json['id']),
+        orderId: _str(json['order_id'] ?? json['orderID']),
+        market: _str(json['market']),
+        assetId: _str(json['asset_id']),
+        side: _str(json['side']),
+        price: _str(json['price']),
+        size: _str(json['size']),
+        status: _str(json['status']),
+        timestamp: _str(json['timestamp']),
+      );
+
+  final String eventType;
+  final String id;
+  final String orderId;
+  final String market;
+  final String assetId;
+  final String side;
+  final String price;
+  final String size;
+  final String status;
+  final String timestamp;
+}
+
+/// Authenticated user-channel trade/fill event (`event_type: "trade"`).
+@immutable
+final class UserTradeMessage {
+  const UserTradeMessage({
+    required this.eventType,
+    this.id = '',
+    this.tradeId = '',
+    this.orderId = '',
+    this.market = '',
+    this.assetId = '',
+    this.side = '',
+    this.price = '',
+    this.size = '',
+    this.feeRateBps = '',
+    this.timestamp = '',
+    this.transactionHash = '',
+  });
+
+  factory UserTradeMessage.fromJson(Map<String, dynamic> json) =>
+      UserTradeMessage(
+        eventType: _str(json['event_type'] ?? json['type']),
+        id: _str(json['id']),
+        tradeId: _str(json['trade_id'] ?? json['tradeID']),
+        orderId: _str(json['order_id'] ?? json['orderID']),
+        market: _str(json['market']),
+        assetId: _str(json['asset_id']),
+        side: _str(json['side']),
+        price: _str(json['price']),
+        size: _str(json['size']),
+        feeRateBps: _str(json['fee_rate_bps']),
+        timestamp: _str(json['timestamp']),
+        transactionHash: _str(json['transaction_hash']),
+      );
+
+  final String eventType;
+  final String id;
+  final String tradeId;
+  final String orderId;
+  final String market;
+  final String assetId;
+  final String side;
+  final String price;
+  final String size;
+  final String feeRateBps;
+  final String timestamp;
+  final String transactionHash;
+}

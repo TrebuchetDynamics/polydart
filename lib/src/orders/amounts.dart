@@ -24,9 +24,12 @@ typedef OrderAmounts = ({BigInt makerAmount, BigInt takerAmount});
 ///
 /// BUY:  maker = size * price * 1e6 (USDC out), taker = size * 1e6 (tokens in)
 /// SELL: maker = size * 1e6           (tokens out), taker = size * price * 1e6 (USDC in)
+///
+/// For market orders, [OrderIntent.amountUsdc] is side-dependent for parity
+/// with Polygolem/Polymarket: BUY uses a USDC budget; SELL uses share size.
 OrderAmounts computeAmounts(OrderIntent intent) {
   if (intent.amountUsdc != null && !intent.amountUsdc!.isZero) {
-    return _computeMarketBuyAmounts(intent);
+    return _computeMarketAmounts(intent);
   }
   final price = intent.price.toDouble();
   final size = intent.size.toDouble();
@@ -36,28 +39,12 @@ OrderAmounts computeAmounts(OrderIntent intent) {
   return (makerAmount: _toFixed(size), takerAmount: _toFixed(size * price));
 }
 
-OrderAmounts _computeMarketBuyAmounts(OrderIntent intent) {
-  if (intent.side != Side.buy) {
-    throw const ValidationException(
-      code: ErrorCode.invalidValue,
-      message: 'market-order amount is currently supported for BUY only',
-    );
-  }
+OrderAmounts _computeMarketAmounts(OrderIntent intent) {
   if (intent.price.isZero) {
     throw const ValidationException(
       code: ErrorCode.missingField,
       message: 'price required for market-order amount computation',
       field: 'price',
-    );
-  }
-
-  final makerCents = _decimalUnitsAtScale(intent.amountUsdc!.raw, 2);
-  final makerAmount = makerCents * _pow10(usdcDecimals - 2);
-  if (makerAmount <= BigInt.zero) {
-    throw const ValidationException(
-      code: ErrorCode.invalidValue,
-      message: 'amount must be at least 0.01 for market buy orders',
-      field: 'amount',
     );
   }
 
@@ -76,11 +63,40 @@ OrderAmounts _computeMarketBuyAmounts(OrderIntent intent) {
   final targetDecimals = _minInt(_decimalsOf(tickRaw) + 2, usdcDecimals);
   final targetScale = _pow10(targetDecimals);
   final fixedScale = _pow10(usdcDecimals);
-  final targetTaker =
-      (makerAmount * price.denominator * targetScale) ~/
-      (fixedScale * price.numerator);
-  final takerAmount = targetTaker * _pow10(usdcDecimals - targetDecimals);
 
+  if (intent.side == Side.buy) {
+    final makerCents = _decimalUnitsAtScale(intent.amountUsdc!.raw, 2);
+    final makerAmount = makerCents * _pow10(usdcDecimals - 2);
+    if (makerAmount <= BigInt.zero) {
+      throw const ValidationException(
+        code: ErrorCode.invalidValue,
+        message: 'amount must be at least 0.01 for market buy orders',
+        field: 'amount',
+      );
+    }
+    final targetTaker =
+        (makerAmount * price.denominator * targetScale) ~/
+        (fixedScale * price.numerator);
+    final takerAmount = targetTaker * _pow10(usdcDecimals - targetDecimals);
+    return (makerAmount: makerAmount, takerAmount: takerAmount);
+  }
+
+  final makerUnits = _decimalUnitsAtScale(
+    intent.amountUsdc!.raw,
+    targetDecimals,
+  );
+  final makerAmount = makerUnits * _pow10(usdcDecimals - targetDecimals);
+  if (makerAmount <= BigInt.zero) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'amount must be at least the market sell precision',
+      field: 'amount',
+    );
+  }
+  final takerCents =
+      (makerAmount * price.numerator * _pow10(2)) ~/
+      (fixedScale * price.denominator);
+  final takerAmount = takerCents * _pow10(usdcDecimals - 2);
   return (makerAmount: makerAmount, takerAmount: takerAmount);
 }
 
@@ -94,7 +110,8 @@ BigInt _toFixed(double value) {
   return BigInt.from((value * _usdcScale).round());
 }
 
-/// Rounds [value] to the nearest multiple of [tickSize]. Both inputs are
+/// Rounds [value] down to the current [tickSize] multiple, matching
+/// polygolem's `RoundToTick` integer-quotient behavior. Both inputs are
 /// parsed as decimals.
 String roundToTick(String value, String tickSize) {
   final v = double.parse(value);
@@ -105,7 +122,7 @@ String roundToTick(String value, String tickSize) {
       message: 'tickSize must be non-zero',
     );
   }
-  final rounded = (v / t).round() * t;
+  final rounded = (v / t).floor() * t;
   return rounded.toStringAsFixed(_decimalsOf(tickSize));
 }
 

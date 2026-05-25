@@ -249,7 +249,16 @@ export 'src/marketdiscovery/market_discovery.dart'
 export 'src/marketdata/marketdata_tracker.dart'
     show Level, MarketDataTracker, Snapshot;
 export 'src/marketresolver/market_resolver.dart'
-    show MarketResolver, ResolvedMarket, parseClobTokenIds;
+    show
+        CryptoMarket,
+        MarketResolver,
+        MarketStatus,
+        ResolveResult,
+        ResolvedMarket,
+        cryptoQueries,
+        cryptoWindowSlug,
+        inferTimeframe,
+        parseClobTokenIds;
 export 'src/modes/modes.dart';
 export 'src/orders/amounts.dart'
     show
@@ -419,6 +428,8 @@ export 'src/wallet/deposit_wallet_readiness.dart'
 export 'src/stream/dedup.dart' show Deduplicator, splitArray;
 export 'src/stream/market_client.dart'
     show MarketClient, WebSocketChannelFactory;
+export 'src/stream/user_client.dart'
+    show UserClient, UserWebSocketChannelFactory, defaultUserStreamUrl;
 export 'src/stream/stream_config.dart' show StreamConfig, defaultStreamUrl;
 export 'src/stream/stream_messages.dart'
     show
@@ -430,7 +441,9 @@ export 'src/stream/stream_messages.dart'
         PriceChangeEntry,
         PriceChangeMessage,
         PriceLevel,
-        TickSizeChangeMessage;
+        TickSizeChangeMessage,
+        UserOrderMessage,
+        UserTradeMessage;
 export 'src/telemetry/telemetry.dart'
     show RedactableValue, TelemetryLogger, redactTelemetryValue;
 export 'src/relayer/relayer_client.dart'
@@ -452,10 +465,13 @@ export 'src/relayer/relayer_types.dart'
         RelayerTransactionState;
 export 'src/relayer/approvals.dart'
     show
+        buildAdapterApprovalCalls,
         buildApprovalCalls,
         ctfAddress,
+        ctfCollateralAdapter,
         ctfExchangeV2,
         negRiskAdapterV2,
+        negRiskCtfCollateralAdapter,
         negRiskExchangeV2,
         pusdAddress;
 export 'src/universal/universal_client.dart'

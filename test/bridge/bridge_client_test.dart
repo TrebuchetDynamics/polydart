@@ -57,6 +57,28 @@ void main() {
   });
 
   group('supportedAssets', () {
+    test('SupportedAsset parses string numeric fields', () {
+      final asset = SupportedAsset.fromJson(<String, dynamic>{
+        'chainId': 137,
+        'chainName': 123,
+        'token': <String, dynamic>{
+          'name': 456,
+          'symbol': 789,
+          'address': 101112,
+          'decimals': '6',
+        },
+        'minCheckoutUsd': '5.5',
+      });
+
+      expect(asset.chainId, '137');
+      expect(asset.chainName, '123');
+      expect(asset.token.name, '456');
+      expect(asset.token.symbol, '789');
+      expect(asset.token.address, '101112');
+      expect(asset.token.decimals, 6);
+      expect(asset.minCheckoutUsd, 5.5);
+    });
+
     test('GETs /supported-assets and decodes assets', () async {
       http.BaseRequest? captured;
       final client = _client((req) async {
@@ -97,6 +119,29 @@ void main() {
   });
 
   group('depositStatus', () {
+    test(
+      'DepositTransaction stringifies numeric IDs and parses string millis',
+      () {
+        final transaction = DepositTransaction.fromJson(<String, dynamic>{
+          'fromChainId': 1,
+          'fromTokenAddress': 123,
+          'fromAmountBaseUnit': 1000000,
+          'toChainId': 137,
+          'toTokenAddress': '0x2791',
+          'txHash': 456,
+          'createdTimeMs': '1714000000123',
+          'status': 'confirmed',
+        });
+
+        expect(transaction.fromChainId, '1');
+        expect(transaction.fromTokenAddress, '123');
+        expect(transaction.fromAmountBaseUnit, '1000000');
+        expect(transaction.toChainId, '137');
+        expect(transaction.txHash, '456');
+        expect(transaction.createdTimeMs, 1714000000123);
+      },
+    );
+
     test('GETs /status/{address} and decodes transactions', () async {
       http.BaseRequest? captured;
       final client = _client((req) async {
@@ -137,6 +182,40 @@ void main() {
   });
 
   group('quote', () {
+    test('QuoteResponse parses string numeric fields', () {
+      final response = QuoteResponse.fromJson(<String, dynamic>{
+        'estCheckoutTimeMs': '120000',
+        'estFeeBreakdown': <String, dynamic>{
+          'appFeeLabel': 123,
+          'appFeePercent': '0.01',
+          'appFeeUsd': '0.10',
+          'fillCostPercent': '0.02',
+          'fillCostUsd': '0.20',
+          'gasUsd': '0.30',
+          'maxSlippage': '0.005',
+          'minReceived': '99.40',
+          'swapImpact': '0.001',
+          'swapImpactUsd': '0.10',
+          'totalImpact': '0.006',
+          'totalImpactUsd': '0.60',
+        },
+        'estInputUsd': '100.5',
+        'estOutputUsd': '99.4',
+        'estToTokenBaseUnit': 99400000,
+        'quoteId': 123,
+      });
+
+      expect(response.estCheckoutTimeMs, 120000);
+      expect(response.estInputUsd, 100.5);
+      expect(response.estOutputUsd, 99.4);
+      expect(response.estToTokenBaseUnit, '99400000');
+      expect(response.quoteId, '123');
+      expect(response.estFeeBreakdown.appFeeLabel, '123');
+      expect(response.estFeeBreakdown.appFeePercent, 0.01);
+      expect(response.estFeeBreakdown.minReceived, 99.40);
+      expect(response.estFeeBreakdown.totalImpactUsd, 0.60);
+    });
+
     test('POSTs /quote with request and decodes quote response', () async {
       http.BaseRequest? captured;
       const request = QuoteRequest(

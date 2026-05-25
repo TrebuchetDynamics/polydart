@@ -79,6 +79,12 @@ final class ClobClient {
     return ClobMarket.fromJson(body);
   }
 
+  /// Resolves a token id to its parent CLOB market ids.
+  Future<ClobMarketByTokenResponse> marketByToken(String tokenId) async {
+    final body = await _transport.getJson('/markets-by-token/$tokenId');
+    return ClobMarketByTokenResponse.fromJson(body);
+  }
+
   /// Returns L2 order book depth for [tokenId].
   Future<OrderBook> orderBook(String tokenId) async {
     final body = await _transport.getJson(
@@ -157,15 +163,20 @@ final class ClobClient {
   // --- Market metadata ---
 
   /// Returns whether [tokenId] belongs to a negative-risk market.
-  ///
-  /// Mirrors `internal/clob/client.go::NegRisk`. The wire response is
-  /// `{"neg_risk": bool}`; only the boolean flag is surfaced.
   Future<bool> negRisk(String tokenId) async {
+    return (await negRiskInfo(tokenId)).negRisk;
+  }
+
+  /// Full negative-risk metadata for [tokenId].
+  ///
+  /// Mirrors Polygolem `NegRisk`, including market id and fee bips when the
+  /// upstream includes them.
+  Future<NegRiskInfo> negRiskInfo(String tokenId) async {
     final body = await _transport.getJson(
       '/neg-risk',
       query: <String, dynamic>{'token_id': tokenId},
     );
-    return body['neg_risk'] == true;
+    return NegRiskInfo.fromJson(body);
   }
 
   /// Returns the maker fee rate in basis points for [tokenId].
@@ -177,7 +188,9 @@ final class ClobClient {
       '/fee-rate',
       query: <String, dynamic>{'token_id': tokenId},
     );
-    return _toInt(body['fee_rate_bps']);
+    return _toInt(
+      _first(body, 'fee_rate_bps', 'feeRateBps', 'base_fee', 'baseFee'),
+    );
   }
 
   /// Cursor-paginated list of simplified markets.
@@ -277,6 +290,23 @@ final class ClobClient {
 
   // --- Order scoring ---
 
+  /// Trades attributed to the configured builder code.
+  ///
+  /// Mirrors Polygolem `BuilderTrades`. The public route returns a wrapped
+  /// `{ "trades": [...] }` payload.
+  Future<List<BuilderTrade>> builderTrades({int limit = 100}) async {
+    final body = await _transport.getJson(
+      '/builder-trades',
+      query: <String, dynamic>{'limit': limit},
+    );
+    final raw = body['trades'];
+    if (raw is! List) return const <BuilderTrade>[];
+    return raw
+        .whereType<Map<dynamic, dynamic>>()
+        .map((m) => BuilderTrade.fromJson(m.cast<String, dynamic>()))
+        .toList(growable: false);
+  }
+
   /// Whether [orderId] is currently scored for rewards.
   ///
   /// Wire response: `{"scoring": bool}`.
@@ -285,7 +315,7 @@ final class ClobClient {
       '/orders/scoring',
       query: <String, dynamic>{'order_id': orderId},
     );
-    return body['scoring'] == true;
+    return _toBool(body['scoring']);
   }
 
   /// Batch scoring lookup. Returns one boolean per id, in the order
@@ -296,7 +326,7 @@ final class ClobClient {
       '/orders/scoring',
       <String, dynamic>{'order_ids': orderIds},
     );
-    return list.map((e) => e == true).toList(growable: false);
+    return list.map(_toBool).toList(growable: false);
   }
 
   // --- Rewards ---
@@ -637,6 +667,29 @@ final class ClobClient {
       out[k] = v == null ? '' : v.toString();
     });
     return out;
+  }
+
+  bool _toBool(Object? raw) {
+    if (raw is bool) return raw;
+    if (raw is num) return raw != 0;
+    if (raw is String) {
+      final normalized = raw.toLowerCase();
+      return normalized == 'true' || normalized == '1';
+    }
+    return false;
+  }
+
+  Object? _first(
+    Map<String, dynamic> json,
+    String a,
+    String b,
+    String c,
+    String d,
+  ) {
+    for (final key in <String>[a, b, c, d]) {
+      if (json.containsKey(key)) return json[key];
+    }
+    return null;
   }
 
   int _toInt(Object? raw) {

@@ -42,9 +42,11 @@ void main() {
   });
 
   group('roundToTick', () {
-    test('rounds up to nearest tick', () {
+    test('floors to the current tick like polygolem', () {
       expect(roundToTick('0.553', '0.01'), '0.55');
-      expect(roundToTick('0.555', '0.01'), '0.56');
+      expect(roundToTick('0.555', '0.01'), '0.55');
+      expect(roundToTick('0.559', '0.01'), '0.55');
+      expect(roundToTick('0.560', '0.01'), '0.56');
     });
 
     test('preserves precision of tickSize', () {

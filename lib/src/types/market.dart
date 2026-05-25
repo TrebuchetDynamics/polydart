@@ -34,6 +34,11 @@ final class Tag {
     this.forceShow = false,
     this.forceHide = false,
     this.isCarousel = false,
+    this.publishedAt,
+    this.createdBy = 0,
+    this.updatedBy = 0,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory Tag.fromJson(Map<String, dynamic> json) => Tag(
@@ -43,6 +48,11 @@ final class Tag {
     forceShow: json['forceShow'] == true,
     forceHide: json['forceHide'] == true,
     isCarousel: json['isCarousel'] == true,
+    publishedAt: parseNormalizedDateTime(json['publishedAt']),
+    createdBy: _int(json['createdBy']),
+    updatedBy: _int(json['updatedBy']),
+    createdAt: parseNormalizedDateTime(json['createdAt']),
+    updatedAt: parseNormalizedDateTime(json['updatedAt']),
   );
 
   final String id;
@@ -51,6 +61,176 @@ final class Tag {
   final bool forceShow;
   final bool forceHide;
   final bool isCarousel;
+  final DateTime? publishedAt;
+  final int createdBy;
+  final int updatedBy;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+}
+
+@immutable
+final class Category {
+  const Category({
+    required this.id,
+    required this.label,
+    this.parentCategory = '',
+    required this.slug,
+    this.publishedAt,
+    this.createdBy = '',
+    this.updatedBy = '',
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory Category.fromJson(Map<String, dynamic> json) => Category(
+    id: json['id']?.toString() ?? '',
+    label: json['label']?.toString() ?? '',
+    parentCategory: json['parentCategory']?.toString() ?? '',
+    slug: json['slug']?.toString() ?? '',
+    publishedAt: parseNormalizedDateTime(json['publishedAt']),
+    createdBy: json['createdBy']?.toString() ?? '',
+    updatedBy: json['updatedBy']?.toString() ?? '',
+    createdAt: parseNormalizedDateTime(json['createdAt']),
+    updatedAt: parseNormalizedDateTime(json['updatedAt']),
+  );
+
+  final String id;
+  final String label;
+  final String parentCategory;
+  final String slug;
+  final DateTime? publishedAt;
+  final String createdBy;
+  final String updatedBy;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+}
+
+@immutable
+final class Collection {
+  const Collection({
+    required this.id,
+    required this.ticker,
+    required this.slug,
+    required this.title,
+    this.subtitle = '',
+    this.collectionType = '',
+    this.description = '',
+    this.tags = '',
+    this.image = '',
+    this.icon = '',
+    this.headerImage = '',
+    this.layout = '',
+    this.active = false,
+    this.closed = false,
+    this.archived = false,
+    this.isNew = false,
+    this.featured = false,
+    this.restricted = false,
+    this.isTemplate = false,
+    this.templateVariables = '',
+    this.publishedAt,
+    this.createdBy = '',
+    this.updatedBy = '',
+    this.createdAt,
+    this.updatedAt,
+    this.commentsEnabled = false,
+    this.imageOptimized,
+    this.iconOptimized,
+    this.headerImageOptimized,
+  });
+
+  factory Collection.fromJson(Map<String, dynamic> json) => Collection(
+    id: json['id']?.toString() ?? '',
+    ticker: json['ticker']?.toString() ?? '',
+    slug: json['slug']?.toString() ?? '',
+    title: json['title']?.toString() ?? '',
+    subtitle: json['subtitle']?.toString() ?? '',
+    collectionType: json['collectionType']?.toString() ?? '',
+    description: json['description']?.toString() ?? '',
+    tags: json['tags']?.toString() ?? '',
+    image: json['image']?.toString() ?? '',
+    icon: json['icon']?.toString() ?? '',
+    headerImage: json['headerImage']?.toString() ?? '',
+    layout: json['layout']?.toString() ?? '',
+    active: json['active'] == true,
+    closed: json['closed'] == true,
+    archived: json['archived'] == true,
+    isNew: json['new'] == true,
+    featured: json['featured'] == true,
+    restricted: json['restricted'] == true,
+    isTemplate: json['isTemplate'] == true,
+    templateVariables: json['templateVariables']?.toString() ?? '',
+    publishedAt: parseNormalizedDateTime(json['publishedAt']),
+    createdBy: json['createdBy']?.toString() ?? '',
+    updatedBy: json['updatedBy']?.toString() ?? '',
+    createdAt: parseNormalizedDateTime(json['createdAt']),
+    updatedAt: parseNormalizedDateTime(json['updatedAt']),
+    commentsEnabled: json['commentsEnabled'] == true,
+    imageOptimized: _optimizedImage(json['imageOptimized']),
+    iconOptimized: _optimizedImage(json['iconOptimized']),
+    headerImageOptimized: _optimizedImage(json['headerImageOptimized']),
+  );
+
+  final String id;
+  final String ticker;
+  final String slug;
+  final String title;
+  final String subtitle;
+  final String collectionType;
+  final String description;
+  final String tags;
+  final String image;
+  final String icon;
+  final String headerImage;
+  final String layout;
+  final bool active;
+  final bool closed;
+  final bool archived;
+  final bool isNew;
+  final bool featured;
+  final bool restricted;
+  final bool isTemplate;
+  final String templateVariables;
+  final DateTime? publishedAt;
+  final String createdBy;
+  final String updatedBy;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final bool commentsEnabled;
+  final OptimizedImage? imageOptimized;
+  final OptimizedImage? iconOptimized;
+  final OptimizedImage? headerImageOptimized;
+}
+
+@immutable
+final class EventCreator {
+  const EventCreator({
+    required this.id,
+    required this.creatorName,
+    required this.creatorHandle,
+    required this.creatorUrl,
+    required this.creatorImage,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory EventCreator.fromJson(Map<String, dynamic> json) => EventCreator(
+    id: json['id']?.toString() ?? '',
+    creatorName: json['creatorName']?.toString() ?? '',
+    creatorHandle: json['creatorHandle']?.toString() ?? '',
+    creatorUrl: json['creatorUrl']?.toString() ?? '',
+    creatorImage: json['creatorImage']?.toString() ?? '',
+    createdAt: parseNormalizedDateTime(json['createdAt']),
+    updatedAt: parseNormalizedDateTime(json['updatedAt']),
+  );
+
+  final String id;
+  final String creatorName;
+  final String creatorHandle;
+  final String creatorUrl;
+  final String creatorImage;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 }
 
 @immutable
@@ -82,6 +262,25 @@ final class Profile {
     required this.name,
     required this.proxyWallet,
     required this.profileImage,
+    this.user = 0,
+    this.referral = '',
+    this.createdBy = 0,
+    this.updatedBy = 0,
+    this.createdAt,
+    this.updatedAt,
+    this.utmSource = '',
+    this.utmMedium = '',
+    this.utmCampaign = '',
+    this.utmContent = '',
+    this.utmTerm = '',
+    this.walletActivated = false,
+    this.pseudonym = '',
+    this.displayUsernamePublic = false,
+    this.bio = '',
+    this.profileImageOptimized,
+    this.isCloseOnly = false,
+    this.isCertReq = false,
+    this.certReqDate,
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) => Profile(
@@ -89,12 +288,50 @@ final class Profile {
     name: json['name']?.toString() ?? '',
     proxyWallet: json['proxyWallet']?.toString() ?? '',
     profileImage: json['profileImage']?.toString() ?? '',
+    user: _int(json['user']),
+    referral: json['referral']?.toString() ?? '',
+    createdBy: _int(json['createdBy']),
+    updatedBy: _int(json['updatedBy']),
+    createdAt: parseNormalizedDateTime(json['createdAt']),
+    updatedAt: parseNormalizedDateTime(json['updatedAt']),
+    utmSource: json['utmSource']?.toString() ?? '',
+    utmMedium: json['utmMedium']?.toString() ?? '',
+    utmCampaign: json['utmCampaign']?.toString() ?? '',
+    utmContent: json['utmContent']?.toString() ?? '',
+    utmTerm: json['utmTerm']?.toString() ?? '',
+    walletActivated: json['walletActivated'] == true,
+    pseudonym: json['pseudonym']?.toString() ?? '',
+    displayUsernamePublic: json['displayUsernamePublic'] == true,
+    bio: json['bio']?.toString() ?? '',
+    profileImageOptimized: _optimizedImage(json['profileImageOptimized']),
+    isCloseOnly: json['isCloseOnly'] == true,
+    isCertReq: json['isCertReq'] == true,
+    certReqDate: parseNormalizedDateTime(json['certReqDate']),
   );
 
   final String id;
   final String name;
   final String proxyWallet;
   final String profileImage;
+  final int user;
+  final String referral;
+  final int createdBy;
+  final int updatedBy;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final String utmSource;
+  final String utmMedium;
+  final String utmCampaign;
+  final String utmContent;
+  final String utmTerm;
+  final bool walletActivated;
+  final String pseudonym;
+  final bool displayUsernamePublic;
+  final String bio;
+  final OptimizedImage? profileImageOptimized;
+  final bool isCloseOnly;
+  final bool isCertReq;
+  final DateTime? certReqDate;
 }
 
 @immutable
@@ -149,10 +386,24 @@ final class Market {
     required this.conditionId,
     required this.slug,
     required this.questionId,
+    this.twitterCardImage = '',
     required this.image,
     required this.icon,
     required this.description,
     this.resolutionSource = '',
+    this.ammType = '',
+    this.fee = '',
+    this.denominationToken = '',
+    this.sponsorName = '',
+    this.sponsorImage = '',
+    this.xAxisValue = '',
+    this.yAxisValue = '',
+    this.marketMakerAddress = '',
+    this.mailchimpTag = '',
+    this.resolvedBy = '',
+    this.disqusThread = '',
+    this.creator = '',
+    this.pastSlugs = '',
     this.groupItemTitle = '',
     this.groupItemThreshold = '',
     this.groupItemRange = '',
@@ -162,15 +413,22 @@ final class Market {
     this.startDateIso = '',
     this.endDateIso = '',
     this.umaEndDate,
+    this.umaEndDateIso = '',
+    this.lowerBoundDate,
+    this.upperBoundDate,
     this.closedTime,
     this.createdAt,
     this.updatedAt,
+    this.createdBy = 0,
+    this.updatedBy = 0,
     this.gameStartTime,
     this.eventStartTime,
     this.readyTimestamp,
+    this.fundedTimestamp,
     this.acceptingOrdersTimestamp,
     required this.outcomes,
     required this.outcomePrices,
+    this.shortOutcomes = const <String>[],
     required this.active,
     required this.closed,
     required this.archived,
@@ -179,8 +437,16 @@ final class Market {
     this.restricted = false,
     this.ready = false,
     this.funded = false,
+    this.wideFormat = false,
     this.marketType = '',
+    this.formatType = '',
+    this.lowerBound = '',
+    this.upperBound = '',
     this.umaResolutionStatus = '',
+    this.umaResolutionStatuses = '',
+    this.umaBond = '',
+    this.umaReward = '',
+    this.marketGroup = 0,
     required this.acceptingOrders,
     required this.enableOrderBook,
     this.orderMinSize = 0,
@@ -195,20 +461,67 @@ final class Market {
     this.volume1wk = 0,
     this.volume1mo = 0,
     this.volume1yr = 0,
+    this.volume24hrAmm = 0,
+    this.volume1wkAmm = 0,
+    this.volume1moAmm = 0,
+    this.volume1yrAmm = 0,
+    this.volume24hrClob = 0,
+    this.volume1wkClob = 0,
+    this.volume1moClob = 0,
+    this.volume1yrClob = 0,
+    this.volumeAmm = 0,
     this.volumeClob = 0,
+    this.liquidityAmm = 0,
     this.liquidityClob = 0,
     required this.lastTradePrice,
     required this.bestBid,
     required this.bestAsk,
     this.spread = 0,
+    this.competitive = 0,
+    this.oneDayPriceChange = 0,
+    this.oneHourPriceChange = 0,
+    this.oneWeekPriceChange = 0,
+    this.oneMonthPriceChange = 0,
+    this.oneYearPriceChange = 0,
     this.rewardsMinSize = 0,
     this.rewardsMaxSpread = 0,
     this.negRisk = false,
     this.negRiskMarketId = '',
     this.negRiskFeeBips = 0,
+    this.automaticallyResolved = false,
+    this.automaticallyActive = false,
+    this.clearBookOnStart = false,
+    this.manualActivation = false,
+    this.chartColor = '',
+    this.seriesColor = '',
+    this.showGmpSeries = false,
+    this.showGmpOutcome = false,
+    this.negRiskOther = false,
+    this.pendingDeployment = false,
+    this.deploying = false,
+    this.deployingTimestamp,
+    this.scheduledDeploymentTimestamp,
     this.rfqEnabled = false,
+    this.notificationsEnabled = false,
+    this.hasReviewedDates = false,
+    this.readyForCron = false,
+    this.commentsEnabled = false,
+    this.curationOrder = 0,
+    this.score = 0,
+    this.imageOptimized,
+    this.iconOptimized,
+    this.teamAId = '',
+    this.teamBId = '',
+    this.gameId = '',
+    this.sportsMarketType = '',
+    this.line = 0,
+    this.secondsDelay = 0,
+    this.fpmmLive = false,
+    this.customLiveness = 0,
     required this.clobTokenIds,
     required this.tags,
+    this.categories = const <Category>[],
+    this.events = const <Event>[],
     this.status = '',
     this.closeTimestamp,
     this.eventEndTime,
@@ -227,18 +540,29 @@ final class Market {
     conditionId: _field(json, 'conditionId', 'condition_id')?.toString() ?? '',
     slug: json['slug']?.toString() ?? '',
     questionId: _field(json, 'questionID', 'question_id')?.toString() ?? '',
+    twitterCardImage: json['twitterCardImage']?.toString() ?? '',
     image: json['image']?.toString() ?? '',
     icon: json['icon']?.toString() ?? '',
     description: json['description']?.toString() ?? '',
     resolutionSource: json['resolutionSource']?.toString() ?? '',
+    ammType: json['ammType']?.toString() ?? '',
+    fee: json['fee']?.toString() ?? '',
+    denominationToken: json['denominationToken']?.toString() ?? '',
+    sponsorName: json['sponsorName']?.toString() ?? '',
+    sponsorImage: json['sponsorImage']?.toString() ?? '',
+    xAxisValue: json['xAxisValue']?.toString() ?? '',
+    yAxisValue: json['yAxisValue']?.toString() ?? '',
+    marketMakerAddress: json['marketMakerAddress']?.toString() ?? '',
+    mailchimpTag: json['mailchimpTag']?.toString() ?? '',
+    resolvedBy: json['resolvedBy']?.toString() ?? '',
+    disqusThread: json['disqusThread']?.toString() ?? '',
+    creator: json['creator']?.toString() ?? '',
+    pastSlugs: json['pastSlugs']?.toString() ?? '',
     groupItemTitle:
         _field(json, 'groupItemTitle', 'group_item_title')?.toString() ?? '',
     groupItemThreshold:
-        _field(
-          json,
-          'groupItemThreshold',
-          'group_item_threshold',
-        )?.toString() ??
+        (json['groupItemThreshold'] ?? json['group_item_threshold'])
+            ?.toString() ??
         '',
     groupItemRange: json['groupItemRange']?.toString() ?? '',
     category: json['category']?.toString() ?? '',
@@ -247,21 +571,28 @@ final class Market {
     startDateIso: json['startDateIso']?.toString() ?? '',
     endDateIso: _field(json, 'endDateIso', 'end_date_iso')?.toString() ?? '',
     umaEndDate: parseNormalizedDateTime(json['umaEndDate']),
+    umaEndDateIso: json['umaEndDateIso']?.toString() ?? '',
+    lowerBoundDate: parseNormalizedDateTime(json['lowerBoundDate']),
+    upperBoundDate: parseNormalizedDateTime(json['upperBoundDate']),
     closedTime: parseNormalizedDateTime(
       _field(json, 'closedTime', 'closed_time'),
     ),
     createdAt: parseNormalizedDateTime(json['createdAt']),
     updatedAt: parseNormalizedDateTime(_field(json, 'updatedAt', 'updated_at')),
+    createdBy: _int(json['createdBy']),
+    updatedBy: _int(json['updatedBy']),
     gameStartTime: parseNormalizedDateTime(
       _field(json, 'gameStartTime', 'game_start_time'),
     ),
     eventStartTime: parseNormalizedDateTime(json['eventStartTime']),
     readyTimestamp: parseNormalizedDateTime(json['readyTimestamp']),
+    fundedTimestamp: parseNormalizedDateTime(json['fundedTimestamp']),
     acceptingOrdersTimestamp: parseNormalizedDateTime(
       json['acceptingOrdersTimestamp'],
     ),
     outcomes: parseStringOrArray(json['outcomes']),
     outcomePrices: parseStringOrArray(json['outcomePrices']),
+    shortOutcomes: parseStringOrArray(json['shortOutcomes']),
     active: json['active'] == true,
     closed: json['closed'] == true,
     archived: json['archived'] == true,
@@ -270,8 +601,16 @@ final class Market {
     restricted: json['restricted'] == true,
     ready: json['ready'] == true,
     funded: json['funded'] == true,
+    wideFormat: json['wideFormat'] == true,
     marketType: json['marketType']?.toString() ?? '',
+    formatType: json['formatType']?.toString() ?? '',
+    lowerBound: json['lowerBound']?.toString() ?? '',
+    upperBound: json['upperBound']?.toString() ?? '',
     umaResolutionStatus: json['umaResolutionStatus']?.toString() ?? '',
+    umaResolutionStatuses: json['umaResolutionStatuses']?.toString() ?? '',
+    umaBond: json['umaBond']?.toString() ?? '',
+    umaReward: json['umaReward']?.toString() ?? '',
+    marketGroup: _int(json['marketGroup']),
     acceptingOrders:
         _field(json, 'acceptingOrders', 'accepting_orders') == true,
     enableOrderBook:
@@ -288,20 +627,69 @@ final class Market {
     volume1wk: _double(json['volume1wk']),
     volume1mo: _double(json['volume1mo']),
     volume1yr: _double(json['volume1yr']),
+    volume24hrAmm: _double(json['volume24hrAmm']),
+    volume1wkAmm: _double(json['volume1wkAmm']),
+    volume1moAmm: _double(json['volume1moAmm']),
+    volume1yrAmm: _double(json['volume1yrAmm']),
+    volume24hrClob: _double(json['volume24hrClob']),
+    volume1wkClob: _double(json['volume1wkClob']),
+    volume1moClob: _double(json['volume1moClob']),
+    volume1yrClob: _double(json['volume1yrClob']),
+    volumeAmm: _double(json['volumeAmm']),
     volumeClob: _double(json['volumeClob']),
+    liquidityAmm: _double(json['liquidityAmm']),
     liquidityClob: _double(json['liquidityClob']),
     lastTradePrice: _double(json['lastTradePrice']),
     bestBid: _double(json['bestBid']),
     bestAsk: _double(json['bestAsk']),
     spread: _double(json['spread']),
+    competitive: _double(json['competitive']),
+    oneDayPriceChange: _double(json['oneDayPriceChange']),
+    oneHourPriceChange: _double(json['oneHourPriceChange']),
+    oneWeekPriceChange: _double(json['oneWeekPriceChange']),
+    oneMonthPriceChange: _double(json['oneMonthPriceChange']),
+    oneYearPriceChange: _double(json['oneYearPriceChange']),
     rewardsMinSize: _double(json['rewardsMinSize']),
     rewardsMaxSpread: _double(json['rewardsMaxSpread']),
     negRisk: json['negRisk'] == true,
     negRiskMarketId: json['negRiskMarketID']?.toString() ?? '',
     negRiskFeeBips: _int(json['negRiskFeeBips']),
+    automaticallyResolved: json['automaticallyResolved'] == true,
+    automaticallyActive: json['automaticallyActive'] == true,
+    clearBookOnStart: json['clearBookOnStart'] == true,
+    manualActivation: json['manualActivation'] == true,
+    chartColor: json['chartColor']?.toString() ?? '',
+    seriesColor: json['seriesColor']?.toString() ?? '',
+    showGmpSeries: json['showGmpSeries'] == true,
+    showGmpOutcome: json['showGmpOutcome'] == true,
+    negRiskOther: json['negRiskOther'] == true,
+    pendingDeployment: json['pendingDeployment'] == true,
+    deploying: json['deploying'] == true,
+    deployingTimestamp: parseNormalizedDateTime(json['deployingTimestamp']),
+    scheduledDeploymentTimestamp: parseNormalizedDateTime(
+      json['scheduledDeploymentTimestamp'],
+    ),
     rfqEnabled: json['rfqEnabled'] == true,
+    notificationsEnabled: json['notificationsEnabled'] == true,
+    hasReviewedDates: json['hasReviewedDates'] == true,
+    readyForCron: json['readyForCron'] == true,
+    commentsEnabled: json['commentsEnabled'] == true,
+    curationOrder: _int(json['curationOrder']),
+    score: _double(json['score']),
+    imageOptimized: _optimizedImage(json['imageOptimized']),
+    iconOptimized: _optimizedImage(json['iconOptimized']),
+    teamAId: json['teamAID']?.toString() ?? '',
+    teamBId: json['teamBID']?.toString() ?? '',
+    gameId: json['gameId']?.toString() ?? '',
+    sportsMarketType: json['sportsMarketType']?.toString() ?? '',
+    line: _double(json['line']),
+    secondsDelay: _int(json['secondsDelay']),
+    fpmmLive: json['fpmmLive'] == true,
+    customLiveness: _int(json['customLiveness']),
     clobTokenIds: json['clobTokenIds']?.toString() ?? '',
     tags: _tags(json['tags']),
+    categories: _categories(json['categories']),
+    events: _events(json['events']),
     status: _field(json, 'status', 'status')?.toString() ?? '',
     closeTimestamp: parseNormalizedDateTime(
       _field(json, 'closeTimestamp', 'close_timestamp'),
@@ -325,10 +713,24 @@ final class Market {
   final String conditionId;
   final String slug;
   final String questionId;
+  final String twitterCardImage;
   final String image;
   final String icon;
   final String description;
   final String resolutionSource;
+  final String ammType;
+  final String fee;
+  final String denominationToken;
+  final String sponsorName;
+  final String sponsorImage;
+  final String xAxisValue;
+  final String yAxisValue;
+  final String marketMakerAddress;
+  final String mailchimpTag;
+  final String resolvedBy;
+  final String disqusThread;
+  final String creator;
+  final String pastSlugs;
   final String groupItemTitle;
   final String groupItemThreshold;
   final String groupItemRange;
@@ -338,15 +740,22 @@ final class Market {
   final String startDateIso;
   final String endDateIso;
   final DateTime? umaEndDate;
+  final String umaEndDateIso;
+  final DateTime? lowerBoundDate;
+  final DateTime? upperBoundDate;
   final DateTime? closedTime;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final int createdBy;
+  final int updatedBy;
   final DateTime? gameStartTime;
   final DateTime? eventStartTime;
   final DateTime? readyTimestamp;
+  final DateTime? fundedTimestamp;
   final DateTime? acceptingOrdersTimestamp;
   final List<String> outcomes;
   final List<String> outcomePrices;
+  final List<String> shortOutcomes;
   final bool active;
   final bool closed;
   final bool archived;
@@ -355,8 +764,16 @@ final class Market {
   final bool restricted;
   final bool ready;
   final bool funded;
+  final bool wideFormat;
   final String marketType;
+  final String formatType;
+  final String lowerBound;
+  final String upperBound;
   final String umaResolutionStatus;
+  final String umaResolutionStatuses;
+  final String umaBond;
+  final String umaReward;
+  final int marketGroup;
   final bool acceptingOrders;
   final bool enableOrderBook;
   final double orderMinSize;
@@ -371,20 +788,67 @@ final class Market {
   final double volume1wk;
   final double volume1mo;
   final double volume1yr;
+  final double volume24hrAmm;
+  final double volume1wkAmm;
+  final double volume1moAmm;
+  final double volume1yrAmm;
+  final double volume24hrClob;
+  final double volume1wkClob;
+  final double volume1moClob;
+  final double volume1yrClob;
+  final double volumeAmm;
   final double volumeClob;
+  final double liquidityAmm;
   final double liquidityClob;
   final double lastTradePrice;
   final double bestBid;
   final double bestAsk;
   final double spread;
+  final double competitive;
+  final double oneDayPriceChange;
+  final double oneHourPriceChange;
+  final double oneWeekPriceChange;
+  final double oneMonthPriceChange;
+  final double oneYearPriceChange;
   final double rewardsMinSize;
   final double rewardsMaxSpread;
   final bool negRisk;
   final String negRiskMarketId;
   final int negRiskFeeBips;
+  final bool automaticallyResolved;
+  final bool automaticallyActive;
+  final bool clearBookOnStart;
+  final bool manualActivation;
+  final String chartColor;
+  final String seriesColor;
+  final bool showGmpSeries;
+  final bool showGmpOutcome;
+  final bool negRiskOther;
+  final bool pendingDeployment;
+  final bool deploying;
+  final DateTime? deployingTimestamp;
+  final DateTime? scheduledDeploymentTimestamp;
   final bool rfqEnabled;
+  final bool notificationsEnabled;
+  final bool hasReviewedDates;
+  final bool readyForCron;
+  final bool commentsEnabled;
+  final int curationOrder;
+  final double score;
+  final OptimizedImage? imageOptimized;
+  final OptimizedImage? iconOptimized;
+  final String teamAId;
+  final String teamBId;
+  final String gameId;
+  final String sportsMarketType;
+  final double line;
+  final int secondsDelay;
+  final bool fpmmLive;
+  final int customLiveness;
   final String clobTokenIds;
   final List<Tag> tags;
+  final List<Category> categories;
+  final List<Event> events;
   final String status;
   final DateTime? closeTimestamp;
   final DateTime? eventEndTime;
@@ -449,6 +913,23 @@ final class Event {
     this.score = '',
     this.elapsed = '',
     this.period = '',
+    this.live = false,
+    this.ended = false,
+    this.finishedTimestamp,
+    this.gmpChartMode = '',
+    this.tweetCount = 0,
+    this.featuredOrder = 0,
+    this.estimateValue = false,
+    this.cantEstimate = false,
+    this.estimatedValue = '',
+    this.spreadsMainLine = 0,
+    this.totalsMainLine = 0,
+    this.carouselMap = '',
+    this.pendingDeployment = false,
+    this.deploying = false,
+    this.deployingTimestamp,
+    this.scheduledDeploymentTimestamp,
+    this.gameStatus = '',
     this.competitive = 0,
     this.commentCount = 0,
     this.openInterest = 0,
@@ -469,6 +950,10 @@ final class Event {
     this.negRiskFeeBips = 0,
     required this.markets,
     this.series = const <Series>[],
+    this.categories = const <Category>[],
+    this.collections = const <Collection>[],
+    this.eventCreators = const <EventCreator>[],
+    this.subEvents = const <String>[],
     required this.tags,
     required this.raw,
   });
@@ -520,6 +1005,25 @@ final class Event {
     score: json['score']?.toString() ?? '',
     elapsed: json['elapsed']?.toString() ?? '',
     period: json['period']?.toString() ?? '',
+    live: json['live'] == true,
+    ended: json['ended'] == true,
+    finishedTimestamp: parseNormalizedDateTime(json['finishedTimestamp']),
+    gmpChartMode: json['gmpChartMode']?.toString() ?? '',
+    tweetCount: _int(json['tweetCount']),
+    featuredOrder: _int(json['featuredOrder']),
+    estimateValue: json['estimateValue'] == true,
+    cantEstimate: json['cantEstimate'] == true,
+    estimatedValue: json['estimatedValue']?.toString() ?? '',
+    spreadsMainLine: _double(json['spreadsMainLine']),
+    totalsMainLine: _double(json['totalsMainLine']),
+    carouselMap: json['carouselMap']?.toString() ?? '',
+    pendingDeployment: json['pendingDeployment'] == true,
+    deploying: json['deploying'] == true,
+    deployingTimestamp: parseNormalizedDateTime(json['deployingTimestamp']),
+    scheduledDeploymentTimestamp: parseNormalizedDateTime(
+      json['scheduledDeploymentTimestamp'],
+    ),
+    gameStatus: json['gameStatus']?.toString() ?? '',
     competitive: _double(json['competitive']),
     commentCount: _int(json['commentCount']),
     openInterest: _double(json['openInterest']),
@@ -540,6 +1044,10 @@ final class Event {
     negRiskFeeBips: _int(json['negRiskFeeBips']),
     markets: _markets(json['markets']),
     series: _seriesList(json['series']),
+    categories: _categories(json['categories']),
+    collections: _collections(json['collections']),
+    eventCreators: _eventCreators(json['eventCreators']),
+    subEvents: _stringList(json['subEvents']),
     tags: _tags(json['tags']),
     raw: Map.unmodifiable(json),
   );
@@ -590,6 +1098,23 @@ final class Event {
   final String score;
   final String elapsed;
   final String period;
+  final bool live;
+  final bool ended;
+  final DateTime? finishedTimestamp;
+  final String gmpChartMode;
+  final int tweetCount;
+  final int featuredOrder;
+  final bool estimateValue;
+  final bool cantEstimate;
+  final String estimatedValue;
+  final double spreadsMainLine;
+  final double totalsMainLine;
+  final String carouselMap;
+  final bool pendingDeployment;
+  final bool deploying;
+  final DateTime? deployingTimestamp;
+  final DateTime? scheduledDeploymentTimestamp;
+  final String gameStatus;
   final double competitive;
   final int commentCount;
   final double openInterest;
@@ -610,6 +1135,10 @@ final class Event {
   final int negRiskFeeBips;
   final List<Market> markets;
   final List<Series> series;
+  final List<Category> categories;
+  final List<Collection> collections;
+  final List<EventCreator> eventCreators;
+  final List<String> subEvents;
   final List<Tag> tags;
   final Map<String, dynamic> raw;
 }
@@ -666,16 +1195,33 @@ final class Series {
     this.category = '',
     required this.image,
     required this.icon,
+    this.layout = '',
     required this.active,
     required this.closed,
     required this.archived,
+    this.isNew = false,
     required this.featured,
+    this.restricted = false,
+    this.isTemplate = false,
+    this.templateVariables = false,
+    this.publishedAt,
+    this.createdBy = '',
+    this.updatedBy = '',
+    this.createdAt,
+    this.updatedAt,
+    this.commentsEnabled = false,
+    this.competitive = '',
     required this.startDate,
+    this.pythTokenId = '',
+    this.cgAssetName = '',
+    this.score = 0,
     required this.volume,
     required this.volume24hr,
     required this.liquidity,
     required this.commentCount,
     required this.events,
+    this.collections = const <Collection>[],
+    this.categories = const <Category>[],
     required this.tags,
     required this.raw,
   });
@@ -692,16 +1238,33 @@ final class Series {
     category: json['category']?.toString() ?? '',
     image: json['image']?.toString() ?? '',
     icon: json['icon']?.toString() ?? '',
+    layout: json['layout']?.toString() ?? '',
     active: json['active'] == true,
     closed: json['closed'] == true,
     archived: json['archived'] == true,
+    isNew: json['new'] == true,
     featured: json['featured'] == true,
+    restricted: json['restricted'] == true,
+    isTemplate: json['isTemplate'] == true,
+    templateVariables: json['templateVariables'] == true,
+    publishedAt: parseNormalizedDateTime(json['publishedAt']),
+    createdBy: json['createdBy']?.toString() ?? '',
+    updatedBy: json['updatedBy']?.toString() ?? '',
+    createdAt: parseNormalizedDateTime(json['createdAt']),
+    updatedAt: parseNormalizedDateTime(json['updatedAt']),
+    commentsEnabled: json['commentsEnabled'] == true,
+    competitive: json['competitive']?.toString() ?? '',
     startDate: parseNormalizedDateTime(json['startDate']),
+    pythTokenId: json['pythTokenID']?.toString() ?? '',
+    cgAssetName: json['cgAssetName']?.toString() ?? '',
+    score: _double(json['score']),
     volume: _double(json['volume']),
     volume24hr: _double(json['volume24hr']),
     liquidity: _double(json['liquidity']),
     commentCount: _int(json['commentCount']),
     events: _events(json['events']),
+    collections: _collections(json['collections']),
+    categories: _categories(json['categories']),
     tags: _tags(json['tags']),
     raw: Map.unmodifiable(json),
   );
@@ -717,16 +1280,33 @@ final class Series {
   final String category;
   final String image;
   final String icon;
+  final String layout;
   final bool active;
   final bool closed;
   final bool archived;
+  final bool isNew;
   final bool featured;
+  final bool restricted;
+  final bool isTemplate;
+  final bool templateVariables;
+  final DateTime? publishedAt;
+  final String createdBy;
+  final String updatedBy;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final bool commentsEnabled;
+  final String competitive;
   final DateTime? startDate;
+  final String pythTokenId;
+  final String cgAssetName;
+  final double score;
   final double volume;
   final double volume24hr;
   final double liquidity;
   final int commentCount;
   final List<Event> events;
+  final List<Collection> collections;
+  final List<Category> categories;
   final List<Tag> tags;
   final Map<String, dynamic> raw;
 }
@@ -798,6 +1378,8 @@ final class Team {
     required this.logo,
     required this.abbreviation,
     required this.alias,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory Team.fromJson(Map<String, dynamic> json) => Team(
@@ -808,6 +1390,8 @@ final class Team {
     logo: json['logo']?.toString() ?? '',
     abbreviation: json['abbreviation']?.toString() ?? '',
     alias: json['alias']?.toString() ?? '',
+    createdAt: parseNormalizedDateTime(json['createdAt']),
+    updatedAt: parseNormalizedDateTime(json['updatedAt']),
   );
 
   final int id;
@@ -817,6 +1401,8 @@ final class Team {
   final String logo;
   final String abbreviation;
   final String alias;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 }
 
 /// Metadata for a sport (Gamma).
@@ -974,6 +1560,30 @@ List<SearchTag> _searchTags(Object? raw) {
   return raw
       .whereType<Map<dynamic, dynamic>>()
       .map((m) => SearchTag.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+}
+
+List<Category> _categories(Object? raw) {
+  if (raw is! List) return const <Category>[];
+  return raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => Category.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+}
+
+List<Collection> _collections(Object? raw) {
+  if (raw is! List) return const <Collection>[];
+  return raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => Collection.fromJson(m.cast<String, dynamic>()))
+      .toList(growable: false);
+}
+
+List<EventCreator> _eventCreators(Object? raw) {
+  if (raw is! List) return const <EventCreator>[];
+  return raw
+      .whereType<Map<dynamic, dynamic>>()
+      .map((m) => EventCreator.fromJson(m.cast<String, dynamic>()))
       .toList(growable: false);
 }
 

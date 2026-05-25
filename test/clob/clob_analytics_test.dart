@@ -55,6 +55,17 @@ void main() {
       expect(captured!.queryParameters['token_id'], 'tok-1');
       expect(result, 25);
     });
+
+    test('decodes camel-case string fee rate', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode(<String, dynamic>{'feeRateBps': '30'}),
+          200,
+        );
+      });
+      final result = await client.feeRateBps('tok-1');
+      expect(result, 30);
+    });
   });
 
   group('simplifiedMarkets', () {
@@ -240,6 +251,17 @@ void main() {
       expect(captured!.queryParameters['order_id'], 'ord-9');
       expect(scoring, isTrue);
     });
+
+    test('decodes string boolean', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode(<String, dynamic>{'scoring': 'true'}),
+          200,
+        );
+      });
+      final scoring = await client.orderScoring('ord-9');
+      expect(scoring, isTrue);
+    });
   });
 
   group('ordersScoring', () {
@@ -257,6 +279,62 @@ void main() {
         'order_ids': <String>['a', 'b', 'c'],
       });
       expect(result, <bool>[true, false, true]);
+    });
+
+    test('decodes string and numeric booleans', () async {
+      final client = _client((req) async {
+        return http.Response(jsonEncode(<Object>['true', 0, 1]), 200);
+      });
+      final result = await client.ordersScoring(<String>['a', 'b', 'c']);
+      expect(result, <bool>[true, false, true]);
+    });
+  });
+
+  group('rewards DTOs', () {
+    test('decode camel aliases and string numerics', () {
+      final cfg = RewardsConfig.fromJson(<String, dynamic>{
+        'market': 'm1',
+        'assetAddress': '0xasset',
+        'rewardsMinSize': '100',
+        'rewardsMaxSpread': '0.02',
+        'active': 'true',
+      });
+      expect(cfg.assetAddress, '0xasset');
+      expect(cfg.rewardsMinSize, 100);
+      expect(cfg.rewardsMaxSpread, 0.02);
+      expect(cfg.active, isTrue);
+
+      final raw = RawRewards.fromJson(<String, dynamic>{
+        'market': 'm1',
+        'date': '2026-05-07',
+        'rewardsPaid': '1.5',
+        'volume': '12',
+      });
+      expect(raw.rewardsPaid, 1.5);
+      expect(raw.volume, 12);
+
+      final pct = RewardPercentages.fromJson(<String, dynamic>{
+        'market': 'm1',
+        'rewardPercentage': '0.15',
+      });
+      expect(pct.rewardPercentage, 0.15);
+
+      final byMarket = UserRewardsMarket.fromJson(<String, dynamic>{
+        'market': 'm1',
+        'totalRewards': '5.5',
+        'rewardPercentage': '0.25',
+      });
+      expect(byMarket.totalRewards, 5.5);
+      expect(byMarket.rewardPercentage, 0.25);
+
+      final rebates = RebatedFees.fromJson(<String, dynamic>{
+        'makerAddress': '0xmaker',
+        'market': 'm1',
+        'totalRebated': '2',
+        'date': '2026-05-07',
+      });
+      expect(rebates.makerAddress, '0xmaker');
+      expect(rebates.totalRebated, 2);
     });
   });
 

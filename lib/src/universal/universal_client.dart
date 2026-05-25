@@ -2,6 +2,7 @@
 library;
 
 import '../clob/clob_analytics_types.dart';
+import '../clob/clob_auth_types.dart';
 import '../clob/clob_client.dart';
 import '../clob/clob_params.dart';
 import '../dataapi/dataapi_client.dart';
@@ -309,6 +310,10 @@ final class UniversalClient {
     return clob.market(conditionId);
   }
 
+  Future<ClobMarketByTokenResponse> clobMarketByToken(String tokenId) {
+    return clob.marketByToken(tokenId);
+  }
+
   Future<OrderBook> orderBook(String tokenId) => clob.orderBook(tokenId);
 
   Future<List<OrderBook>> orderBooks(List<BookParams> params) {
@@ -335,6 +340,8 @@ final class UniversalClient {
 
   Future<bool> negRisk(String tokenId) => clob.negRisk(tokenId);
 
+  Future<NegRiskInfo> negRiskInfo(String tokenId) => clob.negRiskInfo(tokenId);
+
   Future<int> feeRateBps(String tokenId) => clob.feeRateBps(tokenId);
 
   Future<String> lastTradePrice(String tokenId) {
@@ -345,6 +352,10 @@ final class UniversalClient {
     return clob.lastTradesPrices(params);
   }
 
+  Future<List<TradeRecord>> publicTrades({String market = ''}) {
+    return clob.publicTrades(market: market);
+  }
+
   Future<PriceHistory> pricesHistory(PriceHistoryParams params) {
     return clob.pricesHistory(params);
   }
@@ -353,6 +364,10 @@ final class UniversalClient {
 
   Future<List<bool>> ordersScoring(List<String> orderIds) {
     return clob.ordersScoring(orderIds);
+  }
+
+  Future<List<BuilderTrade>> builderTrades({int limit = 100}) {
+    return clob.builderTrades(limit: limit);
   }
 
   Future<List<RewardsConfig>> rewardsConfig() => clob.rewardsConfig();
@@ -464,6 +479,10 @@ final class UniversalClobReadClient {
 
   Future<ClobMarket> market(String conditionId) => _clob.market(conditionId);
 
+  Future<ClobMarketByTokenResponse> marketByToken(String tokenId) {
+    return _clob.marketByToken(tokenId);
+  }
+
   Future<OrderBook> orderBook(String tokenId) => _clob.orderBook(tokenId);
 
   Future<List<OrderBook>> orderBooks(List<BookParams> params) {
@@ -498,6 +517,10 @@ final class UniversalClobReadClient {
 
   Future<bool> negRisk(String tokenId) => _clob.negRisk(tokenId);
 
+  Future<NegRiskInfo> negRiskInfo(String tokenId) {
+    return _clob.negRiskInfo(tokenId);
+  }
+
   Future<int> feeRateBps(String tokenId) => _clob.feeRateBps(tokenId);
 
   Future<ClobPaginatedMarkets> simplifiedMarkets({String? nextCursor}) {
@@ -516,10 +539,18 @@ final class UniversalClobReadClient {
     return _clob.lastTradesPrices(params);
   }
 
+  Future<List<TradeRecord>> publicTrades({String market = ''}) {
+    return _clob.publicTrades(market: market);
+  }
+
   Future<bool> orderScoring(String orderId) => _clob.orderScoring(orderId);
 
   Future<List<bool>> ordersScoring(List<String> orderIds) {
     return _clob.ordersScoring(orderIds);
+  }
+
+  Future<List<BuilderTrade>> builderTrades({int limit = 100}) {
+    return _clob.builderTrades(limit: limit);
   }
 
   Future<List<RewardsConfig>> rewardsConfig() => _clob.rewardsConfig();

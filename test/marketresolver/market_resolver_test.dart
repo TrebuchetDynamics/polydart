@@ -9,6 +9,62 @@ import 'package:polydart/src/transport/http_transport.dart';
 import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
 
+Map<String, dynamic> _marketJson({
+  String slug = 'btc-updown-5m-1778061900',
+  String question = 'Bitcoin Up or Down - 5m?',
+  String conditionId = '0xc',
+  String eventStartTime = '2026-05-06T10:05:00Z',
+  String resolutionSource = 'UMA',
+  bool active = true,
+  bool closed = false,
+  bool acceptingOrders = true,
+  bool enableOrderBook = true,
+}) => <String, dynamic>{
+  'id': '1',
+  'question': question,
+  'conditionId': conditionId,
+  'slug': slug,
+  'outcomes': '["Up","Down"]',
+  'clobTokenIds': '["111","222"]',
+  'active': active,
+  'closed': closed,
+  'archived': false,
+  'acceptingOrders': acceptingOrders,
+  'enableOrderBook': enableOrderBook,
+  'resolutionSource': resolutionSource,
+  'orderMinSize': 5.0,
+  'orderPriceMinTickSize': 0.01,
+  'startDate': '2026-05-06T10:00:00Z',
+  'eventStartTime': eventStartTime,
+  'endDate': '2026-05-06T10:10:00Z',
+};
+
+Map<String, dynamic> _eventJson({
+  String slug = 'btc-updown-5m-1778061900',
+  String resolutionSource = 'event-source',
+  List<Map<String, dynamic>>? markets,
+}) => <String, dynamic>{
+  'id': 'event-1',
+  'slug': slug,
+  'title': 'BTC up/down',
+  'active': true,
+  'closed': false,
+  'archived': false,
+  'featured': false,
+  'resolutionSource': resolutionSource,
+  'markets': markets ?? <Map<String, dynamic>>[_marketJson(slug: slug)],
+};
+
+GammaClient _gammaWithMock(MockClient mock) => GammaClient(
+  transport: HttpTransport(
+    config: const TransportConfig(
+      baseUrl: GammaClient.defaultBaseUrl,
+      retryMax: 0,
+    ),
+    inner: mock,
+  ),
+);
+
 void main() {
   group('parseClobTokenIds', () {
     test('empty / null forms', () {
@@ -85,48 +141,151 @@ void main() {
     });
   });
 
+  group('crypto resolver helpers', () {
+    test('cryptoWindowSlug matches Polygolem deterministic format', () {
+      final window = DateTime.fromMillisecondsSinceEpoch(
+        1778114700000,
+        isUtc: true,
+      );
+      expect(cryptoWindowSlug('BTC', '5m', window), 'btc-updown-5m-1778114700');
+      expect(
+        cryptoWindowSlug('HYPE', '4h', window),
+        'hype-updown-4h-1778114700',
+      );
+      expect(cryptoWindowSlug('MYST', '5m', window), isEmpty);
+      expect(cryptoWindowSlug('BTC', '1h', window), isEmpty);
+    });
+
+    test('cryptoQueries mirrors Polygolem asset aliases', () {
+      expect(cryptoQueries('BTC'), ['bitcoin 5m', 'bitcoin 15m']);
+      expect(cryptoQueries('ABC'), ['abc 5m', 'abc 15m']);
+    });
+
+    test('inferTimeframe recognizes 5m and 15m labels', () {
+      expect(inferTimeframe('btc-updown-5m-1', ''), '5m');
+      expect(inferTimeframe('', 'Bitcoin 15m window'), '15m');
+      expect(inferTimeframe('other', 'no timeframe'), isEmpty);
+    });
+  });
+
   group('MarketResolver', () {
     test('resolveBySlug populates the result', () async {
       final mock = MockClient((req) async {
         // marketBySlug calls /markets?slug=… and expects a JSON list.
         return http.Response(
           jsonEncode([
-            <String, dynamic>{
-              'id': '1',
-              'question': 'BTC > 100k?',
-              'conditionId': '0xc',
-              'slug': 'btc-100k',
-              'outcomes': '["Yes","No"]',
-              'clobTokenIds': '["t1","t2"]',
-              'active': true,
-              'closed': false,
-              'archived': false,
-              'acceptingOrders': true,
-              'enableOrderBook': true,
-            },
+            _marketJson(
+              slug: 'btc-100k',
+              question: 'BTC > 100k?',
+              resolutionSource: '',
+            )..['outcomes'] = '["Yes","No"]',
           ]),
           200,
         );
       });
-      final resolver = MarketResolver(
-        gamma: GammaClient(
-          transport: HttpTransport(
-            config: const TransportConfig(
-              baseUrl: GammaClient.defaultBaseUrl,
-              retryMax: 0,
-            ),
-            inner: mock,
-          ),
-        ),
-      );
+      final resolver = MarketResolver(gamma: _gammaWithMock(mock));
 
       final r = await resolver.resolveBySlug('btc-100k');
       expect(r, isNotNull);
       expect(r!.conditionId, '0xc');
-      expect(r.tokenIds, ['t1', 't2']);
+      expect(r.tokenIds, ['111', '222']);
       expect(r.outcomes, ['Yes', 'No']);
-      expect(r.yesTokenId, 't1');
+      expect(r.yesTokenId, '111');
       expect(r.isAvailable, isTrue);
+    });
+
+    test('resolveTokenIdsForWindow returns strict slug match', () async {
+      final window = DateTime.parse('2026-05-06T10:05:00Z');
+      final mock = MockClient((req) async {
+        expect(req.url.path, '/events');
+        expect(req.url.queryParameters['slug'], 'btc-updown-5m-1778061900');
+        expect(req.url.queryParameters['limit'], '1');
+        return http.Response(jsonEncode([_eventJson()]), 200);
+      });
+      final resolver = MarketResolver(gamma: _gammaWithMock(mock));
+
+      final result = await resolver.resolveTokenIdsForWindow(
+        'BTC',
+        '5m',
+        window,
+      );
+      expect(result.status, MarketStatus.available);
+      expect(result.upTokenId, '111');
+      expect(result.downTokenId, '222');
+      expect(result.conditionId, '0xc');
+      expect(result.source, 'gamma:event_slug_strict:btc-updown-5m-1778061900');
+      expect(result.resolutionSource, 'UMA');
+      expect(result.minOrderSize, 5.0);
+      expect(result.tickSize, 0.01);
+    });
+
+    test('resolveTokenIdsForWindow detects window mismatch', () async {
+      final requested = DateTime.parse('2026-05-06T10:05:00Z');
+      final mock = MockClient((req) async {
+        return http.Response(
+          jsonEncode([
+            _eventJson(
+              markets: <Map<String, dynamic>>[
+                _marketJson(eventStartTime: '2026-05-06T10:10:00Z'),
+              ],
+            ),
+          ]),
+          200,
+        );
+      });
+      final resolver = MarketResolver(gamma: _gammaWithMock(mock));
+
+      final result = await resolver.resolveTokenIdsForWindow(
+        'BTC',
+        '5m',
+        requested,
+      );
+      expect(result.status, MarketStatus.windowMismatch);
+      expect(result.startDate, DateTime.parse('2026-05-06T10:10:00Z'));
+      expect(result.source, contains('gamma:slug_hit_window_mismatch'));
+    });
+
+    test('resolveTokenIds falls back to active crypto search', () async {
+      var searchCalls = 0;
+      final mock = MockClient((req) async {
+        if (req.url.path == '/public-search') {
+          searchCalls++;
+          if (req.url.queryParameters['q'] == 'bitcoin 5m') {
+            return http.Response(
+              jsonEncode(<String, dynamic>{
+                'events': <Map<String, dynamic>>[
+                  _eventJson(markets: <Map<String, dynamic>>[_marketJson()]),
+                ],
+              }),
+              200,
+            );
+          }
+          return http.Response(
+            jsonEncode(<String, dynamic>{'events': <Map<String, dynamic>>[]}),
+            200,
+          );
+        }
+        return http.Response('not found', 404);
+      });
+      final resolver = MarketResolver(gamma: _gammaWithMock(mock));
+
+      final result = await resolver.resolveTokenIds('BTC', '5m');
+      expect(searchCalls, 2);
+      expect(result.status, MarketStatus.available);
+      expect(result.source, 'gamma:crypto_search');
+      expect(result.upTokenId, '111');
+      expect(result.downTokenId, '222');
+    });
+
+    test('validateToken matches Polygolem resolver layer', () {
+      final resolver = MarketResolver(
+        gamma: _gammaWithMock(
+          MockClient((_) async => http.Response('{}', 200)),
+        ),
+      );
+      expect(resolver.validateToken(''), MarketStatus.unresolved);
+      expect(resolver.validateToken('not-a-number'), MarketStatus.unresolved);
+      expect(resolver.validateToken('123'), MarketStatus.available);
     });
   });
 }

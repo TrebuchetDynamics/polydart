@@ -213,7 +213,8 @@ final class OrderResponse {
   });
 
   factory OrderResponse.fromJson(Map<String, dynamic> json) {
-    final singleTransactionHash = json['transaction_hash']?.toString();
+    final singleTransactionHash =
+        (json['transaction_hash'] ?? json['transactionHash'])?.toString();
     return OrderResponse(
       success: json['success'] == true,
       orderId: (json['orderID'] ?? json['order_id'])?.toString() ?? '',
@@ -224,10 +225,13 @@ final class OrderResponse {
       takingAmount: (json['takingAmount'] ?? json['taking_amount'])?.toString(),
       transactionHashes: _stringList(
         json['transactionsHashes'] ??
+            json['transactionHashes'] ??
             json['transaction_hashes'] ??
             singleTransactionHash,
       ),
-      tradeIds: _stringList(json['tradeIDs'] ?? json['trade_ids']),
+      tradeIds: _stringList(
+        json['tradeIDs'] ?? json['tradeIds'] ?? json['trade_ids'],
+      ),
     );
   }
 

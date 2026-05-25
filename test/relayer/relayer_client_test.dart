@@ -147,6 +147,16 @@ void main() {
   });
 
   group('isDeployed', () {
+    test('DeployedResponse decodes string boolean and numeric address', () {
+      final resp = DeployedResponse.fromJson(<String, dynamic>{
+        'deployed': 'true',
+        'address': 123,
+      });
+
+      expect(resp.deployed, isTrue);
+      expect(resp.address, '123');
+    });
+
     test('GETs /deployed and parses the boolean', () async {
       Uri? capturedUrl;
       final client = _client((req) async {
@@ -184,6 +194,54 @@ void main() {
       expect(tx.transactionId, 'tx-object');
       expect(tx.transactionHash, '0xabc');
       expect(tx.parsedState, RelayerTransactionState.confirmed);
+    });
+
+    test('parses snake_case aliases and numeric scalar fields', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'transaction_id': 'tx-snake',
+            'transaction_hash': '0xabc',
+            'proxy_address': '0xwallet',
+            'nonce': 7,
+            'value': 0,
+            'state': 'STATE_MINED',
+            'type': 'WALLET',
+            'created_at': '2026-05-24T00:00:00Z',
+            'updated_at': '2026-05-24T00:01:00Z',
+          }),
+          200,
+        );
+      });
+
+      final tx = await client.getTransaction(txId: 'tx-snake');
+
+      expect(tx.transactionId, 'tx-snake');
+      expect(tx.transactionHash, '0xabc');
+      expect(tx.proxyAddress, '0xwallet');
+      expect(tx.nonce, '7');
+      expect(tx.value, '0');
+      expect(tx.createdAt, isNotEmpty);
+      expect(tx.updatedAt, isNotEmpty);
+    });
+
+    test('parses lower-camel transactionId alias', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'transactionId': 'tx-lower-camel',
+            'transactionHash': '0xabc',
+            'state': 'STATE_MINED',
+            'type': 'WALLET',
+          }),
+          200,
+        );
+      });
+
+      final tx = await client.getTransaction(txId: 'tx-lower-camel');
+
+      expect(tx.transactionId, 'tx-lower-camel');
+      expect(tx.transactionHash, '0xabc');
     });
 
     test('parses first transaction from array response', () async {
