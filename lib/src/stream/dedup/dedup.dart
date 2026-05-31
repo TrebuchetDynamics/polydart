@@ -15,8 +15,7 @@
 /// hash/asset) the message is treated as new.
 library;
 
-import 'dart:convert';
-
+import '../shared/framing/json_object_frame.dart';
 import '../shared/json_array_frame.dart';
 
 /// TTL-bounded set of recently seen message keys.
@@ -135,16 +134,16 @@ DedupKeyExtraction extractDedupKey(List<int> data) {
   if (data.isEmpty) {
     return const DedupKeyExtraction.unkeyed(DedupKeyStatus.emptyPayload);
   }
-  Object? decoded;
-  try {
-    decoded = json.decode(utf8.decode(data));
-  } on FormatException {
-    return const DedupKeyExtraction.unkeyed(DedupKeyStatus.invalidJson);
+  final decoded = decodeJsonObjectFrame(data);
+  switch (decoded.status) {
+    case JsonObjectFrameDecodeStatus.ok:
+      break;
+    case JsonObjectFrameDecodeStatus.invalidJson:
+      return const DedupKeyExtraction.unkeyed(DedupKeyStatus.invalidJson);
+    case JsonObjectFrameDecodeStatus.nonObjectJson:
+      return const DedupKeyExtraction.unkeyed(DedupKeyStatus.nonObjectJson);
   }
-  if (decoded is! Map) {
-    return const DedupKeyExtraction.unkeyed(DedupKeyStatus.nonObjectJson);
-  }
-  final m = decoded.map((k, v) => MapEntry(k.toString(), v));
+  final m = decoded.value!;
   String pick(String key) => (m[key] ?? '').toString();
 
   final eventType = pick('event_type');
