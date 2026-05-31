@@ -14,7 +14,11 @@ const Set<String> _sensitiveHeaderNames = {
   'POLY_BUILDER_SECRET',
   'POLY_BUILDER_PASSPHRASE',
   'POLY_BUILDER_SIGNATURE',
+  'RELAYER_API_KEY',
 };
+
+bool _isSensitiveHeaderName(String name) =>
+    _sensitiveHeaderNames.contains(name.toUpperCase());
 
 /// Redacts a single secret-bearing string.
 ///
@@ -31,7 +35,7 @@ String redactSecret(String value) {
 Map<String, String> redactMap(Map<String, String> headers) {
   final out = <String, String>{};
   for (final entry in headers.entries) {
-    if (_sensitiveHeaderNames.contains(entry.key.toUpperCase())) {
+    if (_isSensitiveHeaderName(entry.key)) {
       out[entry.key] = redactSecret(entry.value);
     } else {
       out[entry.key] = entry.value;

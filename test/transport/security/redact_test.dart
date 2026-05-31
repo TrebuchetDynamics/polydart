@@ -35,6 +35,16 @@ void main() {
       expect(out['poly_secret'], '[REDACTED]');
     });
 
+    test('redacts relayer API key while preserving address provenance', () {
+      final out = redactMap({
+        'RELAYER_API_KEY': 'relayer-secret-token',
+        'RELAYER_API_KEY_ADDRESS': '0xowner',
+      });
+
+      expect(out['RELAYER_API_KEY'], 'rela...oken');
+      expect(out['RELAYER_API_KEY_ADDRESS'], '0xowner');
+    });
+
     test('non-sensitive headers pass through', () {
       final out = redactMap({'Content-Type': 'application/json'});
       expect(out['Content-Type'], 'application/json');
