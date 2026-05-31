@@ -22,6 +22,7 @@ import '../types/decimal.dart';
 import '../types/enums.dart';
 import 'deposit_wallet_order_signing.dart';
 import 'order_builder.dart';
+import 'market_order_pricing.dart';
 import 'order_intent.dart';
 import 'order_signing.dart';
 
@@ -411,23 +412,12 @@ Future<String> _marketOrderPrice({
     );
   }
 
-  var filled = 0.0;
-  for (final level in levels) {
-    final price = double.parse(level.price);
-    final size = double.parse(level.size);
-    filled += side == Side.buy ? price * size : size;
-    if (filled >= amountValue) {
-      return level.price;
-    }
-  }
-
-  if (orderType == OrderType.fok) {
-    throw const ValidationException(
-      code: ErrorCode.invalidValue,
-      message: 'insufficient liquidity to fill order',
-    );
-  }
-  return levels.first.price;
+  return selectMarketOrderPrice(
+    levels: levels,
+    side: side,
+    amount: amountValue,
+    orderType: orderType,
+  ).price;
 }
 
 double _parsePositiveMarketAmount(String amount) {

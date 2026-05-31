@@ -5,9 +5,11 @@ import 'package:http/http.dart' as http;
 import 'package:polydart/src/auth/create2.dart';
 import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/orders/deposit_wallet_order_signing.dart';
+import 'package:polydart/src/orders/market_order_pricing.dart';
 import 'package:polydart/src/orders/order_builder.dart';
 import 'package:polydart/src/orders/order_placement.dart';
 import 'package:polydart/src/orders/order_signing.dart';
+import 'package:polydart/src/types/clob.dart';
 import 'package:polydart/src/types/enums.dart';
 import 'package:test/test.dart';
 
@@ -419,6 +421,46 @@ void main() {
     );
   });
 
+  group('market order price discovery plan', () {
+    test('selects the level that can fill a buy amount', () {
+      final plan = selectMarketOrderPrice(
+        levels: const <OrderBookLevel>[
+          OrderBookLevel(price: '0.10', size: '5'),
+          OrderBookLevel(price: '0.20', size: '10'),
+        ],
+        side: Side.buy,
+        amount: 2.0,
+        orderType: OrderType.fok,
+      );
+
+      expect(plan.price, '0.20');
+      expect(plan.levelsConsumed, 2);
+      expect(plan.fillsCompletely, isTrue);
+    });
+
+    test('rejects malformed book levels as validation failures', () {
+      expect(
+        () => selectMarketOrderPrice(
+          levels: const <OrderBookLevel>[
+            OrderBookLevel(price: 'not-a-price', size: '5'),
+          ],
+          side: Side.buy,
+          amount: 1.0,
+          orderType: OrderType.fok,
+        ),
+        throwsA(
+          isA<ValidationException>()
+              .having((error) => error.field, 'field', 'book price')
+              .having(
+                (error) => error.message,
+                'message',
+                'book price must be a finite positive decimal',
+              ),
+        ),
+      );
+    });
+  });
+
   group('market order price discovery', () {
     test(
       'wraps malformed omitted-price amount as ValidationException',
@@ -455,6 +497,50 @@ void main() {
         );
       },
     );
+
+    test('wraps malformed book prices as ValidationException', () async {
+      final client = orderTestClient((req) async {
+        switch (req.url.path) {
+          case '/tick-size':
+            return tickSizeResponse();
+          case '/book':
+            return http.Response(
+              jsonEncode(<String, dynamic>{
+                'asset_id': '12345',
+                'bids': <Map<String, String>>[],
+                'asks': <Map<String, String>>[
+                  <String, String>{'price': 'not-a-price', 'size': '10'},
+                ],
+              }),
+              200,
+            );
+          default:
+            return http.Response('unexpected ${req.url.path}', 500);
+        }
+      });
+
+      await expectLater(
+        createMarketOrder(
+          client: client,
+          signer: cannedOrderSigner(),
+          apiKey: testOrderApiKey,
+          params: const CreateMarketOrderParams(
+            tokenId: '12345',
+            side: Side.buy,
+            amount: '1.011700',
+          ),
+        ),
+        throwsA(
+          isA<ValidationException>()
+              .having((error) => error.field, 'field', 'book price')
+              .having(
+                (error) => error.message,
+                'message',
+                'book price must be a finite positive decimal',
+              ),
+        ),
+      );
+    });
 
     test('uses best opposing price when price is omitted', () async {
       String? orderBody;
