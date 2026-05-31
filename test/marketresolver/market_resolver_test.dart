@@ -173,6 +173,16 @@ void main() {
       expect(inferTimeframe('hype-updown-4h-1778114700', ''), '4h');
       expect(inferTimeframe('other', 'no timeframe'), isEmpty);
     });
+
+    test('normalizes caller-supplied timeframe aliases before slugging', () {
+      final window = DateTime.parse('2026-05-06T10:05:00Z');
+      expect(normalizeCryptoTimeframe(' 5M '), '5m');
+      expect(normalizeCryptoTimeframe('15 min'), '15m');
+      expect(
+        cryptoWindowSlug(' btc ', '5M', window),
+        'btc-updown-5m-1778061900',
+      );
+    });
   });
 
   group('MarketResolver', () {
@@ -261,6 +271,25 @@ void main() {
       );
       expect(result.upTokenId, '111');
       expect(result.downTokenId, '222');
+    });
+
+    test('resolveTokenIdsForWindow normalizes timeframe aliases', () async {
+      final window = DateTime.parse('2026-05-06T10:05:00Z');
+      final mock = MockClient((req) async {
+        expect(req.url.path, '/events');
+        expect(req.url.queryParameters['slug'], 'btc-updown-5m-1778061900');
+        return http.Response(jsonEncode([_eventJson()]), 200);
+      });
+      final resolver = MarketResolver(gamma: _gammaWithMock(mock));
+
+      final result = await resolver.resolveTokenIdsForWindow(
+        ' btc ',
+        '5M',
+        window,
+      );
+      expect(result.status, MarketStatus.available);
+      expect(result.timeframe, '5m');
+      expect(result.upTokenId, '111');
     });
 
     test('resolveTokenIdsForWindow returns strict slug match', () async {

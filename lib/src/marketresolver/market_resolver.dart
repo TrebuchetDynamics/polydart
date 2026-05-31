@@ -151,6 +151,31 @@ final class ResolveResult {
   final DateTime? endDate;
 }
 
+@immutable
+final class CryptoWindowRequest {
+  const CryptoWindowRequest({
+    required this.asset,
+    required this.timeframe,
+    required this.windowStart,
+  });
+
+  factory CryptoWindowRequest.from({
+    required String asset,
+    required String timeframe,
+    required DateTime windowStart,
+  }) {
+    return CryptoWindowRequest(
+      asset: asset.trim().toUpperCase(),
+      timeframe: normalizeCryptoTimeframe(timeframe),
+      windowStart: _truncateToSecond(windowStart)!,
+    );
+  }
+
+  final String asset;
+  final String timeframe;
+  final DateTime windowStart;
+}
+
 final class MarketResolver {
   MarketResolver({GammaClient? gamma}) : _gamma = gamma ?? GammaClient();
 
@@ -186,26 +211,35 @@ final class MarketResolver {
     String timeframe,
     DateTime windowStart,
   ) async {
-    final slug = cryptoWindowSlug(asset, timeframe, windowStart);
+    final request = CryptoWindowRequest.from(
+      asset: asset,
+      timeframe: timeframe,
+      windowStart: windowStart,
+    );
+    final slug = cryptoWindowSlug(
+      request.asset,
+      request.timeframe,
+      request.windowStart,
+    );
     if (slug.isNotEmpty) {
       final event = await _gamma.eventBySlug(slug);
       if (event != null) {
         final result = _firstAcceptingMarket(
-          asset,
-          timeframe,
+          request.asset,
+          request.timeframe,
           _marketsFromGammaWithSource(
-            asset,
+            request.asset,
             event.resolutionSource,
             event.markets,
           ),
         );
         if (result != null) {
-          final expected = _truncateToSecond(windowStart);
-          if (expected != null && result.startDate != expected) {
+          final expected = request.windowStart;
+          if (result.startDate != expected) {
             return ResolveResult(
               status: MarketStatus.windowMismatch,
-              asset: asset,
-              timeframe: timeframe,
+              asset: request.asset,
+              timeframe: request.timeframe,
               startDate: result.startDate,
               endDate: result.endDate,
               source:
@@ -231,7 +265,7 @@ final class MarketResolver {
         }
       }
     }
-    return resolveTokenIds(asset, timeframe);
+    return resolveTokenIds(request.asset, request.timeframe);
   }
 
   /// Strict window resolver for live-order paths. Never falls back from a
@@ -241,21 +275,18 @@ final class MarketResolver {
     String timeframe,
     DateTime windowStart,
   ) async {
-    final expected = _truncateToSecond(windowStart);
-    if (expected == null) {
-      return ResolveResult(
-        status: MarketStatus.unresolved,
-        asset: asset,
-        timeframe: timeframe,
-        source: 'windowStart_zero',
-      );
-    }
-    final slug = cryptoWindowSlug(asset, timeframe, expected);
+    final request = CryptoWindowRequest.from(
+      asset: asset,
+      timeframe: timeframe,
+      windowStart: windowStart,
+    );
+    final expected = request.windowStart;
+    final slug = cryptoWindowSlug(request.asset, request.timeframe, expected);
     if (slug.isEmpty) {
       return ResolveResult(
         status: MarketStatus.unresolved,
-        asset: asset,
-        timeframe: timeframe,
+        asset: request.asset,
+        timeframe: request.timeframe,
         source: 'no_slug_for_asset_timeframe',
       );
     }
@@ -263,29 +294,33 @@ final class MarketResolver {
     if (event == null) {
       return ResolveResult(
         status: MarketStatus.unresolved,
-        asset: asset,
-        timeframe: timeframe,
+        asset: request.asset,
+        timeframe: request.timeframe,
         source: 'gamma:slug_miss:$slug',
       );
     }
     final result = _firstAcceptingMarket(
-      asset,
-      timeframe,
-      _marketsFromGammaWithSource(asset, event.resolutionSource, event.markets),
+      request.asset,
+      request.timeframe,
+      _marketsFromGammaWithSource(
+        request.asset,
+        event.resolutionSource,
+        event.markets,
+      ),
     );
     if (result == null) {
       return ResolveResult(
         status: MarketStatus.unresolved,
-        asset: asset,
-        timeframe: timeframe,
+        asset: request.asset,
+        timeframe: request.timeframe,
         source: 'gamma:slug_event_no_accepting_market:$slug',
       );
     }
     if (result.startDate != expected) {
       return ResolveResult(
         status: MarketStatus.windowMismatch,
-        asset: asset,
-        timeframe: timeframe,
+        asset: request.asset,
+        timeframe: request.timeframe,
         startDate: result.startDate,
         endDate: result.endDate,
         source:
@@ -312,9 +347,15 @@ final class MarketResolver {
 
   /// Resolves token IDs for [asset] and [timeframe] through broad Gamma search.
   Future<ResolveResult> resolveTokenIds(String asset, String timeframe) async {
+    final normalizedAsset = asset.trim().toUpperCase();
+    final normalizedTimeframe = normalizeCryptoTimeframe(timeframe);
     try {
-      final markets = await resolveCryptoMarkets(asset);
-      final result = _firstAcceptingMarket(asset, timeframe, markets);
+      final markets = await resolveCryptoMarkets(normalizedAsset);
+      final result = _firstAcceptingMarket(
+        normalizedAsset,
+        normalizedTimeframe,
+        markets,
+      );
       if (result != null) {
         return ResolveResult(
           status: result.status,
@@ -335,15 +376,15 @@ final class MarketResolver {
       }
       return ResolveResult(
         status: MarketStatus.unresolved,
-        asset: asset,
-        timeframe: timeframe,
+        asset: normalizedAsset,
+        timeframe: normalizedTimeframe,
         source: 'gamma:no_match (found ${markets.length} markets)',
       );
     } on Object catch (error) {
       return ResolveResult(
         status: MarketStatus.unresolved,
-        asset: asset,
-        timeframe: timeframe,
+        asset: normalizedAsset,
+        timeframe: normalizedTimeframe,
         source: 'gamma_error:$error',
       );
     }
@@ -551,10 +592,13 @@ String cryptoWindowSlug(String asset, String timeframe, DateTime windowStart) {
     'BNB': 'bnb',
     'HYPE': 'hype',
   };
-  final prefix = prefixes[asset.toUpperCase()];
+  final normalizedTimeframe = normalizeCryptoTimeframe(timeframe);
+  final prefix = prefixes[asset.toUpperCase().trim()];
   if (prefix == null) return '';
-  if (!_supportedCryptoWindowTimeframes.contains(timeframe)) return '';
-  return '$prefix-updown-$timeframe-${windowStart.toUtc().millisecondsSinceEpoch ~/ 1000}';
+  if (!_supportedCryptoWindowTimeframes.contains(normalizedTimeframe)) {
+    return '';
+  }
+  return '$prefix-updown-$normalizedTimeframe-${windowStart.toUtc().millisecondsSinceEpoch ~/ 1000}';
 }
 
 const Set<String> _supportedCryptoWindowTimeframes = <String>{
@@ -581,6 +625,15 @@ String inferTimeframe(String slug, String question) {
     if (text.contains(alias)) return timeframe;
   }
   return '';
+}
+
+/// Normalizes caller-supplied crypto resolver timeframe labels.
+String normalizeCryptoTimeframe(String value) {
+  final text = value.toLowerCase().trim();
+  for (final (alias, timeframe) in _cryptoTimeframeAliases) {
+    if (text == alias) return timeframe;
+  }
+  return text;
 }
 
 /// Parses Gamma's `clobTokenIds` field — a JSON-encoded array of strings
