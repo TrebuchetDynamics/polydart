@@ -371,6 +371,33 @@ void main() {
       expect((results[3] as MarketResolvedMessage).winningOutcome, 'Yes');
     });
 
+    test('empty event array is ignored without parse error', () async {
+      await client.connect();
+      final errors = <Object>[];
+      final errorsSub = client.errors.listen(errors.add);
+      addTearDown(errorsSub.cancel);
+      final bookFuture = client.books.first;
+
+      channel.push('[]');
+      channel.push(
+        jsonEncode(<String, dynamic>{
+          'event_type': 'book',
+          'asset_id': 'a',
+          'market': 'm',
+          'timestamp': 't',
+          'hash': 'h',
+          'bids': <Map<String, dynamic>>[],
+          'asks': <Map<String, dynamic>>[],
+        }),
+      );
+
+      final book = await bookFuture;
+      expect(book.assetId, 'a');
+      await Future<void>.delayed(Duration.zero);
+      expect(errors, isEmpty);
+      expect(client.isConnected, isTrue);
+    });
+
     test(
       'malformed message lands on errors stream and connection survives',
       () async {

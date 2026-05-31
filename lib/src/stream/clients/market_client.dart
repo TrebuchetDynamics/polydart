@@ -12,8 +12,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../config/reconnect_policy.dart';
 import '../config/stream_config.dart';
-import '../dedup/dedup.dart' show splitArray;
 import '../models/stream_messages.dart';
+import '../shared/json_array_frame.dart';
 import '../shared/json_frame.dart';
 import '../transport/contracts/channel_factory.dart';
 import '../transport/contracts/default_channel_factory.dart';
@@ -184,9 +184,9 @@ final class MarketClient {
   }
 
   void _dispatch(List<int> bytes) {
-    final children = splitArray(bytes);
-    if (children.isNotEmpty) {
-      for (final child in children) {
+    final split = splitJsonArrayFrame(bytes);
+    if (split.isArray) {
+      for (final child in split.frames) {
         _dispatchSingle(child);
       }
       return;

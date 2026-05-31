@@ -17,6 +17,8 @@ library;
 
 import 'dart:convert';
 
+import '../shared/json_array_frame.dart';
+
 /// TTL-bounded set of recently seen message keys.
 final class Deduplicator {
   Deduplicator({
@@ -140,35 +142,4 @@ String _extractKey(List<int> data) {
 /// Splits a JSON array of CLOB market events into individual byte payloads.
 /// Mirrors `internal/stream::SplitArray`. Returns an empty list if [data] is
 /// empty, isn't a JSON array, or fails to parse.
-List<List<int>> splitArray(List<int> data) {
-  if (!_startsWithJsonArray(data)) {
-    return const <List<int>>[];
-  }
-  Object? decoded;
-  try {
-    decoded = json.decode(utf8.decode(data));
-  } on FormatException {
-    return const <List<int>>[];
-  }
-  if (decoded is! List) return const <List<int>>[];
-  return decoded
-      .map((m) => utf8.encode(json.encode(m)))
-      .toList(growable: false);
-}
-
-bool _startsWithJsonArray(List<int> data) {
-  for (final byte in data) {
-    switch (byte) {
-      case 0x20: // space
-      case 0x09: // tab
-      case 0x0A: // line feed
-      case 0x0D: // carriage return
-        continue;
-      case 0x5B: // '['
-        return true;
-      default:
-        return false;
-    }
-  }
-  return false;
-}
+List<List<int>> splitArray(List<int> data) => splitJsonArrayFrame(data).frames;
