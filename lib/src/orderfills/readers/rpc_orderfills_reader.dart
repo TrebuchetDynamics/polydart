@@ -56,8 +56,8 @@ final class RpcOrderFillsReader
     final blockTimes = <int, DateTime>{};
     final fills = <OrderFill>[];
 
-    for (final raw in logs.whereType<Map<dynamic, dynamic>>()) {
-      final log = raw.cast<String, dynamic>();
+    for (var index = 0; index < logs.length; index += 1) {
+      final log = _logObjectAt(logs, index);
       final decoded = _decodeOrderFilledLog(log);
       if (decoded == null) continue;
       if (tokenFilter.isNotEmpty &&
@@ -229,6 +229,14 @@ final class _DecodedOrderFilled {
   final String side;
   final String price;
   final String size;
+}
+
+Map<String, dynamic> _logObjectAt(List<dynamic> logs, int index) {
+  final raw = logs[index];
+  if (raw is! Map<dynamic, dynamic>) {
+    throw FormatException('eth_getLogs[$index] must be an object');
+  }
+  return raw.cast<String, dynamic>();
 }
 
 _DecodedOrderFilled? _decodeOrderFilledLog(Map<String, dynamic> log) {

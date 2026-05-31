@@ -206,6 +206,33 @@ void main() {
       },
     );
 
+    test('RPC reader rejects malformed log entries instead of dropping them', () async {
+      final client = MockClient((request) async {
+        final body = _jsonBody(request);
+        expect(body['method'], 'eth_getLogs');
+        return _rpcResult(<Object?>[
+          'not-a-log-object',
+        ]);
+      });
+      final reader = RpcOrderFillsReader(
+        rpcUrl: 'http://polygon.invalid',
+        client: client,
+      );
+
+      expect(
+        () => reader.orderFilled(
+          const OrderFillsQuery(fromBlock: 10, toBlock: 10),
+        ),
+        throwsA(
+          isA<FormatException>().having(
+            (error) => error.message,
+            'message',
+            contains('eth_getLogs[0] must be an object'),
+          ),
+        ),
+      );
+    });
+
     test('RPC reader skips fills outside mapped markets', () async {
       final methods = <String>[];
       final client = MockClient((request) async {
