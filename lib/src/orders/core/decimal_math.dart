@@ -44,16 +44,10 @@ BigInt decimalUnitsAtScale(String raw, int scale) {
 }
 
 /// Rounds [value] down to the nearest [tickSize] multiple using exact decimal
-/// arithmetic. [tickSize] must be non-zero.
+/// arithmetic. [tickSize] must be positive.
 String roundDecimalDownToTick(String value, String tickSize) {
   final v = decimalRatio(value);
-  final t = decimalRatio(tickSize);
-  if (t.numerator == BigInt.zero) {
-    throw const ValidationException(
-      code: ErrorCode.invalidValue,
-      message: 'tickSize must be non-zero',
-    );
-  }
+  final t = positiveTickRatio(tickSize);
 
   final quotient =
       (v.numerator * t.denominator) ~/ (v.denominator * t.numerator);
@@ -72,6 +66,18 @@ String formatFixedDecimal(BigInt units, int scale) {
   final whole = absUnits ~/ scaleFactor;
   final fractional = (absUnits % scaleFactor).toString().padLeft(scale, '0');
   return '${negative ? '-' : ''}$whole.$fractional';
+}
+
+DecimalRatio positiveTickRatio(String tickSize) {
+  final t = decimalRatio(tickSize);
+  if (t.numerator <= BigInt.zero) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'tickSize must be positive',
+      field: 'tickSize',
+    );
+  }
+  return t;
 }
 
 BigInt pow10(int exponent) {

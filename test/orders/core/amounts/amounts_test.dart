@@ -60,8 +60,9 @@ void main() {
       expect(roundToTick('0.58', '0.01'), '0.58');
     });
 
-    test('rejects zero tick', () {
+    test('rejects non-positive tick', () {
       expect(() => roundToTick('0.5', '0'), throwsValidationException);
+      expect(() => roundToTick('0.5', '-0.01'), throwsValidationException);
     });
   });
 
