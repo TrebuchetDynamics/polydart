@@ -54,11 +54,14 @@ void main() {
       expect(roundToTick('0.1234', '0.001'), '0.123');
     });
 
+    test('does not drop exact tick multiples due to floating point drift', () {
+      expect(roundToTick('0.29', '0.01'), '0.29');
+      expect(roundToTick('0.57', '0.01'), '0.57');
+      expect(roundToTick('0.58', '0.01'), '0.58');
+    });
+
     test('rejects zero tick', () {
-      expect(
-        () => roundToTick('0.5', '0'),
-        throwsValidationException,
-      );
+      expect(() => roundToTick('0.5', '0'), throwsValidationException);
     });
   });
 

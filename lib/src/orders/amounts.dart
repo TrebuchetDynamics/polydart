@@ -9,6 +9,7 @@ import 'dart:math' show Random;
 
 import '../errors/errors.dart';
 import '../types/enums.dart';
+import 'core/decimal_math.dart';
 import 'order_intent.dart';
 
 /// USDC has 6 decimals on Polygon. Polymarket order amounts are denominated
@@ -48,7 +49,7 @@ OrderAmounts _computeMarketAmounts(OrderIntent intent) {
     );
   }
 
-  final price = _decimalRatio(intent.price.raw);
+  final price = decimalRatio(intent.price.raw);
   if (price.numerator <= BigInt.zero) {
     throw const ValidationException(
       code: ErrorCode.invalidValue,
@@ -60,13 +61,13 @@ OrderAmounts _computeMarketAmounts(OrderIntent intent) {
   final tickRaw = intent.tickSize.tickSize.isNotEmpty
       ? intent.tickSize.tickSize
       : intent.tickSize.minimumTickSize;
-  final targetDecimals = _minInt(_decimalsOf(tickRaw) + 2, usdcDecimals);
-  final targetScale = _pow10(targetDecimals);
-  final fixedScale = _pow10(usdcDecimals);
+  final targetDecimals = minInt(decimalsOf(tickRaw) + 2, usdcDecimals);
+  final targetScale = pow10(targetDecimals);
+  final fixedScale = pow10(usdcDecimals);
 
   if (intent.side == Side.buy) {
-    final makerCents = _decimalUnitsAtScale(intent.amountUsdc!.raw, 2);
-    final makerAmount = makerCents * _pow10(usdcDecimals - 2);
+    final makerCents = decimalUnitsAtScale(intent.amountUsdc!.raw, 2);
+    final makerAmount = makerCents * pow10(usdcDecimals - 2);
     if (makerAmount <= BigInt.zero) {
       throw const ValidationException(
         code: ErrorCode.invalidValue,
@@ -77,15 +78,15 @@ OrderAmounts _computeMarketAmounts(OrderIntent intent) {
     final targetTaker =
         (makerAmount * price.denominator * targetScale) ~/
         (fixedScale * price.numerator);
-    final takerAmount = targetTaker * _pow10(usdcDecimals - targetDecimals);
+    final takerAmount = targetTaker * pow10(usdcDecimals - targetDecimals);
     return (makerAmount: makerAmount, takerAmount: takerAmount);
   }
 
-  final makerUnits = _decimalUnitsAtScale(
+  final makerUnits = decimalUnitsAtScale(
     intent.amountUsdc!.raw,
     targetDecimals,
   );
-  final makerAmount = makerUnits * _pow10(usdcDecimals - targetDecimals);
+  final makerAmount = makerUnits * pow10(usdcDecimals - targetDecimals);
   if (makerAmount <= BigInt.zero) {
     throw const ValidationException(
       code: ErrorCode.invalidValue,
@@ -94,9 +95,9 @@ OrderAmounts _computeMarketAmounts(OrderIntent intent) {
     );
   }
   final takerCents =
-      (makerAmount * price.numerator * _pow10(2)) ~/
+      (makerAmount * price.numerator * pow10(2)) ~/
       (fixedScale * price.denominator);
-  final takerAmount = takerCents * _pow10(usdcDecimals - 2);
+  final takerAmount = takerCents * pow10(usdcDecimals - 2);
   return (makerAmount: makerAmount, takerAmount: takerAmount);
 }
 
@@ -113,59 +114,8 @@ BigInt _toFixed(double value) {
 /// Rounds [value] down to the current [tickSize] multiple, matching
 /// polygolem's `RoundToTick` integer-quotient behavior. Both inputs are
 /// parsed as decimals.
-String roundToTick(String value, String tickSize) {
-  final v = double.parse(value);
-  final t = double.parse(tickSize);
-  if (t == 0) {
-    throw const ValidationException(
-      code: ErrorCode.invalidValue,
-      message: 'tickSize must be non-zero',
-    );
-  }
-  final rounded = (v / t).floor() * t;
-  return rounded.toStringAsFixed(_decimalsOf(tickSize));
-}
-
-int _decimalsOf(String s) {
-  final dot = s.indexOf('.');
-  if (dot < 0) return 0;
-  return s.substring(dot + 1).replaceFirst(RegExp(r'0+$'), '').length;
-}
-
-({BigInt numerator, BigInt denominator}) _decimalRatio(String raw) {
-  final value = raw.trim();
-  final negative = value.startsWith('-');
-  final body = negative ? value.substring(1) : value;
-  final dot = body.indexOf('.');
-  final whole = dot < 0 ? body : body.substring(0, dot);
-  final fractional = dot < 0 ? '' : body.substring(dot + 1);
-  final digits = whole + fractional;
-  final numerator = BigInt.parse(digits.isEmpty ? '0' : digits);
-  final signedNumerator = negative ? -numerator : numerator;
-  return (numerator: signedNumerator, denominator: _pow10(fractional.length));
-}
-
-BigInt _decimalUnitsAtScale(String raw, int scale) {
-  final ratio = _decimalRatio(raw);
-  if (ratio.numerator < BigInt.zero) {
-    throw const ValidationException(
-      code: ErrorCode.invalidValue,
-      message: 'amount must be non-negative',
-      field: 'amount',
-    );
-  }
-  return (ratio.numerator * _pow10(scale)) ~/ ratio.denominator;
-}
-
-BigInt _pow10(int exponent) {
-  var out = BigInt.one;
-  for (var i = 0; i < exponent; i++) {
-    out *= BigInt.from(10);
-  }
-  return out;
-}
-
-int _minInt(int a, int b) => a < b ? a : b;
+String roundToTick(String value, String tickSize) =>
+    roundDecimalDownToTick(value, tickSize);
 
 /// Throws [ValidationException] when [price] is outside `[tickSize, 1 - tickSize]`.
 void validatePriceAgainstTick(String price, String tickSize) {
