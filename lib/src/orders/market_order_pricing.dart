@@ -8,6 +8,7 @@ import 'package:meta/meta.dart';
 
 import '../errors/errors.dart';
 import '../types/clob.dart';
+import '../types/decimal.dart';
 import '../types/enums.dart';
 
 @immutable
@@ -56,6 +57,8 @@ MarketOrderPricePlan selectMarketOrderPrice({
   required double amount,
   required OrderType orderType,
 }) {
+  validateMarketOrderAmount(amount);
+
   if (levels.isEmpty) {
     throw const ValidationException(
       code: ErrorCode.invalidValue,
@@ -113,6 +116,39 @@ List<MarketOrderFillStep> marketOrderFillSteps({
     );
   }
   return steps;
+}
+
+double parsePositiveMarketOrderAmount(String amount) {
+  final decimal = Decimal.tryParse(amount);
+  if (decimal == null) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'amount must be a decimal',
+      field: 'amount',
+    );
+  }
+  final value = decimal.toDouble();
+  if (!value.isFinite) {
+    validateMarketOrderAmount(value);
+  }
+  if (value <= 0) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'amount must be positive',
+      field: 'amount',
+    );
+  }
+  return value;
+}
+
+void validateMarketOrderAmount(double amount) {
+  if (!amount.isFinite || amount <= 0) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'amount must be finite and positive',
+      field: 'amount',
+    );
+  }
 }
 
 double _parsePositiveLevelValue(String raw, String field) {

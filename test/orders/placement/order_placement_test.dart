@@ -476,6 +476,53 @@ void main() {
         ),
       );
     });
+
+    test(
+      'rejects non-positive market-order amounts as validation failures',
+      () {
+        expect(
+          () => selectMarketOrderPrice(
+            levels: const <OrderBookLevel>[
+              OrderBookLevel(price: '0.10', size: '5'),
+            ],
+            side: Side.buy,
+            amount: 0,
+            orderType: OrderType.fok,
+          ),
+          throwsA(
+            isA<ValidationException>()
+                .having((error) => error.field, 'field', 'amount')
+                .having(
+                  (error) => error.message,
+                  'message',
+                  'amount must be finite and positive',
+                ),
+          ),
+        );
+      },
+    );
+
+    test('rejects non-finite market-order amounts as validation failures', () {
+      expect(
+        () => selectMarketOrderPrice(
+          levels: const <OrderBookLevel>[
+            OrderBookLevel(price: '0.10', size: '5'),
+          ],
+          side: Side.buy,
+          amount: double.infinity,
+          orderType: OrderType.gtc,
+        ),
+        throwsA(
+          isA<ValidationException>()
+              .having((error) => error.field, 'field', 'amount')
+              .having(
+                (error) => error.message,
+                'message',
+                'amount must be finite and positive',
+              ),
+        ),
+      );
+    });
   });
 
   group('market order price discovery', () {
