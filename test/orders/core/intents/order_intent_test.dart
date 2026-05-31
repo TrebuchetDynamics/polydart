@@ -1,4 +1,5 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
+import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/orders/order_intent.dart';
 import 'package:polydart/src/types/clob.dart';
 import 'package:polydart/src/types/decimal.dart';
@@ -45,21 +46,77 @@ void main() {
       );
     });
 
-    test('rejects empty tick_size', () {
-      expect(
-        () => OrderIntent(
-          tokenId: '12345',
-          side: Side.buy,
-          price: Decimal.parse('0.55'),
-          size: Decimal.parse('10'),
-          tickSize: const TickSize(
-            minimumTickSize: '',
-            minimumOrderSize: '1',
-            tickSize: '',
+    test('rejects non-positive numeric order fields', () {
+      void expectFieldRejected({
+        required Decimal price,
+        required Decimal size,
+        Decimal? amountUsdc,
+        required String field,
+      }) {
+        expect(
+          () => OrderIntent(
+            tokenId: '12345',
+            side: Side.buy,
+            price: price,
+            size: size,
+            amountUsdc: amountUsdc,
+            tickSize: validTickSize,
+          ).validate(),
+          throwsA(
+            isA<ValidationException>()
+                .having((error) => error.field, 'field', field)
+                .having(
+                  (error) => error.message,
+                  'message',
+                  '$field must be positive',
+                ),
           ),
-        ).validate(),
-        throwsValidationException,
+        );
+      }
+
+      expectFieldRejected(
+        price: Decimal.parse('-0.55'),
+        size: Decimal.parse('10'),
+        field: 'price',
       );
+      expectFieldRejected(
+        price: Decimal.parse('0.55'),
+        size: Decimal.parse('-10'),
+        field: 'size',
+      );
+      expectFieldRejected(
+        price: Decimal.zero,
+        size: Decimal.zero,
+        amountUsdc: Decimal.parse('-25'),
+        field: 'amount_usdc',
+      );
+    });
+
+    test('rejects invalid tick_size values', () {
+      for (final tick in <String>['', '0', '-0.01']) {
+        expect(
+          () => OrderIntent(
+            tokenId: '12345',
+            side: Side.buy,
+            price: Decimal.parse('0.55'),
+            size: Decimal.parse('10'),
+            tickSize: TickSize(
+              minimumTickSize: tick,
+              minimumOrderSize: '1',
+              tickSize: tick,
+            ),
+          ).validate(),
+          throwsA(
+            isA<ValidationException>()
+                .having((error) => error.field, 'field', 'tick_size')
+                .having(
+                  (error) => error.message,
+                  'message',
+                  'valid tick_size required',
+                ),
+          ),
+        );
+      }
     });
 
     test('rejects negative fee_rate_bps', () {

@@ -88,9 +88,12 @@ final class OrderIntent {
         field: 'token_id',
       );
     }
-    final hasPrice = !price.isZero;
-    final hasSize = !size.isZero;
-    final hasAmountUsdc = amountUsdc != null && !amountUsdc!.isZero;
+    final hasPrice = _hasNonZeroDecimal(price);
+    final hasSize = _hasNonZeroDecimal(size);
+    final hasAmountUsdc = amountUsdc != null && _hasNonZeroDecimal(amountUsdc!);
+    if (hasPrice) _validatePositiveDecimal(price, 'price');
+    if (hasSize) _validatePositiveDecimal(size, 'size');
+    if (hasAmountUsdc) _validatePositiveDecimal(amountUsdc!, 'amount_usdc');
     if (!hasPrice && !hasAmountUsdc) {
       throw const ValidationException(
         code: ErrorCode.missingField,
@@ -103,14 +106,7 @@ final class OrderIntent {
         message: 'size or amount_usdc required',
       );
     }
-    final tick = tickSize.tickSize;
-    if (tick.isEmpty || tick == '0' || double.tryParse(tick) == 0) {
-      throw const ValidationException(
-        code: ErrorCode.invalidValue,
-        message: 'valid tick_size required',
-        field: 'tick_size',
-      );
-    }
+    _validatePositiveTickSize(tickSize.tickSize);
     if (feeRateBps < 0) {
       throw const ValidationException(
         code: ErrorCode.invalidValue,
@@ -244,6 +240,30 @@ final class OrderResponse {
   final String? takingAmount;
   final List<String> transactionHashes;
   final List<String> tradeIds;
+}
+
+bool _hasNonZeroDecimal(Decimal value) => !value.isZero;
+
+void _validatePositiveDecimal(Decimal value, String field) {
+  final numeric = value.toDouble();
+  if (!numeric.isFinite || numeric <= 0) {
+    throw ValidationException(
+      code: ErrorCode.invalidValue,
+      message: '$field must be positive',
+      field: field,
+    );
+  }
+}
+
+void _validatePositiveTickSize(String tick) {
+  final value = double.tryParse(tick);
+  if (value == null || !value.isFinite || value <= 0) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'valid tick_size required',
+      field: 'tick_size',
+    );
+  }
 }
 
 List<String> _stringList(Object? raw) {
