@@ -81,6 +81,10 @@ void main() {
       expect(parseClobTokenIds('  ["t1","t2"]  '), ['t1', 't2']);
     });
 
+    test('trims token values and drops whitespace-only tokens', () {
+      expect(parseClobTokenIds('[" t1 "," ","t2"]'), ['t1', 't2']);
+    });
+
     test('legacy unquoted-style fallback', () {
       // Manual parser kicks in only for non-JSON shapes.
       expect(parseClobTokenIds('"t1","t2"'), ['t1', 't2']);

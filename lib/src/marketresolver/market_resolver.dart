@@ -577,8 +577,8 @@ List<String> parseClobTokenIds(String raw) {
     final decoded = jsonDecode(s);
     if (decoded is List) {
       return decoded
-          .where((e) => e != null && e.toString().isNotEmpty)
-          .map((e) => e.toString())
+          .map(_trimmedTokenId)
+          .where((tokenId) => tokenId.isNotEmpty)
           .toList(growable: false);
     }
   } on FormatException {
@@ -593,7 +593,8 @@ List<String> parseClobTokenIds(String raw) {
     if (c == '"') {
       inQuote = !inQuote;
       if (!inQuote) {
-        if (buffer.isNotEmpty) out.add(buffer.toString());
+        final tokenId = _trimmedTokenId(buffer.toString());
+        if (tokenId.isNotEmpty) out.add(tokenId);
         buffer.clear();
       }
     } else if (inQuote) {
@@ -602,3 +603,5 @@ List<String> parseClobTokenIds(String raw) {
   }
   return out;
 }
+
+String _trimmedTokenId(Object? value) => value?.toString().trim() ?? '';
