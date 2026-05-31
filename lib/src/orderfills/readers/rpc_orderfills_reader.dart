@@ -300,13 +300,8 @@ final class _MarketIndex {
   _MarketIndex(List<OrderFillsMarket> markets)
     : byToken = <String, OrderFillsMarket>{} {
     for (final market in markets) {
-      final normalized = OrderFillsMarket(
-        marketId: market.marketId.trim(),
-        conditionId: market.conditionId.trim(),
-        yesTokenId: market.yesTokenId,
-        noTokenId: market.noTokenId,
-      );
-      for (final tokenId in <String>[market.yesTokenId, market.noTokenId]) {
+      final normalized = market.normalizedIdentity();
+      for (final tokenId in market.tokenIds) {
         final normalizedToken = _normalizeTokenId(tokenId);
         if (normalizedToken.isEmpty) continue;
         final previous = byToken[normalizedToken];
