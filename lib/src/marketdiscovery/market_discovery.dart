@@ -12,6 +12,7 @@ import '../gamma/gamma_params.dart';
 import '../marketresolver/market_resolver.dart';
 import '../types/clob.dart';
 import '../types/market.dart';
+import 'market_filter.dart';
 
 @immutable
 final class EnrichedMarket {
@@ -103,7 +104,7 @@ final class MarketDiscovery {
     );
     final out = <EnrichedMarket>[];
     for (final m in markets) {
-      if (!m.active || !m.enableOrderBook) continue;
+      if (!shouldEnrichMarket(m)) continue;
       out.add(await enrichMarket(m));
     }
     return out;
@@ -124,7 +125,7 @@ final class MarketDiscovery {
       final fullEvent = await _safe(() => _gamma.eventBySlug(evt.slug));
       if (fullEvent == null) continue;
       for (final m in fullEvent.markets) {
-        if (!m.active || !m.enableOrderBook) continue;
+        if (!shouldEnrichMarket(m)) continue;
         out.add(await enrichMarket(m));
       }
     }

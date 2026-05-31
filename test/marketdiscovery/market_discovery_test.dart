@@ -6,6 +6,7 @@ import 'package:http/testing.dart';
 import 'package:polydart/src/clob/clob_client.dart';
 import 'package:polydart/src/gamma/gamma_client.dart';
 import 'package:polydart/src/marketdiscovery/market_discovery.dart';
+import 'package:polydart/src/marketdiscovery/market_filter.dart';
 import 'package:polydart/src/transport/http_transport.dart';
 import 'package:polydart/src/transport/transport_config.dart';
 import 'package:polydart/src/types/market.dart';
@@ -33,7 +34,49 @@ ClobClient _clob(Future<http.Response> Function(http.BaseRequest) handler) =>
       ),
     );
 
+Map<String, dynamic> _marketJson({
+  String id = 'm1',
+  bool active = true,
+  bool closed = false,
+  bool archived = false,
+  bool enableOrderBook = true,
+  String clobTokenIds = '["t1"]',
+}) => <String, dynamic>{
+  'id': id,
+  'question': 'q',
+  'slug': 's',
+  'clobTokenIds': clobTokenIds,
+  'active': active,
+  'closed': closed,
+  'archived': archived,
+  'enableOrderBook': enableOrderBook,
+};
+
 void main() {
+  group('shouldEnrichMarket', () {
+    test('requires active open unarchived order-book markets', () {
+      expect(shouldEnrichMarket(Market.fromJson(_marketJson())), isTrue);
+      expect(
+        shouldEnrichMarket(Market.fromJson(_marketJson(active: false))),
+        isFalse,
+      );
+      expect(
+        shouldEnrichMarket(Market.fromJson(_marketJson(closed: true))),
+        isFalse,
+      );
+      expect(
+        shouldEnrichMarket(Market.fromJson(_marketJson(archived: true))),
+        isFalse,
+      );
+      expect(
+        shouldEnrichMarket(
+          Market.fromJson(_marketJson(enableOrderBook: false)),
+        ),
+        isFalse,
+      );
+    });
+  });
+
   test('enrichMarket fans out CLOB reads in parallel', () async {
     final hit = <String>{};
     final clob = _clob((req) async {
@@ -92,16 +135,9 @@ void main() {
 
     final discovery = MarketDiscovery(gamma: GammaClient(), clob: clob);
 
-    final market = Market.fromJson(<String, dynamic>{
-      'id': '1',
-      'question': 'q',
-      'slug': 's',
-      'clobTokenIds': '["t1","t2"]',
-      'active': true,
-      'closed': false,
-      'archived': false,
-      'enableOrderBook': true,
-    });
+    final market = Market.fromJson(
+      _marketJson(id: '1', clobTokenIds: '["t1","t2"]'),
+    );
 
     final enriched = await discovery.enrichMarket(market);
     expect(enriched.tickSize?.tickSize, '0.01');
@@ -154,6 +190,81 @@ void main() {
     expect(enriched.negRisk, isNull);
     expect(enriched.feeRateBps, isNull);
     expect(enriched.market.id, '1');
+  });
+
+  test('searchAndEnrich skips closed markets before CLOB reads', () async {
+    var clobHits = 0;
+    final gamma = _gamma((req) async {
+      if (req.url.path == '/public-search') {
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'events': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'id': 'e1',
+                'ticker': 'BTC',
+                'slug': 'btc',
+                'title': '',
+                'description': '',
+                'image': '',
+                'icon': '',
+                'active': true,
+                'closed': false,
+                'archived': false,
+                'featured': false,
+                'liquidity': 0,
+                'volume': 0,
+                'tags': <Object>[],
+                'markets': <Map<String, dynamic>>[],
+              },
+            ],
+            'tags': <Object>[],
+            'profiles': <Object>[],
+            'pagination': <String, dynamic>{
+              'hasMore': false,
+              'totalResults': 1,
+            },
+          }),
+          200,
+        );
+      }
+      if (req.url.path == '/events') {
+        return http.Response(
+          jsonEncode(<Map<String, dynamic>>[
+            <String, dynamic>{
+              'id': 'e1',
+              'ticker': 'BTC',
+              'slug': 'btc',
+              'title': '',
+              'description': '',
+              'image': '',
+              'icon': '',
+              'active': true,
+              'closed': false,
+              'archived': false,
+              'featured': false,
+              'liquidity': 0,
+              'volume': 0,
+              'tags': <Object>[],
+              'markets': <Map<String, dynamic>>[
+                _marketJson(id: 'closed', closed: true),
+              ],
+            },
+          ]),
+          200,
+        );
+      }
+      return http.Response('not found', 404);
+    });
+
+    final clob = _clob((req) async {
+      clobHits++;
+      return http.Response('unexpected CLOB hit', 500);
+    });
+
+    final discovery = MarketDiscovery(gamma: gamma, clob: clob);
+    final out = await discovery.searchAndEnrich('btc');
+    expect(out, isEmpty);
+    expect(clobHits, 0);
   });
 
   test(
