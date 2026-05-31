@@ -10,6 +10,7 @@ import 'dart:convert';
 
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+import '../config/reconnect_policy.dart';
 import '../config/stream_config.dart';
 import '../dedup/dedup.dart' show splitArray;
 import '../models/stream_messages.dart';
@@ -243,18 +244,9 @@ final class MarketClient {
     if (_closed || !_config.reconnect) return;
     if (_reconnects >= _config.reconnectMax) return;
     _reconnects += 1;
-    final base = _config.reconnectDelay.inMilliseconds;
-    final cap = _config.reconnectMaxDelay.inMilliseconds;
-    var delay = base;
-    for (var i = 0; i < _reconnects; i++) {
-      delay *= 2;
-      if (delay > cap) {
-        delay = cap;
-        break;
-      }
-    }
+    final delay = reconnectDelayForAttempt(_config, _reconnects);
     _reconnectTimer?.cancel();
-    _reconnectTimer = Timer(Duration(milliseconds: delay), () async {
+    _reconnectTimer = Timer(delay, () async {
       _reconnectTimer = null;
       if (_closed) return;
       try {
