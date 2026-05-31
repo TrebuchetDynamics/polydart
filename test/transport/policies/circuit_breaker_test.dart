@@ -2,6 +2,8 @@ import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/transport/circuit_breaker.dart';
 import 'package:test/test.dart';
 
+import '../shared/transport_test_harness.dart';
+
 void main() {
   group('state transitions', () {
     test('opens after enough failures', () {
@@ -35,40 +37,40 @@ void main() {
     });
 
     test('open → half-open after reset timeout', () {
-      var clock = DateTime(2026, 1, 1);
+      final clock = FakeClock();
       final cb = CircuitBreaker(
         config: const CircuitBreakerConfig(
           maxFailures: 1,
           resetTimeout: Duration(seconds: 60),
           halfOpenMaxRequests: 2,
         ),
-        now: () => clock,
+        now: clock.call,
       );
       cb.recordResult(StateError('x'));
       expect(cb.state, CircuitState.open);
 
       // not yet
-      clock = clock.add(const Duration(seconds: 30));
+      clock.advance(const Duration(seconds: 30));
       expect(() => cb.beforeRequest(), throwsA(isA<TransportException>()));
 
       // reset timeout elapsed
-      clock = clock.add(const Duration(seconds: 31));
+      clock.advance(const Duration(seconds: 31));
       cb.beforeRequest(); // first half-open probe allowed
       expect(cb.state, CircuitState.halfOpen);
     });
 
     test('half-open → closed after enough successes', () {
-      var clock = DateTime(2026, 1, 1);
+      final clock = FakeClock();
       final cb = CircuitBreaker(
         config: const CircuitBreakerConfig(
           maxFailures: 1,
           resetTimeout: Duration(seconds: 60),
           halfOpenMaxRequests: 2,
         ),
-        now: () => clock,
+        now: clock.call,
       );
       cb.recordResult(StateError('x'));
-      clock = clock.add(const Duration(seconds: 61));
+      clock.advance(const Duration(seconds: 61));
 
       cb.beforeRequest();
       cb.recordResult(null);
@@ -79,33 +81,33 @@ void main() {
     });
 
     test('half-open → open on a single failure', () {
-      var clock = DateTime(2026, 1, 1);
+      final clock = FakeClock();
       final cb = CircuitBreaker(
         config: const CircuitBreakerConfig(
           maxFailures: 1,
           resetTimeout: Duration(seconds: 60),
         ),
-        now: () => clock,
+        now: clock.call,
       );
       cb.recordResult(StateError('x'));
-      clock = clock.add(const Duration(seconds: 61));
+      clock.advance(const Duration(seconds: 61));
       cb.beforeRequest();
       cb.recordResult(StateError('still bad'));
       expect(cb.state, CircuitState.open);
     });
 
     test('half-open caps probe requests', () {
-      var clock = DateTime(2026, 1, 1);
+      final clock = FakeClock();
       final cb = CircuitBreaker(
         config: const CircuitBreakerConfig(
           maxFailures: 1,
           resetTimeout: Duration(seconds: 60),
           halfOpenMaxRequests: 2,
         ),
-        now: () => clock,
+        now: clock.call,
       );
       cb.recordResult(StateError('x'));
-      clock = clock.add(const Duration(seconds: 61));
+      clock.advance(const Duration(seconds: 61));
       cb.beforeRequest();
       cb.beforeRequest();
       expect(

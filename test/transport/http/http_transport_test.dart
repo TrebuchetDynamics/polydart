@@ -10,6 +10,8 @@ import 'package:polydart/src/transport/rate_limit.dart';
 import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
 
+import '../shared/transport_test_harness.dart';
+
 void main() {
   const config = TransportConfig(
     baseUrl: 'https://example.test',
@@ -272,17 +274,17 @@ void main() {
     });
 
     test('rate limiter gates outbound calls', () async {
-      var clock = DateTime(2026, 1, 1);
-      final rl = RateLimiter(requestsPerSecond: 1000, now: () => clock);
+      final clock = FakeClock();
+      final rl = RateLimiter(requestsPerSecond: 1000, now: clock.call);
       // pre-drain
-      while (rl.tryAcquire()) {}
+      drainRateLimiter(rl);
       final transport = HttpTransport(
         config: config,
         rateLimiter: rl,
         inner: MockClient((req) async => http.Response('{"ok": true}', 200)),
       );
       // Advance the clock to refill before each call.
-      clock = clock.add(const Duration(seconds: 1));
+      clock.advance(const Duration(seconds: 1));
       await transport.getJson('/x');
     });
 
