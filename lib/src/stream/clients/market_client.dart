@@ -15,7 +15,7 @@ import '../dedup/dedup.dart' show splitArray;
 import '../models/stream_messages.dart';
 import '../shared/json_frame.dart';
 import '../transport/contracts/channel_factory.dart';
-import '../transport/socket_dispatch.dart' as platform;
+import '../transport/contracts/default_channel_factory.dart';
 
 /// Factory used to open a [WebSocketChannel] for a given URI. Tests inject a
 /// fake; the default opens a platform-appropriate channel
@@ -32,7 +32,9 @@ final class MarketClient {
   }) : _config = config,
        _channelFactory =
            channelFactory ??
-           ((Uri url) => platform.defaultOpenChannel(url, config.pingInterval));
+           defaultStreamWebSocketChannelFactory(
+             pingInterval: config.pingInterval,
+           );
 
   final StreamConfig _config;
   final WebSocketChannelFactory _channelFactory;

@@ -14,7 +14,7 @@ import '../config/stream_config.dart';
 import '../models/stream_messages.dart';
 import '../shared/json_frame.dart';
 import '../transport/contracts/channel_factory.dart';
-import '../transport/socket_dispatch.dart' as platform;
+import '../transport/contracts/default_channel_factory.dart';
 
 const String defaultUserStreamUrl =
     'wss://ws-subscriptions-clob.polymarket.com/ws/user';
@@ -31,7 +31,9 @@ final class UserClient {
        _credentials = credentials,
        _channelFactory =
            channelFactory ??
-           ((Uri url) => platform.defaultOpenChannel(url, config.pingInterval));
+           defaultStreamWebSocketChannelFactory(
+             pingInterval: config.pingInterval,
+           );
 
   UserClient.defaults({
     required ApiKey credentials,
