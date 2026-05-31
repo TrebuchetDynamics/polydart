@@ -50,6 +50,23 @@ void main() {
       expect(dedup.dupCount, 0);
     });
 
+    test('size cap evicts oldest live key when no keys have expired', () {
+      final fixed = DateTime.fromMillisecondsSinceEpoch(1700000000000);
+      final dedup = Deduplicator(
+        size: 1,
+        ttl: const Duration(minutes: 5),
+        clock: () => fixed,
+      );
+      final first = _enc(<String, dynamic>{'event_type': 'book', 'hash': 'h1'});
+      final second = _enc(<String, dynamic>{'event_type': 'book', 'hash': 'h2'});
+
+      expect(dedup.process(first), isTrue);
+      expect(dedup.process(second), isTrue);
+      expect(dedup.process(first), isTrue);
+      expect(dedup.outCount, 3);
+      expect(dedup.dupCount, 0);
+    });
+
     test('empty bytes are counted as new (no key)', () {
       final dedup = Deduplicator(size: 16, ttl: const Duration(seconds: 1));
       expect(dedup.process(const <int>[]), isTrue);

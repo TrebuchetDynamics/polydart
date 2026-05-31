@@ -65,10 +65,7 @@ final class Deduplicator {
       return false;
     }
 
-    _seen[key] = nowMs;
-    if (_seen.length > _size) {
-      _evict(nowMs);
-    }
+    _rememberKey(key, nowMs);
     _out += 1;
     return true;
   }
@@ -81,8 +78,27 @@ final class Deduplicator {
     _out = 0;
   }
 
-  void _evict(int nowMs) {
+  void _rememberKey(String key, int nowMs) {
+    // Reinsert so a key that was seen after TTL expiry becomes newest in the
+    // insertion-ordered map before size-based eviction runs.
+    _seen.remove(key);
+    _seen[key] = nowMs;
+    _evictExpired(nowMs);
+    _evictOverflow();
+  }
+
+  void _evictExpired(int nowMs) {
     _seen.removeWhere((_, ts) => (nowMs - ts) >= _ttlMs);
+  }
+
+  void _evictOverflow() {
+    if (_size <= 0) {
+      _seen.clear();
+      return;
+    }
+    while (_seen.length > _size) {
+      _seen.remove(_seen.keys.first);
+    }
   }
 }
 
