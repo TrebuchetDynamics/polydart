@@ -5,34 +5,12 @@
 /// catch wire-shape regressions without re-asserting every JSON field.
 library;
 
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:polydart/src/gamma/gamma_client.dart';
 import 'package:polydart/src/gamma/gamma_params.dart';
 import 'package:polydart/src/types/market.dart';
-import 'package:polydart/src/transport/http_transport.dart';
-import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
 
-GammaClient _client(Future<http.Response> Function(http.BaseRequest) handler) {
-  return GammaClient(
-    transport: HttpTransport(
-      config: const TransportConfig(
-        baseUrl: GammaClient.defaultBaseUrl,
-        retryMax: 0,
-      ),
-      inner: MockClient(handler),
-    ),
-  );
-}
-
-http.Response _jsonList(List<Map<String, dynamic>> rows) =>
-    http.Response(jsonEncode(rows), 200);
-
-http.Response _jsonObj(Map<String, dynamic> obj) =>
-    http.Response(jsonEncode(obj), 200);
+import '../support/gamma_test_client.dart';
 
 Event _event({
   required String id,
@@ -70,7 +48,7 @@ void main() {
     test(
       'activeMarketsAll collects pages and dedupes by condition id',
       () async {
-        final client = _client((req) async {
+        final client = gammaTestClient((req) async {
           expect(req.url.path, '/markets');
           expect(req.url.queryParameters['active'], 'true');
           expect(req.url.queryParameters['closed'], 'false');
@@ -106,7 +84,7 @@ void main() {
             ],
             _ => <Map<String, dynamic>>[],
           };
-          return _jsonList(rows);
+          return gammaJsonList(rows);
         });
 
         final markets = await client.activeMarketsAll();
@@ -200,9 +178,9 @@ void main() {
 
     test('GETs /markets with active=true&closed=false', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonList([
+        return gammaJsonList([
           <String, dynamic>{'id': '1', 'slug': 'a', 'active': true},
         ]);
       });
@@ -216,7 +194,7 @@ void main() {
 
   group('events / eventById / eventBySlug', () {
     test('activeEventsAll collects pages and dedupes by slug', () async {
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         expect(req.url.path, '/events');
         expect(req.url.queryParameters['closed'], 'false');
         expect(req.url.queryParameters['limit'], '100');
@@ -251,7 +229,7 @@ void main() {
           ],
           _ => <Map<String, dynamic>>[],
         };
-        return _jsonList(rows);
+        return gammaJsonList(rows);
       });
 
       final events = await client.activeEventsAll();
@@ -309,9 +287,9 @@ void main() {
 
     test('events GETs /events with limit + slug repeated', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonList([
+        return gammaJsonList([
           <String, dynamic>{'id': 'e1', 'slug': 'btc'},
         ]);
       });
@@ -327,9 +305,9 @@ void main() {
 
     test('eventById GETs /events/{id}', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonObj(<String, dynamic>{'id': '7', 'slug': 'x'});
+        return gammaJsonObj(<String, dynamic>{'id': '7', 'slug': 'x'});
       });
       final e = await client.eventById('7');
       expect(captured!.path, '/events/7');
@@ -338,9 +316,9 @@ void main() {
 
     test('eventBySlug GETs /events?slug=...&limit=1', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonList([
+        return gammaJsonList([
           <String, dynamic>{'id': '9', 'slug': 'btc-100k'},
         ]);
       });
@@ -352,8 +330,8 @@ void main() {
     });
 
     test('eventBySlug returns null on empty list', () async {
-      final client = _client(
-        (req) async => _jsonList(<Map<String, dynamic>>[]),
+      final client = gammaTestClient(
+        (req) async => gammaJsonList(<Map<String, dynamic>>[]),
       );
       expect(await client.eventBySlug('does-not-exist'), isNull);
     });
@@ -361,7 +339,7 @@ void main() {
 
   group('series / seriesById', () {
     test('activeSeriesAll collects pages and dedupes by slug', () async {
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         expect(req.url.path, '/series');
         expect(req.url.queryParameters['closed'], 'false');
         expect(req.url.queryParameters['limit'], '100');
@@ -396,7 +374,7 @@ void main() {
           ],
           _ => <Map<String, dynamic>>[],
         };
-        return _jsonList(rows);
+        return gammaJsonList(rows);
       });
 
       final series = await client.activeSeriesAll();
@@ -407,9 +385,9 @@ void main() {
 
     test('series GETs /series with order/ascending', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonList([
+        return gammaJsonList([
           <String, dynamic>{'id': 's1', 'slug': 'masters'},
         ]);
       });
@@ -424,9 +402,9 @@ void main() {
 
     test('seriesById GETs /series/{id}', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonObj(<String, dynamic>{'id': '42', 'slug': 'masters'});
+        return gammaJsonObj(<String, dynamic>{'id': '42', 'slug': 'masters'});
       });
       final s = await client.seriesById('42');
       expect(captured!.path, '/series/42');
@@ -436,7 +414,7 @@ void main() {
 
   group('tags / tagById / tagBySlug', () {
     test('tagsAll collects pages and dedupes by slug', () async {
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         expect(req.url.path, '/tags');
         expect(req.url.queryParameters['limit'], '100');
         final offset =
@@ -464,7 +442,7 @@ void main() {
           ],
           _ => <Map<String, dynamic>>[],
         };
-        return _jsonList(rows);
+        return gammaJsonList(rows);
       });
 
       final tags = await client.tagsAll();
@@ -475,9 +453,9 @@ void main() {
 
     test('tags GETs /tags', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonList([
+        return gammaJsonList([
           <String, dynamic>{'id': 't1', 'label': 'Crypto', 'slug': 'crypto'},
         ]);
       });
@@ -489,9 +467,9 @@ void main() {
 
     test('tagById GETs /tags/{id}', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonObj(<String, dynamic>{
+        return gammaJsonObj(<String, dynamic>{
           'id': '1',
           'label': 'Crypto',
           'slug': 'crypto',
@@ -504,9 +482,9 @@ void main() {
 
     test('tagBySlug GETs /tags/{slug}', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonObj(<String, dynamic>{
+        return gammaJsonObj(<String, dynamic>{
           'id': '2',
           'label': 'Sports',
           'slug': 'sports',
@@ -521,9 +499,9 @@ void main() {
   group('relatedTagsById / relatedTagsBySlug', () {
     test('relatedTagsById GETs /tags/{id}/related', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonList([
+        return gammaJsonList([
           <String, dynamic>{
             'id': 'rel-1',
             'tagID': 1,
@@ -540,9 +518,9 @@ void main() {
 
     test('relatedTagsBySlug GETs /tags/{slug}/related', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonList(<Map<String, dynamic>>[]);
+        return gammaJsonList(<Map<String, dynamic>>[]);
       });
       final out = await client.relatedTagsBySlug('crypto');
       expect(captured!.path, '/tags/crypto/related');
@@ -553,9 +531,9 @@ void main() {
   group('teams', () {
     test('teams GETs /teams with repeated league/name', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonList([
+        return gammaJsonList([
           <String, dynamic>{
             'id': 1,
             'name': 'Lakers',
@@ -579,9 +557,9 @@ void main() {
       'comments GETs /comments with parent_entity_id + parent_entity_type',
       () async {
         Uri? captured;
-        final client = _client((req) async {
+        final client = gammaTestClient((req) async {
           captured = req.url;
-          return _jsonList([
+          return gammaJsonList([
             <String, dynamic>{
               'id': 'c1',
               'body': 'gm',
@@ -608,8 +586,8 @@ void main() {
     );
 
     test('comments decodes current Gamma profile shape', () async {
-      final client = _client((req) async {
-        return _jsonList([
+      final client = gammaTestClient((req) async {
+        return gammaJsonList([
           <String, dynamic>{
             'id': '2933135',
             'body': 'Why so many people moving from this market?',
@@ -643,9 +621,9 @@ void main() {
 
     test('commentById GETs /comments/{id}', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonObj(<String, dynamic>{
+        return gammaJsonObj(<String, dynamic>{
           'id': '42',
           'body': 'hi',
           'user': <String, dynamic>{
@@ -662,9 +640,9 @@ void main() {
 
     test('commentsByUser GETs /comments?user_address=...&limit=...', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonList(<Map<String, dynamic>>[]);
+        return gammaJsonList(<Map<String, dynamic>>[]);
       });
       await client.commentsByUser('0xfeed', limit: 10);
       expect(captured!.path, '/comments');
@@ -676,9 +654,9 @@ void main() {
   group('sports', () {
     test('sportsMetadata GETs /sports-metadata', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonList([
+        return gammaJsonList([
           <String, dynamic>{
             'sport': 'NBA',
             'image': 'https://x/nba.png',
@@ -696,9 +674,9 @@ void main() {
 
     test('sportsMarketTypes GETs /sports-market-types', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonList([
+        return gammaJsonList([
           <String, dynamic>{'id': 'ml', 'name': 'Moneyline', 'slug': 'ml'},
         ]);
       });
@@ -711,9 +689,9 @@ void main() {
   group('marketByToken', () {
     test('GETs /markets/token/{tokenId} and decodes wrapper', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonObj(<String, dynamic>{
+        return gammaJsonObj(<String, dynamic>{
           'market': <String, dynamic>{'id': 'm1', 'slug': 's1'},
           'token_id': '0xToken',
           'outcome': 'YES',
@@ -730,9 +708,9 @@ void main() {
   group('publicProfile', () {
     test('GETs /profiles/{addr}', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonObj(<String, dynamic>{
+        return gammaJsonObj(<String, dynamic>{
           'id': 'p1',
           'name': 'pix',
           'proxyWallet': '0xproxy',
@@ -748,9 +726,9 @@ void main() {
   group('eventsKeyset / marketsKeyset', () {
     test('eventsKeyset returns (data, nextCursor) record', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonObj(<String, dynamic>{
+        return gammaJsonObj(<String, dynamic>{
           'data': <Map<String, dynamic>>[
             <String, dynamic>{'id': 'e1', 'slug': 'a'},
             <String, dynamic>{'id': 'e2', 'slug': 'b'},
@@ -778,9 +756,9 @@ void main() {
 
     test('marketsKeyset returns (data, nextCursor) record', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return _jsonObj(<String, dynamic>{
+        return gammaJsonObj(<String, dynamic>{
           'data': <Map<String, dynamic>>[
             <String, dynamic>{'id': 'm1', 'slug': 'a'},
           ],

@@ -1,33 +1,16 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
-import 'package:polydart/src/gamma/gamma_client.dart';
 import 'package:polydart/src/gamma/gamma_params.dart';
-import 'package:polydart/src/transport/http_transport.dart';
-import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
 
-GammaClient _client(Future<http.Response> Function(http.BaseRequest) handler) {
-  return GammaClient(
-    transport: HttpTransport(
-      config: const TransportConfig(
-        baseUrl: GammaClient.defaultBaseUrl,
-        retryMax: 0,
-      ),
-      inner: MockClient(handler),
-    ),
-  );
-}
+import '../support/gamma_test_client.dart';
 
 void main() {
   group('markets', () {
     test('decodes a list response', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        final body = jsonEncode([
+        return gammaJsonList([
           <String, dynamic>{
             'id': '1',
             'question': 'BTC > 100k?',
@@ -37,7 +20,6 @@ void main() {
             'archived': false,
           },
         ]);
-        return http.Response(body, 200);
       });
       final markets = await client.markets(
         const GetMarketsParams(limit: 5, active: true, closed: false),
@@ -52,9 +34,9 @@ void main() {
 
     test('multi-valued slug param emits repeated keys', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return http.Response('[]', 200);
+        return gammaJsonList(<Map<String, dynamic>>[]);
       });
       await client.markets(const GetMarketsParams(slug: ['a', 'b']));
       expect(captured!.queryParametersAll['slug'], ['a', 'b']);
@@ -64,12 +46,9 @@ void main() {
   group('marketById / marketBySlug', () {
     test('GETs /markets/{id}', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return http.Response(
-          jsonEncode(<String, dynamic>{'id': '42', 'slug': 'btc-100k'}),
-          200,
-        );
+        return gammaJsonObj(<String, dynamic>{'id': '42', 'slug': 'btc-100k'});
       });
       final m = await client.marketById('42');
       expect(m!.id, '42');
@@ -78,14 +57,11 @@ void main() {
 
     test('marketBySlug GETs /markets?slug=...&limit=1', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        return http.Response(
-          jsonEncode([
-            <String, dynamic>{'id': '42', 'slug': 'btc-100k'},
-          ]),
-          200,
-        );
+        return gammaJsonList([
+          <String, dynamic>{'id': '42', 'slug': 'btc-100k'},
+        ]);
       });
       final m = await client.marketBySlug('btc-100k');
       expect(m!.slug, 'btc-100k');
@@ -95,8 +71,8 @@ void main() {
     });
 
     test('marketBySlug returns null on empty list', () async {
-      final client = _client((req) async {
-        return http.Response('[]', 200);
+      final client = gammaTestClient((req) async {
+        return gammaJsonList(<Map<String, dynamic>>[]);
       });
       final m = await client.marketBySlug('does-not-exist');
       expect(m, isNull);
@@ -106,9 +82,9 @@ void main() {
   group('search', () {
     test('q encoded; events + tags decoded', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = gammaTestClient((req) async {
         captured = req.url;
-        final body = jsonEncode(<String, dynamic>{
+        return gammaJsonObj(<String, dynamic>{
           'events': <Map<String, dynamic>>[
             <String, dynamic>{
               'id': 'e1',
@@ -139,7 +115,6 @@ void main() {
           'profiles': <Object>[],
           'pagination': <String, dynamic>{'hasMore': false, 'totalResults': 1},
         });
-        return http.Response(body, 200);
       });
       final r = await client.search(
         const SearchParams(query: 'btc 5m', limitPerType: 5),
