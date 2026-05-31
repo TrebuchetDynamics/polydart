@@ -42,6 +42,23 @@ void main() {
   });
 
   group('OffsetPager', () {
+    test('rejects non-positive page size before fetching', () {
+      expect(
+        () => OffsetPager<int>(
+          pageSize: 0,
+          fetch: (offset, limit) async => <int>[],
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => OffsetPager<int>(
+          pageSize: -1,
+          fetch: (offset, limit) async => <int>[],
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('walks until short page', () async {
       final pager = OffsetPager<int>(
         fetch: (offset, limit) async {

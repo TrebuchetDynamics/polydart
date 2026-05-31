@@ -165,9 +165,7 @@ typedef OffsetPage<T> =
 ///
 /// Throws the first page error and does not return partial results.
 Future<List<T>> collectOffset<T>(OffsetPage<T> pageFn, int limit) async {
-  if (limit <= 0) {
-    throw ArgumentError.value(limit, 'limit', 'must be positive');
-  }
+  _checkPositive(limit, 'limit');
 
   final items = <T>[];
   var offset = 0;
@@ -203,9 +201,9 @@ int? _nextOffsetOrDone<T>(int offset, int limit, OffsetPageResult<T> page) {
 final class OffsetPager<T> {
   OffsetPager({
     required Future<List<T>> Function(int offset, int limit) fetch,
-    this.pageSize = 50,
+    int pageSize = 50,
   }) : _fetch = fetch,
-       assert(pageSize > 0, 'pageSize must be positive');
+       pageSize = _checkPositive(pageSize, 'pageSize');
 
   final Future<List<T>> Function(int offset, int limit) _fetch;
   final int pageSize;
@@ -243,9 +241,7 @@ Future<List<R>> batch<T, R>(
   int maxBatchSize,
   FutureOr<R> Function(List<T> items) fn,
 ) async {
-  if (maxBatchSize <= 0) {
-    throw ArgumentError.value(maxBatchSize, 'maxBatchSize', 'must be positive');
-  }
+  _checkPositive(maxBatchSize, 'maxBatchSize');
 
   final materialized = items.toList(growable: false);
   if (materialized.isEmpty) return <R>[];
@@ -299,6 +295,13 @@ final class _BatchResult<R> {
   bool get hasError => error != null;
 
   R get value => _value as R;
+}
+
+int _checkPositive(int value, String name) {
+  if (value <= 0) {
+    throw ArgumentError.value(value, name, 'must be positive');
+  }
+  return value;
 }
 
 Never _throwWithStackTrace(Object error, StackTrace? stackTrace) {
