@@ -245,7 +245,7 @@ Future<String> _ethGetCode(
       );
     }
 
-    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+    final decoded = _decodeRpcResponse(response.body, 'eth_getCode');
     final error = decoded['error'];
     if (error != null) {
       throw StateError('eth_getCode error: $error');
@@ -260,6 +260,14 @@ Future<String> _ethGetCode(
       httpClient.close();
     }
   }
+}
+
+Map<String, dynamic> _decodeRpcResponse(String body, String method) {
+  final decoded = jsonDecode(body);
+  if (decoded is! Map<String, dynamic>) {
+    throw FormatException('$method response must be a JSON object');
+  }
+  return decoded;
 }
 
 String _requireHexAddress(String address) {

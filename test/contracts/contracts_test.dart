@@ -107,6 +107,21 @@ void main() {
       expect(status.source, 'polygon_eth_getCode');
     });
 
+    test('throws FormatException when RPC response is not an object', () async {
+      final client = MockClient(
+        (_) async => http.Response(jsonEncode(<Object>['not-an-object']), 200),
+      );
+
+      await expectLater(
+        contractDeployed(
+          '0x21999a074344610057c9b2B362332388a44502D4',
+          rpcUrl: 'http://rpc.test',
+          client: client,
+        ),
+        throwsFormatException,
+      );
+    });
+
     test('throws on invalid address before calling RPC', () async {
       var called = false;
       final client = MockClient((_) async {
