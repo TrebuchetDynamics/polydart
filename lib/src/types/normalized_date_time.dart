@@ -18,10 +18,11 @@ DateTime? parseNormalizedDateTime(Object? raw) {
 
   final dateOnly = _dateOnlyRegex.firstMatch(s);
   if (dateOnly != null) {
-    final year = int.parse(dateOnly.group(1)!);
-    final month = int.parse(dateOnly.group(2)!);
-    final day = int.parse(dateOnly.group(3)!);
-    return DateTime.utc(year, month, day);
+    return _parseUtcDate(
+      year: int.parse(dateOnly.group(1)!),
+      month: int.parse(dateOnly.group(2)!),
+      day: int.parse(dateOnly.group(3)!),
+    );
   }
 
   // Pad short timezone suffixes: "+07" → "+07:00".
@@ -51,7 +52,9 @@ DateTime? parseNormalizedDateTime(Object? raw) {
     final day = int.parse(m.group(2)!);
     final year = int.parse(m.group(3)!);
     final month = _monthNameToInt[monthName];
-    if (month != null) return DateTime.utc(year, month, day);
+    if (month != null) {
+      return _parseUtcDate(year: year, month: month, day: day);
+    }
   }
 
   return null;
@@ -61,6 +64,18 @@ DateTime? parseNormalizedDateTime(Object? raw) {
 String? encodeNormalizedDateTime(DateTime? dt) {
   if (dt == null) return null;
   return dt.toUtc().toIso8601String();
+}
+
+DateTime? _parseUtcDate({
+  required int year,
+  required int month,
+  required int day,
+}) {
+  final parsed = DateTime.utc(year, month, day);
+  if (parsed.year != year || parsed.month != month || parsed.day != day) {
+    return null;
+  }
+  return parsed;
 }
 
 bool _isDigit(int code) => code >= 0x30 && code <= 0x39;

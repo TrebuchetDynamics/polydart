@@ -39,12 +39,21 @@ void main() {
     expect(dt, DateTime.utc(2026, 5, 7));
   });
 
+  test('invalid date-only form is rejected instead of normalized', () {
+    expect(parseNormalizedDateTime('2026-02-30'), isNull);
+    expect(parseNormalizedDateTime('2026-13-01'), isNull);
+  });
+
   test('long human form', () {
     final dt = parseNormalizedDateTime('May 7, 2026');
     expect(dt, isNotNull);
     expect(dt!.year, 2026);
     expect(dt.month, 5);
     expect(dt.day, 7);
+  });
+
+  test('invalid long human form is rejected instead of normalized', () {
+    expect(parseNormalizedDateTime('February 30, 2026'), isNull);
   });
 
   test('encode round-trips a UTC moment', () {
