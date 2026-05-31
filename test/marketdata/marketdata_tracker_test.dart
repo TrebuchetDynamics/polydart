@@ -126,6 +126,82 @@ void main() {
       expect(snapshots.single.bestBid, '0.48');
     });
 
+    test('price change clearing last bid removes stale derived prices', () {
+      final tracker = MarketDataTracker()
+        ..applyBook(
+          const BookMessage(
+            eventType: '',
+            assetId: 'token-1',
+            market: 'market-1',
+            timestamp: '',
+            hash: '',
+            bids: <PriceLevel>[PriceLevel(price: '0.49', size: '10')],
+            asks: <PriceLevel>[PriceLevel(price: '0.53', size: '7')],
+          ),
+        );
+
+      final snapshots = tracker.applyPriceChange(
+        const PriceChangeMessage(
+          eventType: '',
+          market: 'market-1',
+          timestamp: '1001',
+          changes: <PriceChangeEntry>[
+            PriceChangeEntry(
+              assetId: 'token-1',
+              side: 'BUY',
+              price: '0.49',
+              size: '0',
+              hash: 'hash-1',
+            ),
+          ],
+        ),
+      );
+
+      expect(snapshots.single.bids, isEmpty);
+      expect(snapshots.single.bestBid, '');
+      expect(snapshots.single.bestAsk, '0.53');
+      expect(snapshots.single.midpoint, '');
+      expect(snapshots.single.spread, '');
+    });
+
+    test('price change clearing last ask removes stale derived prices', () {
+      final tracker = MarketDataTracker()
+        ..applyBook(
+          const BookMessage(
+            eventType: '',
+            assetId: 'token-1',
+            market: 'market-1',
+            timestamp: '',
+            hash: '',
+            bids: <PriceLevel>[PriceLevel(price: '0.49', size: '10')],
+            asks: <PriceLevel>[PriceLevel(price: '0.53', size: '7')],
+          ),
+        );
+
+      final snapshots = tracker.applyPriceChange(
+        const PriceChangeMessage(
+          eventType: '',
+          market: 'market-1',
+          timestamp: '1001',
+          changes: <PriceChangeEntry>[
+            PriceChangeEntry(
+              assetId: 'token-1',
+              side: 'SELL',
+              price: '0.53',
+              size: '0',
+              hash: 'hash-1',
+            ),
+          ],
+        ),
+      );
+
+      expect(snapshots.single.asks, isEmpty);
+      expect(snapshots.single.bestBid, '0.49');
+      expect(snapshots.single.bestAsk, '');
+      expect(snapshots.single.midpoint, '');
+      expect(snapshots.single.spread, '');
+    });
+
     test('last trade preserves book prices', () {
       final tracker = MarketDataTracker()
         ..applyBook(

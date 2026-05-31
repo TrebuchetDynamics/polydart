@@ -310,28 +310,20 @@ List<Level> _sortLevels(List<Level> levels, {required bool bid}) {
 }
 
 Snapshot _refreshPrices(Snapshot snapshot) {
-  var next = snapshot;
-  if (snapshot.bids.isNotEmpty) {
-    next = next._copyWith(bestBid: snapshot.bids.first.price);
-  }
-  if (snapshot.asks.isNotEmpty) {
-    next = next._copyWith(bestAsk: snapshot.asks.first.price);
-  }
+  final next = snapshot._copyWith(
+    bestBid: _topPrice(snapshot.bids),
+    bestAsk: _topPrice(snapshot.asks),
+  );
   return _refreshMidpoint(next);
 }
 
-Snapshot _refreshMidpoint(Snapshot snapshot) {
-  var next = snapshot;
-  final midpoint = _midpoint(snapshot.bestBid, snapshot.bestAsk);
-  if (midpoint != null) {
-    next = next._copyWith(midpoint: midpoint);
-  }
-  final spread = _spread(snapshot.bestBid, snapshot.bestAsk);
-  if (spread != null) {
-    next = next._copyWith(spread: spread);
-  }
-  return next;
-}
+String _topPrice(List<Level> levels) =>
+    levels.isEmpty ? '' : levels.first.price;
+
+Snapshot _refreshMidpoint(Snapshot snapshot) => snapshot._copyWith(
+  midpoint: _midpoint(snapshot.bestBid, snapshot.bestAsk) ?? '',
+  spread: _spread(snapshot.bestBid, snapshot.bestAsk) ?? '',
+);
 
 String? _midpoint(String bid, String ask) {
   final bidValue = double.tryParse(bid.trim());
