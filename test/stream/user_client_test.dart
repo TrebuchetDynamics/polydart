@@ -62,6 +62,46 @@ class _FakeWebSocketSink extends DelegatingStreamSink<dynamic>
 
 const _apiKey = ApiKey(key: 'key', secret: 'secret', passphrase: 'pass');
 
+final class _ReconnectUserClient {
+  const _ReconnectUserClient({
+    required this.client,
+    required this.channels,
+    required this.secondChannel,
+  });
+
+  final UserClient client;
+  final List<_FakeWebSocketChannel> channels;
+  final Completer<_FakeWebSocketChannel> secondChannel;
+}
+
+_ReconnectUserClient _newReconnectClient() {
+  final channels = <_FakeWebSocketChannel>[];
+  final secondChannel = Completer<_FakeWebSocketChannel>();
+  final client = UserClient(
+    config: const StreamConfig(
+      url: defaultUserStreamUrl,
+      reconnect: true,
+      reconnectDelay: Duration.zero,
+      reconnectMaxDelay: Duration.zero,
+      reconnectMax: 1,
+    ),
+    credentials: _apiKey,
+    channelFactory: (_) {
+      final next = _FakeWebSocketChannel();
+      channels.add(next);
+      if (channels.length == 2) {
+        secondChannel.complete(next);
+      }
+      return next;
+    },
+  );
+  return _ReconnectUserClient(
+    client: client,
+    channels: channels,
+    secondChannel: secondChannel,
+  );
+}
+
 void main() {
   group('UserClient', () {
     late _FakeWebSocketChannel channel;
@@ -109,35 +149,18 @@ void main() {
     });
 
     test('reconnect resubscribes the last user market filter', () async {
-      final channels = <_FakeWebSocketChannel>[];
-      final secondChannel = Completer<_FakeWebSocketChannel>();
-      final reconnectClient = UserClient(
-        config: const StreamConfig(
-          url: defaultUserStreamUrl,
-          reconnect: true,
-          reconnectDelay: Duration.zero,
-          reconnectMaxDelay: Duration.zero,
-          reconnectMax: 1,
-        ),
-        credentials: _apiKey,
-        channelFactory: (_) {
-          final next = _FakeWebSocketChannel();
-          channels.add(next);
-          if (channels.length == 2) {
-            secondChannel.complete(next);
-          }
-          return next;
-        },
-      );
-      addTearDown(reconnectClient.close);
+      final reconnectClient = _newReconnectClient();
+      addTearDown(reconnectClient.client.close);
 
-      await reconnectClient.connect();
-      final firstOutbound = channels.single.outbound.first;
-      await reconnectClient.subscribeUser(markets: <String>['condition-1']);
+      await reconnectClient.client.connect();
+      final firstOutbound = reconnectClient.channels.single.outbound.first;
+      await reconnectClient.client.subscribeUser(
+        markets: <String>['condition-1'],
+      );
       await firstOutbound;
 
-      await channels.single.closeIncoming();
-      final reconnected = await secondChannel.future.timeout(
+      await reconnectClient.channels.single.closeIncoming();
+      final reconnected = await reconnectClient.secondChannel.future.timeout(
         const Duration(milliseconds: 250),
       );
       final raw = await reconnected.outbound.first.timeout(
@@ -146,6 +169,27 @@ void main() {
       final body = jsonDecode(raw as String) as Map<String, dynamic>;
       expect(body['type'], 'user');
       expect(body['markets'], <String>['condition-1']);
+    });
+
+    test('reconnect resubscribes an all-markets user subscription', () async {
+      final reconnectClient = _newReconnectClient();
+      addTearDown(reconnectClient.client.close);
+
+      await reconnectClient.client.connect();
+      final firstOutbound = reconnectClient.channels.single.outbound.first;
+      await reconnectClient.client.subscribeUser();
+      await firstOutbound;
+
+      await reconnectClient.channels.single.closeIncoming();
+      final reconnected = await reconnectClient.secondChannel.future.timeout(
+        const Duration(milliseconds: 250),
+      );
+      final raw = await reconnected.outbound.first.timeout(
+        const Duration(milliseconds: 250),
+      );
+      final body = jsonDecode(raw as String) as Map<String, dynamic>;
+      expect(body['type'], 'user');
+      expect(body['markets'], isEmpty);
     });
 
     test('dispatches order and trade events', () async {

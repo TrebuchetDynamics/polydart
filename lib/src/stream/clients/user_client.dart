@@ -58,7 +58,7 @@ final class UserClient {
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _subscription;
   Timer? _reconnectTimer;
-  List<String> _subscribedMarkets = const <String>[];
+  _UserSubscription _subscriptionFilter = _UserSubscription.none;
   int _reconnects = 0;
   bool _connected = false;
   bool _closed = false;
@@ -97,17 +97,17 @@ final class UserClient {
       throw StateError('UserClient: not connected');
     }
     _writeSubscribe(channel, markets);
-    _subscribedMarkets = List<String>.unmodifiable(markets);
+    _subscriptionFilter = _UserSubscription.active(markets);
   }
 
   void _resubscribe() {
-    final markets = _subscribedMarkets;
-    if (markets.isEmpty) return;
+    final subscription = _subscriptionFilter;
+    if (!subscription.subscribed) return;
     final channel = _channel;
     if (channel == null || !_connected) {
       throw StateError('UserClient: not connected');
     }
-    _writeSubscribe(channel, markets);
+    _writeSubscribe(channel, subscription.markets);
   }
 
   void _writeSubscribe(WebSocketChannel channel, List<String> markets) {
@@ -200,6 +200,29 @@ final class UserClient {
     if (_errors.isClosed) return;
     _errors.add(error);
   }
+}
+
+final class _UserSubscription {
+  const _UserSubscription._({required this.subscribed, required this.markets});
+
+  static const none = _UserSubscription._(
+    subscribed: false,
+    markets: <String>[],
+  );
+
+  factory _UserSubscription.active(List<String> markets) => _UserSubscription._(
+    subscribed: true,
+    markets: List<String>.unmodifiable(markets),
+  );
+
+  /// Whether a user subscription was explicitly sent on this client.
+  ///
+  /// An empty [markets] list is an active all-markets subscription, not the
+  /// absence of a subscription. Keeping that state explicit prevents reconnect
+  /// resubscribe from dropping all-market listeners.
+  final bool subscribed;
+
+  final List<String> markets;
 }
 
 Map<String, dynamic> _userSubscribePayload(
