@@ -43,6 +43,23 @@ BigInt decimalUnitsAtScale(String raw, int scale) {
   return (ratio.numerator * pow10(scale)) ~/ ratio.denominator;
 }
 
+/// Returns [raw] rounded to [scale] decimal places as integer units.
+BigInt decimalUnitsRoundedAtScale(String raw, int scale) {
+  final ratio = decimalRatio(raw);
+  return _roundScaledRatio(ratio.numerator, ratio.denominator, scale);
+}
+
+/// Returns `[left] * [right]` rounded to [scale] decimal places as integer units.
+BigInt decimalProductUnitsRoundedAtScale(String left, String right, int scale) {
+  final l = decimalRatio(left);
+  final r = decimalRatio(right);
+  return _roundScaledRatio(
+    l.numerator * r.numerator,
+    l.denominator * r.denominator,
+    scale,
+  );
+}
+
 /// Rounds [value] down to the nearest [tickSize] multiple using exact decimal
 /// arithmetic. [tickSize] must be positive.
 String roundDecimalDownToTick(String value, String tickSize) {
@@ -89,3 +106,12 @@ BigInt pow10(int exponent) {
 }
 
 int minInt(int a, int b) => a < b ? a : b;
+
+BigInt _roundScaledRatio(BigInt numerator, BigInt denominator, int scale) {
+  final scaledNumerator = numerator * pow10(scale);
+  final negative = scaledNumerator < BigInt.zero;
+  final absNumerator = negative ? -scaledNumerator : scaledNumerator;
+  final rounded =
+      (absNumerator * BigInt.two + denominator) ~/ (denominator * BigInt.two);
+  return negative ? -rounded : rounded;
+}

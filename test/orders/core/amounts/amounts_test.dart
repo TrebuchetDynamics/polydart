@@ -40,6 +40,20 @@ void main() {
       expect(amts.makerAmount, BigInt.from(1010000));
       expect(amts.takerAmount, BigInt.from(8416600));
     });
+
+    test(
+      'limit orders keep decimal math replayable beyond double precision',
+      () {
+        final intent = OrderBuilder(
+          tokenId: 'tok-1',
+          side: Side.buy,
+        ).price('0.01').size('123456789012345.123456').tickSize('0.01').build();
+        final amts = computeAmounts(intent);
+
+        expect(amts.makerAmount, BigInt.parse('1234567890123451235'));
+        expect(amts.takerAmount, BigInt.parse('123456789012345123456'));
+      },
+    );
   });
 
   group('roundToTick', () {
