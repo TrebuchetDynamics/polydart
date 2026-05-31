@@ -430,6 +430,49 @@ void main() {
       expect(result.source, contains('slug_event_no_accepting_market'));
     });
 
+    test(
+      'resolveTokenIdsAt does not fall back when the slug event is not accepting',
+      () async {
+        final window = DateTime.parse('2026-05-06T10:05:00Z');
+        var searchCalls = 0;
+        final mock = MockClient((req) async {
+          if (req.url.path == '/events') {
+            return http.Response(
+              jsonEncode([
+                _eventJson(
+                  markets: <Map<String, dynamic>>[_marketJson(archived: true)],
+                ),
+              ]),
+              200,
+            );
+          }
+          if (req.url.path == '/public-search') {
+            searchCalls++;
+            return http.Response(
+              jsonEncode(<String, dynamic>{
+                'events': <Map<String, dynamic>>[
+                  _eventJson(
+                    markets: <Map<String, dynamic>>[
+                      _marketJson(conditionId: '0xfallback'),
+                    ],
+                  ),
+                ],
+              }),
+              200,
+            );
+          }
+          return http.Response('not found', 404);
+        });
+        final resolver = MarketResolver(gamma: _gammaWithMock(mock));
+
+        final result = await resolver.resolveTokenIdsAt('BTC', '5m', window);
+
+        expect(result.status, MarketStatus.unresolved);
+        expect(result.source, contains('slug_event_no_accepting_market'));
+        expect(searchCalls, 0);
+      },
+    );
+
     test('resolveTokenIdsForWindow detects window mismatch', () async {
       final requested = DateTime.parse('2026-05-06T10:05:00Z');
       final mock = MockClient((req) async {

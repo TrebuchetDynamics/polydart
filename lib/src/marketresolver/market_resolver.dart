@@ -249,46 +249,14 @@ final class MarketResolver {
     if (slug.isNotEmpty) {
       final event = await _gamma.eventBySlug(slug);
       if (event != null) {
-        final expected = request.windowStart;
-        final result = _firstAcceptingMarketForWindow(
-          request.asset,
-          request.timeframe,
-          expected,
-          _marketsFromGammaWithSource(
-            request.asset,
-            event.resolutionSource,
-            event.markets,
-          ),
+        return _resolveWindowSlugEvent(
+          asset: request.asset,
+          timeframe: request.timeframe,
+          expectedStart: request.windowStart,
+          slug: slug,
+          event: event,
+          successSource: 'gamma:event_slug:$slug',
         );
-        if (result != null) {
-          if (result.startDate != expected) {
-            return ResolveResult(
-              status: MarketStatus.windowMismatch,
-              asset: request.asset,
-              timeframe: request.timeframe,
-              startDate: result.startDate,
-              endDate: result.endDate,
-              source:
-                  'gamma:slug_hit_window_mismatch:$slug:got=${_rfc3339(result.startDate)} want=${_rfc3339(expected)}',
-            );
-          }
-          return ResolveResult(
-            status: result.status,
-            upTokenId: result.upTokenId,
-            downTokenId: result.downTokenId,
-            conditionId: result.conditionId,
-            asset: result.asset,
-            timeframe: result.timeframe,
-            question: result.question,
-            slug: result.slug,
-            resolutionSource: result.resolutionSource,
-            minOrderSize: result.minOrderSize,
-            tickSize: result.tickSize,
-            source: 'gamma:event_slug:$slug',
-            startDate: result.startDate,
-            endDate: result.endDate,
-          );
-        }
       }
     }
     return resolveTokenIds(request.asset, request.timeframe);
@@ -325,50 +293,13 @@ final class MarketResolver {
         source: 'gamma:slug_miss:$slug',
       );
     }
-    final result = _firstAcceptingMarketForWindow(
-      request.asset,
-      request.timeframe,
-      expected,
-      _marketsFromGammaWithSource(
-        request.asset,
-        event.resolutionSource,
-        event.markets,
-      ),
-    );
-    if (result == null) {
-      return ResolveResult(
-        status: MarketStatus.unresolved,
-        asset: request.asset,
-        timeframe: request.timeframe,
-        source: 'gamma:slug_event_no_accepting_market:$slug',
-      );
-    }
-    if (result.startDate != expected) {
-      return ResolveResult(
-        status: MarketStatus.windowMismatch,
-        asset: request.asset,
-        timeframe: request.timeframe,
-        startDate: result.startDate,
-        endDate: result.endDate,
-        source:
-            'gamma:slug_hit_window_mismatch:$slug:got=${_rfc3339(result.startDate)} want=${_rfc3339(expected)}',
-      );
-    }
-    return ResolveResult(
-      status: result.status,
-      upTokenId: result.upTokenId,
-      downTokenId: result.downTokenId,
-      conditionId: result.conditionId,
-      asset: result.asset,
-      timeframe: result.timeframe,
-      question: result.question,
-      slug: result.slug,
-      resolutionSource: result.resolutionSource,
-      minOrderSize: result.minOrderSize,
-      tickSize: result.tickSize,
-      source: 'gamma:event_slug_strict:$slug',
-      startDate: result.startDate,
-      endDate: result.endDate,
+    return _resolveWindowSlugEvent(
+      asset: request.asset,
+      timeframe: request.timeframe,
+      expectedStart: expected,
+      slug: slug,
+      event: event,
+      successSource: 'gamma:event_slug_strict:$slug',
     );
   }
 
@@ -512,6 +443,60 @@ List<CryptoMarket> _marketsFromGammaWithSource(
   }
   return markets;
 }
+
+ResolveResult _resolveWindowSlugEvent({
+  required String asset,
+  required String timeframe,
+  required DateTime expectedStart,
+  required String slug,
+  required Event event,
+  required String successSource,
+}) {
+  final result = _firstAcceptingMarketForWindow(
+    asset,
+    timeframe,
+    expectedStart,
+    _marketsFromGammaWithSource(asset, event.resolutionSource, event.markets),
+  );
+  if (result == null) {
+    return ResolveResult(
+      status: MarketStatus.unresolved,
+      asset: asset,
+      timeframe: timeframe,
+      source: 'gamma:slug_event_no_accepting_market:$slug',
+    );
+  }
+  if (result.startDate != expectedStart) {
+    return ResolveResult(
+      status: MarketStatus.windowMismatch,
+      asset: asset,
+      timeframe: timeframe,
+      startDate: result.startDate,
+      endDate: result.endDate,
+      source:
+          'gamma:slug_hit_window_mismatch:$slug:got=${_rfc3339(result.startDate)} want=${_rfc3339(expectedStart)}',
+    );
+  }
+  return _resolveResultWithSource(result, successSource);
+}
+
+ResolveResult _resolveResultWithSource(ResolveResult result, String source) =>
+    ResolveResult(
+      status: result.status,
+      upTokenId: result.upTokenId,
+      downTokenId: result.downTokenId,
+      conditionId: result.conditionId,
+      asset: result.asset,
+      timeframe: result.timeframe,
+      question: result.question,
+      slug: result.slug,
+      resolutionSource: result.resolutionSource,
+      minOrderSize: result.minOrderSize,
+      tickSize: result.tickSize,
+      source: source,
+      startDate: result.startDate,
+      endDate: result.endDate,
+    );
 
 ResolveResult? _firstAcceptingMarket(
   String asset,
