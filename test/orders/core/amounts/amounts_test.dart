@@ -1,8 +1,9 @@
-import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/orders/amounts.dart';
 import 'package:polydart/src/orders/order_builder.dart';
 import 'package:polydart/src/types/enums.dart';
 import 'package:test/test.dart';
+
+import '../support/core_order_test_support.dart';
 
 void main() {
   group('computeAmounts (1e6 USDC fixed-point)', () {
@@ -56,7 +57,7 @@ void main() {
     test('rejects zero tick', () {
       expect(
         () => roundToTick('0.5', '0'),
-        throwsA(isA<ValidationException>()),
+        throwsValidationException,
       );
     });
   });
@@ -70,14 +71,14 @@ void main() {
     test('rejects below tick', () {
       expect(
         () => validatePriceAgainstTick('0.005', '0.01'),
-        throwsA(isA<ValidationException>()),
+        throwsValidationException,
       );
     });
 
     test('rejects above 1-tick', () {
       expect(
         () => validatePriceAgainstTick('0.995', '0.01'),
-        throwsA(isA<ValidationException>()),
+        throwsValidationException,
       );
     });
   });

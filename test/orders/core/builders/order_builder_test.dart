@@ -1,8 +1,9 @@
-import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/orders/order_builder.dart';
 import 'package:polydart/src/types/decimal.dart';
 import 'package:polydart/src/types/enums.dart';
 import 'package:test/test.dart';
+
+import '../support/core_order_test_support.dart';
 
 void main() {
   test('fluent path builds a valid intent', () {
@@ -25,7 +26,7 @@ void main() {
   test('build throws when validation fails', () {
     expect(
       () => OrderBuilder(tokenId: '', side: Side.buy).build(),
-      throwsA(isA<ValidationException>()),
+      throwsValidationException,
     );
   });
 

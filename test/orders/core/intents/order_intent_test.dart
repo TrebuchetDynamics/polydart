@@ -1,18 +1,13 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
-import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/orders/order_intent.dart';
 import 'package:polydart/src/types/clob.dart';
 import 'package:polydart/src/types/decimal.dart';
 import 'package:polydart/src/types/enums.dart';
 import 'package:test/test.dart';
 
-void main() {
-  const tickOk = TickSize(
-    minimumTickSize: '0.01',
-    minimumOrderSize: '5',
-    tickSize: '0.01',
-  );
+import '../support/core_order_test_support.dart';
 
+void main() {
   group('OrderIntent.validate', () {
     test('accepts a well-formed buy', () {
       OrderIntent(
@@ -20,7 +15,7 @@ void main() {
         side: Side.buy,
         price: Decimal.parse('0.55'),
         size: Decimal.parse('10'),
-        tickSize: tickOk,
+        tickSize: validTickSize,
       ).validate();
     });
 
@@ -31,9 +26,9 @@ void main() {
           side: Side.buy,
           price: Decimal.parse('0.55'),
           size: Decimal.parse('10'),
-          tickSize: tickOk,
+          tickSize: validTickSize,
         ).validate(),
-        throwsA(isA<ValidationException>()),
+        throwsValidationException,
       );
     });
 
@@ -44,9 +39,9 @@ void main() {
           side: Side.buy,
           price: Decimal.zero,
           size: Decimal.zero,
-          tickSize: tickOk,
+          tickSize: validTickSize,
         ).validate(),
-        throwsA(isA<ValidationException>()),
+        throwsValidationException,
       );
     });
 
@@ -63,7 +58,7 @@ void main() {
             tickSize: '',
           ),
         ).validate(),
-        throwsA(isA<ValidationException>()),
+        throwsValidationException,
       );
     });
 
@@ -74,10 +69,10 @@ void main() {
           side: Side.buy,
           price: Decimal.parse('0.55'),
           size: Decimal.parse('10'),
-          tickSize: tickOk,
+          tickSize: validTickSize,
           feeRateBps: -1,
         ).validate(),
-        throwsA(isA<ValidationException>()),
+        throwsValidationException,
       );
     });
   });
@@ -91,7 +86,7 @@ void main() {
     test('rejects unknown', () {
       expect(
         () => LifecycleState.parse('zombie'),
-        throwsA(isA<ValidationException>()),
+        throwsValidationException,
       );
     });
   });
