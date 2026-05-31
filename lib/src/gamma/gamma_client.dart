@@ -27,6 +27,29 @@ const int _defaultMaxSeriesPages = 50;
 const int _defaultTagPageSize = 100;
 const int _defaultMaxTagPages = 50;
 
+final class _OffsetCollectionPlan {
+  _OffsetCollectionPlan({
+    required this.pageSize,
+    required this.maxPages,
+  }) {
+    _checkPositive(pageSize, 'pageSize');
+    _checkPositive(maxPages, 'maxPages');
+  }
+
+  final int pageSize;
+  final int maxPages;
+
+  int get maxOffsetExclusive => pageSize * maxPages;
+
+  bool shouldStopBeforeFetch(int offset) => offset >= maxOffsetExclusive;
+}
+
+void _checkPositive(int value, String name) {
+  if (value <= 0) {
+    throw ArgumentError.value(value, name, 'must be positive');
+  }
+}
+
 final class GammaClient {
   GammaClient({HttpTransport? transport})
     : _transport =
@@ -103,8 +126,12 @@ final class GammaClient {
     int pageSize = _defaultMarketPageSize,
     int maxPages = _defaultMaxMarketPages,
   }) async {
+    final plan = _OffsetCollectionPlan(
+      pageSize: pageSize,
+      maxPages: maxPages,
+    );
     final raw = await collectOffset<Market>((offset, limit) async {
-      if (offset >= pageSize * maxPages) {
+      if (plan.shouldStopBeforeFetch(offset)) {
         return const OffsetPageResult<Market>(items: [], count: 0);
       }
       final page = await markets(
@@ -116,7 +143,7 @@ final class GammaClient {
         ),
       );
       return OffsetPageResult<Market>(items: page, count: page.length);
-    }, pageSize);
+    }, plan.pageSize);
     return deduplicateMarketsByConditionId(raw);
   }
 
@@ -126,15 +153,19 @@ final class GammaClient {
     int pageSize = _defaultEventPageSize,
     int maxPages = _defaultMaxEventPages,
   }) async {
+    final plan = _OffsetCollectionPlan(
+      pageSize: pageSize,
+      maxPages: maxPages,
+    );
     final raw = await collectOffset<Event>((offset, limit) async {
-      if (offset >= pageSize * maxPages) {
+      if (plan.shouldStopBeforeFetch(offset)) {
         return const OffsetPageResult<Event>(items: [], count: 0);
       }
       final page = await events(
         GetEventsParams(closed: false, limit: limit, offset: offset),
       );
       return OffsetPageResult<Event>(items: page, count: page.length);
-    }, pageSize);
+    }, plan.pageSize);
     return deduplicateEventsBySlugOrId(raw);
   }
 
@@ -173,15 +204,19 @@ final class GammaClient {
     int pageSize = _defaultSeriesPageSize,
     int maxPages = _defaultMaxSeriesPages,
   }) async {
+    final plan = _OffsetCollectionPlan(
+      pageSize: pageSize,
+      maxPages: maxPages,
+    );
     final raw = await collectOffset<Series>((offset, limit) async {
-      if (offset >= pageSize * maxPages) {
+      if (plan.shouldStopBeforeFetch(offset)) {
         return const OffsetPageResult<Series>(items: [], count: 0);
       }
       final page = await series(
         GetSeriesParams(closed: false, limit: limit, offset: offset),
       );
       return OffsetPageResult<Series>(items: page, count: page.length);
-    }, pageSize);
+    }, plan.pageSize);
     return deduplicateSeriesBySlugOrId(raw);
   }
 
@@ -209,13 +244,17 @@ final class GammaClient {
     int pageSize = _defaultTagPageSize,
     int maxPages = _defaultMaxTagPages,
   }) async {
+    final plan = _OffsetCollectionPlan(
+      pageSize: pageSize,
+      maxPages: maxPages,
+    );
     final raw = await collectOffset<Tag>((offset, limit) async {
-      if (offset >= pageSize * maxPages) {
+      if (plan.shouldStopBeforeFetch(offset)) {
         return const OffsetPageResult<Tag>(items: [], count: 0);
       }
       final page = await tags(GetTagsParams(limit: limit, offset: offset));
       return OffsetPageResult<Tag>(items: page, count: page.length);
-    }, pageSize);
+    }, plan.pageSize);
     return deduplicateTagsBySlugOrId(raw);
   }
 

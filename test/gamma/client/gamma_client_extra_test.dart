@@ -190,6 +190,20 @@ void main() {
       expect(captured!.queryParameters['closed'], 'false');
       expect(ms, hasLength(1));
     });
+
+    test('activeMarketsAll rejects non-positive maxPages before fetching', () {
+      var calls = 0;
+      final client = gammaTestClient((req) async {
+        calls += 1;
+        return gammaJsonList(<Map<String, dynamic>>[]);
+      });
+
+      expect(
+        () => client.activeMarketsAll(maxPages: 0),
+        throwsArgumentError,
+      );
+      expect(calls, 0);
+    });
   });
 
   group('events / eventById / eventBySlug', () {
