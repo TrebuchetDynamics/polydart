@@ -1,12 +1,19 @@
 import 'package:polydart/src/types/normalized_date_time.dart';
 import 'package:test/test.dart';
 
+import '../shared/scalar_input_contracts.dart';
+
 void main() {
   test('null / empty / "null" return null', () {
-    expect(parseNormalizedDateTime(null), isNull);
-    expect(parseNormalizedDateTime(''), isNull);
-    expect(parseNormalizedDateTime('null'), isNull);
-    expect(parseNormalizedDateTime('"null"'), isNull);
+    expectScalarInputCases(
+      parse: parseNormalizedDateTime,
+      cases: const <Object?, DateTime?>{
+        null: null,
+        '': null,
+        'null': null,
+        '"null"': null,
+      },
+    );
   });
 
   test('quoted ISO-8601 unwraps', () {

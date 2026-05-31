@@ -1,10 +1,14 @@
 import 'package:polydart/src/types/numeric_string.dart';
 import 'package:test/test.dart';
 
+import '../shared/scalar_input_contracts.dart';
+
 void main() {
   test('null and "null" collapse to empty', () {
-    expect(parseNumericString(null), '');
-    expect(parseNumericString('null'), '');
+    expectScalarInputCases(
+      parse: parseNumericString,
+      cases: const <Object?, String>{null: '', 'null': ''},
+    );
   });
 
   test('strings are trimmed', () {

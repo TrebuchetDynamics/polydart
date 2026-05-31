@@ -1,10 +1,14 @@
 import 'package:polydart/src/types/string_or_array.dart';
 import 'package:test/test.dart';
 
+import '../shared/scalar_input_contracts.dart';
+
 void main() {
   test('null and empty produce empty list', () {
-    expect(parseStringOrArray(null), isEmpty);
-    expect(parseStringOrArray(''), isEmpty);
+    expectScalarInputCases(
+      parse: parseStringOrArray,
+      cases: const <Object?, List<String>>{null: <String>[], '': <String>[]},
+    );
   });
 
   test('plain string wraps in single-element list', () {
