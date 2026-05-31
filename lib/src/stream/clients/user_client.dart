@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../auth/l2.dart' show ApiKey;
+import '../config/reconnect_policy.dart';
 import '../config/stream_config.dart';
 import '../models/stream_messages.dart';
 import '../shared/json_frame.dart';
@@ -56,6 +57,9 @@ final class UserClient {
 
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _subscription;
+  Timer? _reconnectTimer;
+  List<String> _subscribedMarkets = const <String>[];
+  int _reconnects = 0;
   bool _connected = false;
   bool _closed = false;
 
@@ -66,6 +70,11 @@ final class UserClient {
 
   Future<void> connect() async {
     _credentials.validate();
+    _reconnects = 0;
+    await _dial();
+  }
+
+  Future<void> _dial() async {
     if (_closed) {
       throw StateError('UserClient: cannot connect after close()');
     }
@@ -87,24 +96,31 @@ final class UserClient {
     if (channel == null || !_connected) {
       throw StateError('UserClient: not connected');
     }
+    _writeSubscribe(channel, markets);
+    _subscribedMarkets = List<String>.unmodifiable(markets);
+  }
+
+  void _resubscribe() {
+    final markets = _subscribedMarkets;
+    if (markets.isEmpty) return;
+    final channel = _channel;
+    if (channel == null || !_connected) {
+      throw StateError('UserClient: not connected');
+    }
+    _writeSubscribe(channel, markets);
+  }
+
+  void _writeSubscribe(WebSocketChannel channel, List<String> markets) {
     _credentials.validate();
-    channel.sink.add(
-      jsonEncode(<String, dynamic>{
-        'type': 'user',
-        'markets': markets,
-        'auth': <String, String>{
-          'apiKey': _credentials.key,
-          'secret': _credentials.secret,
-          'passphrase': _credentials.passphrase,
-        },
-      }),
-    );
+    channel.sink.add(jsonEncode(_userSubscribePayload(_credentials, markets)));
   }
 
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
     _connected = false;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
     final sub = _subscription;
     _subscription = null;
     await sub?.cancel();
@@ -146,10 +162,32 @@ final class UserClient {
   void _handleSocketError(Object error, StackTrace stack) {
     _emitError(error);
     _connected = false;
+    _scheduleReconnect();
   }
 
   void _handleSocketDone() {
     _connected = false;
+    if (_closed) return;
+    _scheduleReconnect();
+  }
+
+  void _scheduleReconnect() {
+    if (_closed || !_config.reconnect) return;
+    if (_reconnects >= _config.reconnectMax) return;
+    _reconnects += 1;
+    final delay = reconnectDelayForAttempt(_config, _reconnects);
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(delay, () async {
+      _reconnectTimer = null;
+      if (_closed) return;
+      try {
+        await _dial();
+        _resubscribe();
+      } on Object catch (e) {
+        _emitError(e);
+        _scheduleReconnect();
+      }
+    });
   }
 
   void _emitError(Object error) {
@@ -157,3 +195,17 @@ final class UserClient {
     _errors.add(error);
   }
 }
+
+Map<String, dynamic> _userSubscribePayload(
+  ApiKey credentials,
+  List<String> markets,
+) =>
+    <String, dynamic>{
+      'type': 'user',
+      'markets': markets,
+      'auth': <String, String>{
+        'apiKey': credentials.key,
+        'secret': credentials.secret,
+        'passphrase': credentials.passphrase,
+      },
+    };

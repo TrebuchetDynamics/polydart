@@ -42,6 +42,8 @@ class _FakeWebSocketChannel extends StreamChannelMixin<dynamic>
   Future<void> get ready => Future<void>.value();
 
   void push(String frame) => _incoming.add(frame);
+
+  Future<void> closeIncoming() => _incoming.close();
 }
 
 class _FakeWebSocketSink extends DelegatingStreamSink<dynamic>
@@ -104,6 +106,46 @@ void main() {
         'secret': 'secret',
         'passphrase': 'pass',
       });
+    });
+
+    test('reconnect resubscribes the last user market filter', () async {
+      final channels = <_FakeWebSocketChannel>[];
+      final secondChannel = Completer<_FakeWebSocketChannel>();
+      final reconnectClient = UserClient(
+        config: const StreamConfig(
+          url: defaultUserStreamUrl,
+          reconnect: true,
+          reconnectDelay: Duration.zero,
+          reconnectMaxDelay: Duration.zero,
+          reconnectMax: 1,
+        ),
+        credentials: _apiKey,
+        channelFactory: (_) {
+          final next = _FakeWebSocketChannel();
+          channels.add(next);
+          if (channels.length == 2) {
+            secondChannel.complete(next);
+          }
+          return next;
+        },
+      );
+      addTearDown(reconnectClient.close);
+
+      await reconnectClient.connect();
+      final firstOutbound = channels.single.outbound.first;
+      await reconnectClient.subscribeUser(markets: <String>['condition-1']);
+      await firstOutbound;
+
+      await channels.single.closeIncoming();
+      final reconnected = await secondChannel.future.timeout(
+        const Duration(milliseconds: 250),
+      );
+      final raw = await reconnected.outbound.first.timeout(
+        const Duration(milliseconds: 250),
+      );
+      final body = jsonDecode(raw as String) as Map<String, dynamic>;
+      expect(body['type'], 'user');
+      expect(body['markets'], <String>['condition-1']);
     });
 
     test('dispatches order and trade events', () async {
