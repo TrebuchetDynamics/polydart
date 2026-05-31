@@ -80,6 +80,22 @@ void main() {
       expect(markets.single.value, 42);
     });
 
+    test('rejects malformed wrapped response candidates by index', () {
+      expect(
+        () => _liveVolumeFrom(<Object>[
+          'not-a-live-volume-object',
+          <String, dynamic>{'total': 42},
+        ]),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('Data API response[0]'),
+          ),
+        ),
+      );
+    });
+
     test('rejects malformed market candidates instead of dropping them', () {
       expect(
         () => _liveVolumeFrom(<String, dynamic>{
@@ -129,6 +145,22 @@ void main() {
       expect(value.user, '0xuser');
       expect(value.value, 0);
       expect(value.timestamp, '');
+    });
+
+    test('rejects malformed wrapped response candidates by index', () {
+      expect(
+        () => _totalValueFrom(<Object>[
+          'not-a-total-value-object',
+          <String, dynamic>{'user': '0xuser', 'value': 42},
+        ]),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('Data API response[0]'),
+          ),
+        ),
+      );
     });
   });
 }

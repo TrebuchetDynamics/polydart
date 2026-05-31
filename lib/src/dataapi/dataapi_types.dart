@@ -513,13 +513,8 @@ Map<String, dynamic> _responseMap(Object? raw) {
   if (raw is Map<String, dynamic>) return raw;
   if (raw is Map) return raw.cast<String, dynamic>();
   if (raw is List) {
-    for (var i = 0; i < raw.length; i++) {
-      final candidate = raw[i];
-      if (candidate is Map<dynamic, dynamic>) {
-        return candidate.cast<String, dynamic>();
-      }
-    }
-    return const <String, dynamic>{};
+    if (raw.isEmpty) return const <String, dynamic>{};
+    return _mapCandidateAt(raw, 0, 'response');
   }
   return const <String, dynamic>{};
 }
