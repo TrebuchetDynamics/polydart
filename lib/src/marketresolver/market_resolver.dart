@@ -225,9 +225,11 @@ final class MarketResolver {
     if (slug.isNotEmpty) {
       final event = await _gamma.eventBySlug(slug);
       if (event != null) {
-        final result = _firstAcceptingMarket(
+        final expected = request.windowStart;
+        final result = _firstAcceptingMarketForWindow(
           request.asset,
           request.timeframe,
+          expected,
           _marketsFromGammaWithSource(
             request.asset,
             event.resolutionSource,
@@ -235,7 +237,6 @@ final class MarketResolver {
           ),
         );
         if (result != null) {
-          final expected = request.windowStart;
           if (result.startDate != expected) {
             return ResolveResult(
               status: MarketStatus.windowMismatch,
@@ -300,9 +301,10 @@ final class MarketResolver {
         source: 'gamma:slug_miss:$slug',
       );
     }
-    final result = _firstAcceptingMarket(
+    final result = _firstAcceptingMarketForWindow(
       request.asset,
       request.timeframe,
+      expected,
       _marketsFromGammaWithSource(
         request.asset,
         event.resolutionSource,
@@ -493,26 +495,51 @@ ResolveResult? _firstAcceptingMarket(
   List<CryptoMarket> markets,
 ) {
   for (final market in markets) {
-    if (market.timeframe == timeframe && market.accepting && !market.closed) {
-      return ResolveResult(
-        status: MarketStatus.available,
-        upTokenId: market.upTokenId,
-        downTokenId: market.downTokenId,
-        conditionId: market.conditionId,
-        asset: asset,
-        timeframe: timeframe,
-        question: market.question,
-        slug: market.slug,
-        resolutionSource: market.resolutionSource,
-        minOrderSize: market.minOrderSize,
-        tickSize: market.tickSize,
-        startDate: market.startDate,
-        endDate: market.endDate,
-      );
+    if (_isAcceptingTimeframeMarket(market, timeframe)) {
+      return _resolveResultForCryptoMarket(asset, timeframe, market);
     }
   }
   return null;
 }
+
+ResolveResult? _firstAcceptingMarketForWindow(
+  String asset,
+  String timeframe,
+  DateTime expectedStart,
+  List<CryptoMarket> markets,
+) {
+  ResolveResult? firstAccepting;
+  for (final market in markets) {
+    if (!_isAcceptingTimeframeMarket(market, timeframe)) continue;
+    final result = _resolveResultForCryptoMarket(asset, timeframe, market);
+    if (market.startDate == expectedStart) return result;
+    firstAccepting ??= result;
+  }
+  return firstAccepting;
+}
+
+bool _isAcceptingTimeframeMarket(CryptoMarket market, String timeframe) =>
+    market.timeframe == timeframe && market.accepting && !market.closed;
+
+ResolveResult _resolveResultForCryptoMarket(
+  String asset,
+  String timeframe,
+  CryptoMarket market,
+) => ResolveResult(
+  status: MarketStatus.available,
+  upTokenId: market.upTokenId,
+  downTokenId: market.downTokenId,
+  conditionId: market.conditionId,
+  asset: asset,
+  timeframe: timeframe,
+  question: market.question,
+  slug: market.slug,
+  resolutionSource: market.resolutionSource,
+  minOrderSize: market.minOrderSize,
+  tickSize: market.tickSize,
+  startDate: market.startDate,
+  endDate: market.endDate,
+);
 
 DateTime? _cryptoMarketWindowStart(Market market) =>
     _truncateToSecond(market.eventStartTime ?? market.startDate);

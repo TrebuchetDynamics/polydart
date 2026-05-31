@@ -368,6 +368,39 @@ void main() {
     });
 
     test(
+      'resolveTokenIdsForWindow checks later candidates before mismatch',
+      () async {
+        final requested = DateTime.parse('2026-05-06T10:05:00Z');
+        final mock = MockClient((req) async {
+          return http.Response(
+            jsonEncode([
+              _eventJson(
+                markets: <Map<String, dynamic>>[
+                  _marketJson(
+                    conditionId: '0xwrong-window',
+                    eventStartTime: '2026-05-06T10:10:00Z',
+                  ),
+                  _marketJson(conditionId: '0xcorrect-window'),
+                ],
+              ),
+            ]),
+            200,
+          );
+        });
+        final resolver = MarketResolver(gamma: _gammaWithMock(mock));
+
+        final result = await resolver.resolveTokenIdsForWindow(
+          'BTC',
+          '5m',
+          requested,
+        );
+        expect(result.status, MarketStatus.available);
+        expect(result.conditionId, '0xcorrect-window');
+        expect(result.startDate, requested);
+      },
+    );
+
+    test(
       'resolveCryptoMarkets normalizes padded asset before searching',
       () async {
         final mock = MockClient((req) async {
