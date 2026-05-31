@@ -182,6 +182,51 @@ void main() {
       );
     });
 
+    test('connect again detaches the stale socket read loop', () async {
+      final channels = <_FakeWebSocketChannel>[];
+      final reconnectingClient = MarketClient(
+        config: const StreamConfig(url: defaultStreamUrl, reconnect: false),
+        channelFactory: (_) {
+          final next = _FakeWebSocketChannel();
+          channels.add(next);
+          return next;
+        },
+      );
+      addTearDown(reconnectingClient.close);
+
+      await reconnectingClient.connect();
+      final stale = channels.single;
+      await reconnectingClient.connect();
+      final active = channels.last;
+
+      final next = reconnectingClient.books.first;
+      stale.push(
+        jsonEncode(<String, dynamic>{
+          'event_type': 'book',
+          'asset_id': 'stale',
+          'market': 'm',
+          'timestamp': 'stale',
+          'hash': 'h',
+          'bids': <Map<String, dynamic>>[],
+          'asks': <Map<String, dynamic>>[],
+        }),
+      );
+      active.push(
+        jsonEncode(<String, dynamic>{
+          'event_type': 'book',
+          'asset_id': 'active',
+          'market': 'm',
+          'timestamp': 'active',
+          'hash': 'h',
+          'bids': <Map<String, dynamic>>[],
+          'asks': <Map<String, dynamic>>[],
+        }),
+      );
+
+      final book = await next.timeout(const Duration(milliseconds: 250));
+      expect(book.assetId, 'active');
+    });
+
     test('inbound book event lands on books stream', () async {
       await client.connect();
       final next = client.books.first;
@@ -504,7 +549,9 @@ void main() {
         expect(err, isA<FormatException>());
         expect(err.toString(), contains('bids[0]'));
 
-        final book = await bookFuture.timeout(const Duration(milliseconds: 250));
+        final book = await bookFuture.timeout(
+          const Duration(milliseconds: 250),
+        );
         expect(book.timestamp, 'good');
         expect(book.bids, hasLength(1));
       },

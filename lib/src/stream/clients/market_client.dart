@@ -14,6 +14,7 @@ import '../config/reconnect_policy.dart';
 import '../config/stream_config.dart';
 import '../models/stream_messages.dart';
 import '../shared/json_frame.dart';
+import '../shared/socket_lifecycle.dart';
 import '../transport/contracts/channel_factory.dart';
 import '../transport/contracts/default_channel_factory.dart';
 
@@ -103,6 +104,11 @@ final class MarketClient {
     if (_closed) {
       throw StateError('MarketClient: cannot connect after close()');
     }
+    await detachStreamSocket(subscription: _subscription, channel: _channel);
+    _subscription = null;
+    _channel = null;
+    _connected = false;
+
     final url = Uri.parse(_config.url);
     final channel = _channelFactory(url);
     _channel = channel;
@@ -155,17 +161,10 @@ final class MarketClient {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
     final sub = _subscription;
-    _subscription = null;
-    await sub?.cancel();
     final channel = _channel;
+    _subscription = null;
     _channel = null;
-    if (channel != null) {
-      try {
-        await channel.sink.close();
-      } on Object {
-        // Ignore close errors — we've already torn down state.
-      }
-    }
+    await detachStreamSocket(subscription: sub, channel: channel);
     await _books.close();
     await _priceChanges.close();
     await _lastTrades.close();

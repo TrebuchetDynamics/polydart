@@ -192,6 +192,56 @@ void main() {
       expect(body['markets'], isEmpty);
     });
 
+    test('connect again detaches the stale socket read loop', () async {
+      final channels = <_FakeWebSocketChannel>[];
+      final reconnectingClient = UserClient(
+        config: const StreamConfig(url: defaultUserStreamUrl, reconnect: false),
+        credentials: _apiKey,
+        channelFactory: (_) {
+          final next = _FakeWebSocketChannel();
+          channels.add(next);
+          return next;
+        },
+      );
+      addTearDown(reconnectingClient.close);
+
+      await reconnectingClient.connect();
+      final stale = channels.single;
+      await reconnectingClient.connect();
+      final active = channels.last;
+
+      final next = reconnectingClient.orders.first;
+      stale.push(
+        jsonEncode(<String, dynamic>{
+          'event_type': 'order',
+          'order_id': 'stale-order',
+          'market': 'condition-1',
+          'asset_id': 'token-1',
+          'side': 'BUY',
+          'price': '0.5',
+          'size': '10',
+          'status': 'live',
+          'timestamp': 'stale',
+        }),
+      );
+      active.push(
+        jsonEncode(<String, dynamic>{
+          'event_type': 'order',
+          'order_id': 'active-order',
+          'market': 'condition-1',
+          'asset_id': 'token-1',
+          'side': 'BUY',
+          'price': '0.5',
+          'size': '10',
+          'status': 'live',
+          'timestamp': 'active',
+        }),
+      );
+
+      final order = await next.timeout(const Duration(milliseconds: 250));
+      expect(order.orderId, 'active-order');
+    });
+
     test('dispatches order and trade events', () async {
       await client.connect();
       final orderFuture = client.orders.first;

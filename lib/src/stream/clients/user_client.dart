@@ -14,6 +14,7 @@ import '../config/reconnect_policy.dart';
 import '../config/stream_config.dart';
 import '../models/stream_messages.dart';
 import '../shared/json_frame.dart';
+import '../shared/socket_lifecycle.dart';
 import '../transport/contracts/channel_factory.dart';
 import '../transport/contracts/default_channel_factory.dart';
 
@@ -78,6 +79,11 @@ final class UserClient {
     if (_closed) {
       throw StateError('UserClient: cannot connect after close()');
     }
+    await detachStreamSocket(subscription: _subscription, channel: _channel);
+    _subscription = null;
+    _channel = null;
+    _connected = false;
+
     final channel = _channelFactory(Uri.parse(_config.url));
     _channel = channel;
     _connected = true;
@@ -122,17 +128,10 @@ final class UserClient {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
     final sub = _subscription;
-    _subscription = null;
-    await sub?.cancel();
     final channel = _channel;
+    _subscription = null;
     _channel = null;
-    if (channel != null) {
-      try {
-        await channel.sink.close();
-      } on Object {
-        // Ignore close errors — state is already torn down.
-      }
-    }
+    await detachStreamSocket(subscription: sub, channel: channel);
     await _orders.close();
     await _trades.close();
     await _errors.close();
