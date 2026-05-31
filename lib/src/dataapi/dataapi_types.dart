@@ -513,24 +513,47 @@ Map<String, dynamic> _responseMap(Object? raw) {
   if (raw is Map<String, dynamic>) return raw;
   if (raw is Map) return raw.cast<String, dynamic>();
   if (raw is List) {
-    final firstMap = raw.whereType<Map<dynamic, dynamic>>().firstOrNull;
-    return firstMap?.cast<String, dynamic>() ?? const <String, dynamic>{};
+    for (var i = 0; i < raw.length; i++) {
+      final candidate = raw[i];
+      if (candidate is Map<dynamic, dynamic>) {
+        return candidate.cast<String, dynamic>();
+      }
+    }
+    return const <String, dynamic>{};
   }
   return const <String, dynamic>{};
 }
 
-List<LiveVolumeEntry> _liveVolumeEntries(Object? raw) {
-  if (raw is! List) return const <LiveVolumeEntry>[];
-  return raw
-      .whereType<Map<dynamic, dynamic>>()
-      .map((m) => LiveVolumeEntry.fromJson(m.cast<String, dynamic>()))
-      .toList(growable: false);
+List<LiveVolumeEntry> _liveVolumeEntries(Object? raw) =>
+    _decodeObjectList(raw, 'live-volume.events', LiveVolumeEntry.fromJson);
+
+List<LiveVolumeMarket> _liveVolumeMarkets(Object? raw) =>
+    _decodeObjectList(raw, 'live-volume.markets', LiveVolumeMarket.fromJson);
+
+List<T> _decodeObjectList<T>(
+  Object? raw,
+  String path,
+  T Function(Map<String, dynamic>) decode,
+) {
+  if (raw is! List) return <T>[];
+  final decoded = <T>[];
+  for (var i = 0; i < raw.length; i++) {
+    decoded.add(decode(_mapCandidateAt(raw, i, path)));
+  }
+  return decoded.toList(growable: false);
 }
 
-List<LiveVolumeMarket> _liveVolumeMarkets(Object? raw) {
-  if (raw is! List) return const <LiveVolumeMarket>[];
-  return raw
-      .whereType<Map<dynamic, dynamic>>()
-      .map((m) => LiveVolumeMarket.fromJson(m.cast<String, dynamic>()))
-      .toList(growable: false);
+Map<String, dynamic> _mapCandidateAt(
+  List<dynamic> candidates,
+  int index,
+  String path,
+) {
+  final candidate = candidates[index];
+  if (candidate is! Map<dynamic, dynamic>) {
+    throw FormatException(
+      'Data API $path[$index]: expected JSON object',
+      candidate,
+    );
+  }
+  return candidate.cast<String, dynamic>();
 }

@@ -79,6 +79,25 @@ void main() {
       expect(markets.single.market, '0xcondition');
       expect(markets.single.value, 42);
     });
+
+    test('rejects malformed market candidates instead of dropping them', () {
+      expect(
+        () => _liveVolumeFrom(<String, dynamic>{
+          'total': 42,
+          'markets': [
+            'not-a-market-object',
+            <String, dynamic>{'market': '0xcondition', 'value': 42},
+          ],
+        }),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('Data API live-volume.markets[0]'),
+          ),
+        ),
+      );
+    });
   });
 
   group('TotalValue', () {
