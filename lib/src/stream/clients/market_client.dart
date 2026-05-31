@@ -196,24 +196,28 @@ final class MarketClient {
     );
     if (payload == null) return;
     final eventType = (payload['event_type'] ?? '').toString();
-    switch (eventType) {
-      case 'book':
-        _books.add(BookMessage.fromJson(payload));
-      case 'price_change':
-        _priceChanges.add(PriceChangeMessage.fromJson(payload));
-      case 'last_trade_price':
-        _lastTrades.add(LastTradeMessage.fromJson(payload));
-      case 'tick_size_change':
-        _tickSizeChanges.add(TickSizeChangeMessage.fromJson(payload));
-      case 'best_bid_ask':
-        _bestBidAsks.add(BestBidAskMessage.fromJson(payload));
-      case 'new_market':
-        _newMarkets.add(NewMarketMessage.fromJson(payload));
-      case 'market_resolved':
-        _marketResolutions.add(MarketResolvedMessage.fromJson(payload));
-      default:
-        // Unknown / unsupported event — drop silently to match polygolem.
-        return;
+    try {
+      switch (eventType) {
+        case 'book':
+          _books.add(BookMessage.fromJson(payload));
+        case 'price_change':
+          _priceChanges.add(PriceChangeMessage.fromJson(payload));
+        case 'last_trade_price':
+          _lastTrades.add(LastTradeMessage.fromJson(payload));
+        case 'tick_size_change':
+          _tickSizeChanges.add(TickSizeChangeMessage.fromJson(payload));
+        case 'best_bid_ask':
+          _bestBidAsks.add(BestBidAskMessage.fromJson(payload));
+        case 'new_market':
+          _newMarkets.add(NewMarketMessage.fromJson(payload));
+        case 'market_resolved':
+          _marketResolutions.add(MarketResolvedMessage.fromJson(payload));
+        default:
+          // Unknown / unsupported event — drop silently to match polygolem.
+          return;
+      }
+    } on FormatException catch (e) {
+      _emitError(e);
     }
   }
 

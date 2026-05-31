@@ -37,6 +37,29 @@ List<PriceLevel> _levels(Object? raw) {
       .toList(growable: false);
 }
 
+Map<String, dynamic> _objectCandidateAt(
+  List<Object?> candidates,
+  int index,
+  String fieldName,
+) {
+  final candidate = candidates[index];
+  if (candidate is! Map) {
+    throw FormatException(
+      'stream: expected $fieldName[$index] to be a JSON object',
+      candidate,
+    );
+  }
+  return candidate.map<String, dynamic>((k, v) => MapEntry(k.toString(), v));
+}
+
+List<PriceChangeEntry> _priceChangeEntries(Object? raw) {
+  if (raw is! List) return const <PriceChangeEntry>[];
+  return <PriceChangeEntry>[
+    for (var i = 0; i < raw.length; i++)
+      PriceChangeEntry.fromJson(_objectCandidateAt(raw, i, 'price_changes')),
+  ];
+}
+
 /// Single bid or ask in a [BookMessage].
 @immutable
 final class PriceLevel {
@@ -125,17 +148,7 @@ final class PriceChangeMessage {
   });
 
   factory PriceChangeMessage.fromJson(Map<String, dynamic> json) {
-    final raw = json['price_changes'];
-    final changes = raw is List
-        ? raw
-              .whereType<Map<dynamic, dynamic>>()
-              .map(
-                (m) => PriceChangeEntry.fromJson(
-                  m.map((k, v) => MapEntry(k.toString(), v)),
-                ),
-              )
-              .toList(growable: false)
-        : const <PriceChangeEntry>[];
+    final changes = _priceChangeEntries(json['price_changes']);
     return PriceChangeMessage(
       eventType: _str(json['event_type']),
       market: _str(json['market']),

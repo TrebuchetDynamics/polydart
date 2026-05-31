@@ -424,6 +424,50 @@ void main() {
       },
     );
 
+    test(
+      'malformed price_change entry reports an indexed error and is not truncated',
+      () async {
+        await client.connect();
+        final errFuture = client.errors.first;
+        final priceChangeFuture = client.priceChanges.first;
+
+        channel.push(
+          jsonEncode(<String, dynamic>{
+            'event_type': 'price_change',
+            'market': 'm',
+            'timestamp': 'bad',
+            'price_changes': <Object>['not an object'],
+          }),
+        );
+        channel.push(
+          jsonEncode(<String, dynamic>{
+            'event_type': 'price_change',
+            'market': 'm',
+            'timestamp': 'good',
+            'price_changes': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'asset_id': 'a',
+                'price': '0.5',
+                'side': 'BUY',
+                'size': '1',
+                'hash': 'h',
+              },
+            ],
+          }),
+        );
+
+        final err = await errFuture.timeout(const Duration(milliseconds: 250));
+        expect(err, isA<FormatException>());
+        expect(err.toString(), contains('price_changes[0]'));
+
+        final priceChange = await priceChangeFuture.timeout(
+          const Duration(milliseconds: 250),
+        );
+        expect(priceChange.timestamp, 'good');
+        expect(priceChange.changes, hasLength(1));
+      },
+    );
+
     test('close shuts down all output streams', () async {
       await client.connect();
       await client.close();
