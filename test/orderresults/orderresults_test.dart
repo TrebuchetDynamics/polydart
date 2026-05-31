@@ -198,6 +198,49 @@ void main() {
       },
     );
 
+    test('keeps same-source fills that share a transaction hash', () async {
+      final report = await buildReport(
+        _FakeDataReader(
+          trades: const [
+            data.Trade(
+              id: 'fill-1',
+              market: '0xsol',
+              assetId: 'token-sol-up',
+              side: 'BUY',
+              price: 0.51,
+              size: 2,
+              feeRateBps: 0,
+              createdAt: '1',
+              outcome: 'Up',
+              transactionHash: '0xbatched',
+            ),
+            data.Trade(
+              id: 'fill-2',
+              market: '0xsol',
+              assetId: 'token-sol-up',
+              side: 'BUY',
+              price: 0.49,
+              size: 3,
+              feeRateBps: 0,
+              createdAt: '1',
+              outcome: 'Up',
+              transactionHash: '0xbatched',
+            ),
+          ],
+        ),
+        user: '0xwallet',
+      );
+
+      final row = report.rowByToken('token-sol-up');
+      expect(row, isNotNull);
+      expect(row!.trades.map((trade) => trade.id), <String>[
+        'fill-1',
+        'fill-2',
+      ]);
+      expect(row.tradeCount, 2);
+      expect(report.summary.matchedNotional, 2.49);
+    });
+
     test('deduplicates Data API and CLOB trades by transaction hash', () async {
       final clobReader = _FakeClobReader(
         trades: const [

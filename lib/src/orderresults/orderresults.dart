@@ -609,20 +609,47 @@ final class _MutableRow {
 }
 
 bool _appendTrade(_MutableRow row, OrderResultsTradeSummary trade) {
-  final tx = trade.transactionHash.trim();
-  if (tx.isNotEmpty) {
-    for (var i = 0; i < row.trades.length; i++) {
-      final existing = row.trades[i];
-      if (existing.transactionHash.toLowerCase() != tx.toLowerCase()) continue;
-      if (existing.source == orderResultSourceData &&
-          trade.source == orderResultSourceClob) {
+  for (var i = 0; i < row.trades.length; i++) {
+    switch (_compareTradeIdentity(row.trades[i], trade)) {
+      case _TradeIdentityAction.append:
+        continue;
+      case _TradeIdentityAction.skip:
+        return false;
+      case _TradeIdentityAction.replace:
         row.trades[i] = trade;
-      }
-      return false;
+        return false;
     }
   }
   row.trades.add(trade);
   return true;
+}
+
+enum _TradeIdentityAction { append, skip, replace }
+
+_TradeIdentityAction _compareTradeIdentity(
+  OrderResultsTradeSummary existing,
+  OrderResultsTradeSummary incoming,
+) {
+  final existingTx = existing.transactionHash.trim().toLowerCase();
+  final incomingTx = incoming.transactionHash.trim().toLowerCase();
+  if (existingTx.isEmpty || existingTx != incomingTx) {
+    return _TradeIdentityAction.append;
+  }
+
+  if (existing.source == incoming.source) {
+    final existingId = existing.id.trim();
+    final incomingId = incoming.id.trim();
+    if (existingId.isNotEmpty && existingId == incomingId) {
+      return _TradeIdentityAction.skip;
+    }
+    return _TradeIdentityAction.append;
+  }
+
+  if (existing.source == orderResultSourceData &&
+      incoming.source == orderResultSourceClob) {
+    return _TradeIdentityAction.replace;
+  }
+  return _TradeIdentityAction.skip;
 }
 
 String _classifyPosition(data.Position position) {
