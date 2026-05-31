@@ -119,15 +119,35 @@ String roundToTick(String value, String tickSize) =>
 
 /// Throws [ValidationException] when [price] is outside `[tickSize, 1 - tickSize]`.
 void validatePriceAgainstTick(String price, String tickSize) {
-  final p = double.parse(price);
-  final t = double.parse(tickSize);
+  final p = _parseFiniteDecimal(price, field: 'price');
+  final t = _parseFiniteDecimal(tickSize, field: 'tickSize');
+  if (t <= 0 || t >= 1) {
+    throw ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'tickSize $tickSize must be finite and between 0 and 1',
+      field: 'tickSize',
+    );
+  }
   if (p < t || p > 1 - t) {
     throw ValidationException(
       code: ErrorCode.invalidValue,
       message:
           'price $price must be within [$t, ${1 - t}] for tick size $tickSize',
+      field: 'price',
     );
   }
+}
+
+double _parseFiniteDecimal(String raw, {required String field}) {
+  final value = double.tryParse(raw);
+  if (value == null || !value.isFinite) {
+    throw ValidationException(
+      code: ErrorCode.invalidValue,
+      message: '$field must be a finite decimal',
+      field: field,
+    );
+  }
+  return value;
 }
 
 /// Builds a deterministic salt from a seed. For tests / replays.

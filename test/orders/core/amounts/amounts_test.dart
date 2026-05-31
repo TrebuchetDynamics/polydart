@@ -84,6 +84,25 @@ void main() {
         throwsValidationException,
       );
     });
+
+    test('rejects non-finite price and non-positive tick', () {
+      expect(
+        () => validatePriceAgainstTick('NaN', '0.01'),
+        throwsValidationException,
+      );
+      expect(
+        () => validatePriceAgainstTick('0.50', 'NaN'),
+        throwsValidationException,
+      );
+      expect(
+        () => validatePriceAgainstTick('0.50', '0'),
+        throwsValidationException,
+      );
+      expect(
+        () => validatePriceAgainstTick('0.50', '-0.01'),
+        throwsValidationException,
+      );
+    });
   });
 
   group('salts', () {
