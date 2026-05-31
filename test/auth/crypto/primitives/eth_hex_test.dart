@@ -3,6 +3,14 @@ import 'package:polydart/src/errors/errors.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('stripHexPrefix', () {
+    test('removes lowercase and uppercase prefixes only', () {
+      expect(stripHexPrefix('0xdead'), 'dead');
+      expect(stripHexPrefix('0Xdead'), 'dead');
+      expect(stripHexPrefix('dead'), 'dead');
+    });
+  });
+
   group('hexToBytes', () {
     test('handles 0x and bare', () {
       expect(hexToBytes('0xdeadbeef'), [0xde, 0xad, 0xbe, 0xef]);
