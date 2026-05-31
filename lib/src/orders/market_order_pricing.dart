@@ -18,9 +18,11 @@ final class MarketOrderPricePlan {
     required this.requiredAmount,
     required this.levelsConsumed,
     required this.fillsCompletely,
-  });
+  }) : assert(levelsConsumed > 0),
+       assert(filledAmount >= 0),
+       assert(requiredAmount > 0);
 
-  /// Limit/fill price selected from the opposing book side.
+  /// Limit/fill price selected from the worst consumed opposing book level.
   final String price;
 
   /// BUY: USDC notional available through consumed asks.
@@ -30,6 +32,22 @@ final class MarketOrderPricePlan {
   final double requiredAmount;
   final int levelsConsumed;
   final bool fillsCompletely;
+}
+
+@immutable
+final class MarketOrderFillStep {
+  const MarketOrderFillStep({
+    required this.level,
+    required this.fillContribution,
+    required this.cumulativeFilled,
+  }) : assert(fillContribution > 0),
+       assert(cumulativeFilled > 0);
+
+  final OrderBookLevel level;
+
+  /// BUY: USDC notional at this ask level. SELL: share size at this bid level.
+  final double fillContribution;
+  final double cumulativeFilled;
 }
 
 MarketOrderPricePlan selectMarketOrderPrice({
@@ -45,19 +63,15 @@ MarketOrderPricePlan selectMarketOrderPrice({
     );
   }
 
-  var filled = 0.0;
-  var levelsConsumed = 0;
-  for (final level in levels) {
-    levelsConsumed++;
-    final price = _parsePositiveLevelValue(level.price, 'book price');
-    final size = _parsePositiveLevelValue(level.size, 'book size');
-    filled += side == Side.buy ? price * size : size;
-    if (filled >= amount) {
+  final steps = marketOrderFillSteps(levels: levels, side: side);
+  for (var i = 0; i < steps.length; i++) {
+    final step = steps[i];
+    if (step.cumulativeFilled >= amount) {
       return MarketOrderPricePlan(
-        price: level.price,
-        filledAmount: filled,
+        price: step.level.price,
+        filledAmount: step.cumulativeFilled,
         requiredAmount: amount,
-        levelsConsumed: levelsConsumed,
+        levelsConsumed: i + 1,
         fillsCompletely: true,
       );
     }
@@ -69,13 +83,36 @@ MarketOrderPricePlan selectMarketOrderPrice({
       message: 'insufficient liquidity to fill order',
     );
   }
+  final lastVisibleStep = steps.last;
   return MarketOrderPricePlan(
-    price: levels.first.price,
-    filledAmount: filled,
+    price: lastVisibleStep.level.price,
+    filledAmount: lastVisibleStep.cumulativeFilled,
     requiredAmount: amount,
-    levelsConsumed: levelsConsumed,
+    levelsConsumed: steps.length,
     fillsCompletely: false,
   );
+}
+
+List<MarketOrderFillStep> marketOrderFillSteps({
+  required List<OrderBookLevel> levels,
+  required Side side,
+}) {
+  var filled = 0.0;
+  final steps = <MarketOrderFillStep>[];
+  for (final level in levels) {
+    final price = _parsePositiveLevelValue(level.price, 'book price');
+    final size = _parsePositiveLevelValue(level.size, 'book size');
+    final contribution = side == Side.buy ? price * size : size;
+    filled += contribution;
+    steps.add(
+      MarketOrderFillStep(
+        level: level,
+        fillContribution: contribution,
+        cumulativeFilled: filled,
+      ),
+    );
+  }
+  return steps;
 }
 
 double _parsePositiveLevelValue(String raw, String field) {

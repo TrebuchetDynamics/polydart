@@ -438,6 +438,23 @@ void main() {
       expect(plan.fillsCompletely, isTrue);
     });
 
+    test('non-FOK partial fills keep the worst consumed visible price', () {
+      final plan = selectMarketOrderPrice(
+        levels: const <OrderBookLevel>[
+          OrderBookLevel(price: '0.10', size: '5'),
+          OrderBookLevel(price: '0.20', size: '10'),
+        ],
+        side: Side.buy,
+        amount: 10.0,
+        orderType: OrderType.gtc,
+      );
+
+      expect(plan.price, '0.20');
+      expect(plan.filledAmount, 2.5);
+      expect(plan.levelsConsumed, 2);
+      expect(plan.fillsCompletely, isFalse);
+    });
+
     test('rejects malformed book levels as validation failures', () {
       expect(
         () => selectMarketOrderPrice(
