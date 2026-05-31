@@ -4,6 +4,8 @@ import 'package:polydart/src/auth/eip712.dart';
 import 'package:polydart/src/auth/eth_hex.dart';
 import 'package:test/test.dart';
 
+import '../shared/eip712_test_values.dart';
+
 void main() {
   group('eip712TypeHash', () {
     test('canonical EIP712Domain locks in keccak of the type string', () {
@@ -47,10 +49,8 @@ void main() {
 
   group('eip712DomainSeparator', () {
     test('domain hash is 32 bytes and depends on chainId', () {
-      const a = Eip712Domain(name: 'X', version: '1', chainId: 137);
-      const b = Eip712Domain(name: 'X', version: '1', chainId: 1);
-      final ha = eip712DomainSeparator(a);
-      final hb = eip712DomainSeparator(b);
+      final ha = eip712DomainSeparator(eip712TestDomainPolygon);
+      final hb = eip712DomainSeparator(eip712TestDomainMainnet);
       expect(ha.length, 32);
       expect(ha, isNot(hb));
     });
@@ -63,7 +63,7 @@ void main() {
         Eip712Field('amount', 'uint256'),
       ];
       final h1 = hashTypedData(
-        domain: const Eip712Domain(name: 'X', version: '1', chainId: 137),
+        domain: eip712TestDomainPolygon,
         primaryType: 'Transfer',
         fields: fields,
         message: <String, Object?>{
@@ -72,7 +72,7 @@ void main() {
         },
       );
       final h2 = hashTypedData(
-        domain: const Eip712Domain(name: 'X', version: '1', chainId: 1),
+        domain: eip712TestDomainMainnet,
         primaryType: 'Transfer',
         fields: fields,
         message: <String, Object?>{
@@ -81,7 +81,7 @@ void main() {
         },
       );
       final h3 = hashTypedData(
-        domain: const Eip712Domain(name: 'X', version: '1', chainId: 137),
+        domain: eip712TestDomainPolygon,
         primaryType: 'Transfer',
         fields: fields,
         message: <String, Object?>{
@@ -99,7 +99,7 @@ void main() {
   test('atomic encoder rejects bad bytes32', () {
     expect(
       () => hashTypedData(
-        domain: const Eip712Domain(name: 'X', version: '1', chainId: 137),
+        domain: eip712TestDomainPolygon,
         primaryType: 'T',
         fields: const [Eip712Field('h', 'bytes32')],
         message: <String, Object?>{'h': '0x12'},

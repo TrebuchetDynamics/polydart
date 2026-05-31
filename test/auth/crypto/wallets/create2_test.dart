@@ -4,7 +4,7 @@ import 'package:polydart/src/auth/create2.dart';
 import 'package:polydart/src/errors/errors.dart';
 import 'package:test/test.dart';
 
-import '../support/auth_test_fixtures.dart';
+import '../../support/auth_test_fixtures.dart';
 
 void main() {
   group('CREATE2 parity vectors (cross-validated against polygolem)', () {

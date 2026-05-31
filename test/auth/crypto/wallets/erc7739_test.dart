@@ -10,25 +10,11 @@ import 'package:polydart/src/auth/erc7739.dart';
 import 'package:polydart/src/auth/eth_hex.dart';
 import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/orders/order_signing.dart';
-import 'package:polydart/src/types/enums.dart';
 import 'package:test/test.dart';
 
-import '../support/auth_test_fixtures.dart';
-import '../support/fake_wallet_signer.dart';
-
-OrderV2Draft _draft() => const OrderV2Draft(
-  salt: '1',
-  // For sigType=poly1271, both maker and signer are the deposit wallet,
-  // matching `buildSignedOrderPayload` in polygolem orders.go.
-  maker: canonicalDepositWallet,
-  signer: canonicalDepositWallet,
-  tokenId: '12345',
-  makerAmount: '5500000',
-  takerAmount: '10000000',
-  side: Side.buy,
-  signatureType: SignatureType.poly1271,
-  timestamp: '1700000000000',
-);
+import '../../support/auth_test_fixtures.dart';
+import '../../support/fake_wallet_signer.dart';
+import '../shared/poly1271_test_values.dart';
 
 void main() {
   group('ERC-7739 parity (cross-validated against polygolem)', () {
@@ -40,7 +26,7 @@ void main() {
     });
 
     test('contents (Order struct hash) for sigtype=3 variant', () {
-      final contents = orderV2StructHash(draft: _draft());
+      final contents = orderV2StructHash(draft: canonicalPoly1271OrderDraft());
       expect(
         bytesToHex(contents),
         '662e2e1befa43fad015c08b6b0832c68fa42980e84e5f4a8b71c8ff532e14e03',
@@ -49,7 +35,7 @@ void main() {
 
     test('hashStruct(TypedDataSign) for canonical sample', () {
       final tds = poly1271StructHash(
-        contents: orderV2StructHash(draft: _draft()),
+        contents: orderV2StructHash(draft: canonicalPoly1271OrderDraft()),
         depositWalletAddress: canonicalDepositWallet,
       );
       expect(
@@ -60,7 +46,7 @@ void main() {
 
     test('final hash for canonical regular-market sample', () {
       final digest = computePoly1271FinalHash(
-        draft: _draft(),
+        draft: canonicalPoly1271OrderDraft(),
         depositWalletAddress: canonicalDepositWallet,
       );
       expect(
@@ -71,7 +57,7 @@ void main() {
 
     test('final hash for canonical neg-risk-market sample', () {
       final digest = computePoly1271FinalHash(
-        draft: _draft(),
+        draft: canonicalPoly1271OrderDraft(),
         depositWalletAddress: canonicalDepositWallet,
         negRisk: true,
       );
@@ -92,7 +78,7 @@ void main() {
       // would run on the envelope returned by
       // buildPoly1271TypedDataEnvelope. It must produce the same digest
       // as computePoly1271FinalHash.
-      final draft = _draft();
+      final draft = canonicalPoly1271OrderDraft();
       final a = computePoly1271FinalHash(
         draft: draft,
         depositWalletAddress: canonicalDepositWallet,
@@ -107,13 +93,10 @@ void main() {
 
   group('assembled wrap layout', () {
     test('317 bytes total with deterministic placeholder sig', () {
-      final placeholder = Uint8List(65);
-      for (var i = 0; i < 65; i++) {
-        placeholder[i] = 0xa0 + (i % 16);
-      }
+      final placeholder = deterministicInnerSignature65();
       final assembled = assemblePoly1271WrappedSignature(
         innerSignature: placeholder,
-        draft: _draft(),
+        draft: canonicalPoly1271OrderDraft(),
       );
       // 0x prefix + 634 hex chars = 636 chars total = 317 bytes.
       expect(assembled.length, 636);
@@ -139,13 +122,10 @@ void main() {
     });
 
     test('neg-risk wrap swaps only the app domain separator', () {
-      final placeholder = Uint8List(65);
-      for (var i = 0; i < 65; i++) {
-        placeholder[i] = 0xa0 + (i % 16);
-      }
+      final placeholder = deterministicInnerSignature65();
       final assembled = assemblePoly1271WrappedSignature(
         innerSignature: placeholder,
-        draft: _draft(),
+        draft: canonicalPoly1271OrderDraft(),
         negRisk: true,
       );
       const expected =
@@ -169,7 +149,7 @@ void main() {
       expect(
         () => assemblePoly1271WrappedSignature(
           innerSignature: Uint8List(64),
-          draft: _draft(),
+          draft: canonicalPoly1271OrderDraft(),
         ),
         throwsA(isA<Exception>()),
       );
@@ -179,7 +159,7 @@ void main() {
   group('typed-data envelope shape', () {
     test('matches the wallet provider format', () {
       final env = buildPoly1271TypedDataEnvelope(
-        draft: _draft(),
+        draft: canonicalPoly1271OrderDraft(),
         depositWalletAddress: canonicalDepositWallet,
       );
       expect(env['primaryType'], 'TypedDataSign');
@@ -204,13 +184,11 @@ void main() {
   group('wrapPoly1271Signature (WalletSigner integration)', () {
     test('passes the envelope to the signer and assembles the wrap', () async {
       final signer = FakeWalletSigner(
-        signature: Uint8List.fromList(
-          List<int>.generate(65, (i) => 0xa0 + (i % 16)),
-        ),
+        signature: deterministicInnerSignature65(),
       );
       final wrapped = await wrapPoly1271Signature(
         signer: signer,
-        draft: _draft(),
+        draft: canonicalPoly1271OrderDraft(),
         depositWalletAddress: canonicalDepositWallet,
       );
       // Sanity: 636 chars and the captured envelope used chainId=137.
@@ -226,7 +204,7 @@ void main() {
       await expectLater(
         () => wrapPoly1271Signature(
           signer: signer,
-          draft: _draft(),
+          draft: canonicalPoly1271OrderDraft(),
           depositWalletAddress: canonicalDepositWallet,
         ),
         throwsA(
@@ -248,7 +226,7 @@ void main() {
       expect(
         () => wrapPoly1271Signature(
           signer: signer,
-          draft: _draft(),
+          draft: canonicalPoly1271OrderDraft(),
           depositWalletAddress: canonicalDepositWallet,
         ),
         throwsA(isA<Exception>()),
