@@ -118,7 +118,7 @@ final class DataApiClient {
       '/oi',
       query: <String, dynamic>{'market': market},
     );
-    final first = _firstMap(list);
+    final first = _optionalFirstMap(list, '/oi');
     if (first == null) {
       return OpenInterest(market: market, assetId: '', openValue: 0);
     }
@@ -205,10 +205,11 @@ final class DataApiClient {
     return candidate.cast<String, dynamic>();
   }
 
-  Map<String, dynamic>? _firstMap(List<dynamic> list) {
-    for (final item in list) {
-      if (item is Map<dynamic, dynamic>) return item.cast<String, dynamic>();
-    }
-    return null;
+  Map<String, dynamic>? _optionalFirstMap(
+    List<dynamic> candidates,
+    String path,
+  ) {
+    if (candidates.isEmpty) return null;
+    return _mapCandidateAt(candidates, 0, path);
   }
 }

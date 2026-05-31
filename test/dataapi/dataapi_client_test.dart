@@ -76,37 +76,40 @@ void main() {
       expect(captured!.queryParameters['limit'], '25');
     });
 
-    test('rejects malformed position candidates instead of dropping them', () async {
-      final client = _client((req) async {
-        return http.Response(
-          jsonEncode([
-            'not-a-position-object',
-            <String, dynamic>{
-              'token_id': 'tok',
-              'condition_id': 'cond',
-              'market_id': 'mkt',
-              'side': 'YES',
-              'avg_price': 0.42,
-              'size': 100.0,
-              'current_price': 0.51,
-              'unrealized_pnl': 9.0,
-            },
-          ]),
-          200,
-        );
-      });
+    test(
+      'rejects malformed position candidates instead of dropping them',
+      () async {
+        final client = _client((req) async {
+          return http.Response(
+            jsonEncode([
+              'not-a-position-object',
+              <String, dynamic>{
+                'token_id': 'tok',
+                'condition_id': 'cond',
+                'market_id': 'mkt',
+                'side': 'YES',
+                'avg_price': 0.42,
+                'size': 100.0,
+                'current_price': 0.51,
+                'unrealized_pnl': 9.0,
+              },
+            ]),
+            200,
+          );
+        });
 
-      await expectLater(
-        client.currentPositions('0xuser'),
-        throwsA(
-          isA<FormatException>().having(
-            (e) => e.message,
-            'message',
-            contains('Data API /positions[0]'),
+        await expectLater(
+          client.currentPositions('0xuser'),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains('Data API /positions[0]'),
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test('decodes Polygolem V2 camelCase position fields', () async {
       final client = _client((req) async {
@@ -422,33 +425,39 @@ void main() {
       expect(holders.first.shares, 500.0);
     });
 
-    test('rejects malformed nested holder candidates instead of dropping them', () async {
-      final client = _client((req) async {
-        return http.Response(
-          jsonEncode([
-            <String, dynamic>{
-              'token': 'tok123',
-              'holders': [
-                'not-a-holder-object',
-                <String, dynamic>{'proxyWallet': '0xholder', 'amount': '500.0'},
-              ],
-            },
-          ]),
-          200,
-        );
-      });
+    test(
+      'rejects malformed nested holder candidates instead of dropping them',
+      () async {
+        final client = _client((req) async {
+          return http.Response(
+            jsonEncode([
+              <String, dynamic>{
+                'token': 'tok123',
+                'holders': [
+                  'not-a-holder-object',
+                  <String, dynamic>{
+                    'proxyWallet': '0xholder',
+                    'amount': '500.0',
+                  },
+                ],
+              },
+            ]),
+            200,
+          );
+        });
 
-      await expectLater(
-        client.topHolders('tok123'),
-        throwsA(
-          isA<FormatException>().having(
-            (e) => e.message,
-            'message',
-            contains('Data API /holders[0].holders[0]'),
+        await expectLater(
+          client.topHolders('tok123'),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains('Data API /holders[0].holders[0]'),
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   });
 
   group('totalValue', () {
@@ -534,6 +543,48 @@ void main() {
       expect(oi.assetId, 'tok');
       expect(oi.openValue, 9999.99);
     });
+
+    test('returns empty fallback when /oi returns no candidates', () async {
+      final client = _client((req) async {
+        return http.Response(jsonEncode(<Object>[]), 200);
+      });
+
+      final oi = await client.openInterest('0xempty');
+
+      expect(oi.market, '0xempty');
+      expect(oi.assetId, isEmpty);
+      expect(oi.openValue, 0);
+    });
+
+    test(
+      'rejects malformed first /oi candidate instead of skipping it',
+      () async {
+        final client = _client((req) async {
+          return http.Response(
+            jsonEncode([
+              'not-open-interest-object',
+              <String, dynamic>{
+                'market': '0xabc',
+                'asset_id': 'tok',
+                'open_value': '9999.99',
+              },
+            ]),
+            200,
+          );
+        });
+
+        await expectLater(
+          client.openInterest('tok'),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains('Data API /oi[0]'),
+            ),
+          ),
+        );
+      },
+    );
   });
 
   group('traderLeaderboard', () {
