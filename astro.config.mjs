@@ -31,6 +31,10 @@ export default defineConfig({
               label: 'Live Safety Gates',
               slug: 'protocol-safety/live-safety-gates',
             },
+            {
+              label: 'Credential Boundaries',
+              slug: 'protocol-safety/credential-boundaries',
+            },
           ],
         },
         {
