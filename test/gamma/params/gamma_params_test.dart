@@ -53,6 +53,11 @@ void main() {
       expect(p.toQuery(), {'q': 'btc 5m'});
     });
 
+    test('preserves non-positive pagination values for search parity', () {
+      const p = SearchParams(query: 'btc 5m', limitPerType: 0, page: -1);
+      expect(p.toQuery(), {'q': 'btc 5m', 'limit_per_type': '0', 'page': '-1'});
+    });
+
     test('full set encoded', () {
       const p = SearchParams(
         query: 'eth',
@@ -73,6 +78,30 @@ void main() {
       expect(q['ascending'], 'true');
       expect(q['sort'], 'volume');
       expect(q['search_profiles'], 'false');
+    });
+  });
+
+  group('shared Gamma query contracts', () {
+    test('offset-paginated endpoints drop non-positive limit and offset', () {
+      expect(const GetEventsParams(limit: 0, offset: -1).toQuery(), isEmpty);
+      expect(const GetSeriesParams(limit: 0, offset: -1).toQuery(), isEmpty);
+      expect(const GetTagsParams(limit: 0, offset: -1).toQuery(), isEmpty);
+      expect(const GetTeamsParams(limit: 0, offset: -1).toQuery(), isEmpty);
+      expect(const CommentQuery(limit: 0, offset: -1).toQuery(), isEmpty);
+      expect(const KeysetParams(limit: 0).toQuery(), isEmpty);
+    });
+
+    test('keeps boolean false values explicit', () {
+      expect(const GetEventsParams(closed: false).toQuery(), {
+        'closed': 'false',
+      });
+      expect(const GetSeriesParams(closed: false).toQuery(), {
+        'closed': 'false',
+      });
+      expect(const KeysetParams(active: false, closed: false).toQuery(), {
+        'active': 'false',
+        'closed': 'false',
+      });
     });
   });
 }

@@ -8,6 +8,32 @@ library;
 
 import 'package:meta/meta.dart';
 
+extension _GammaQueryBuilder on Map<String, dynamic> {
+  void addPositiveInt(String key, int? value) {
+    if (value != null && value > 0) this[key] = value.toString();
+  }
+
+  void addInt(String key, int? value) {
+    if (value != null) this[key] = value.toString();
+  }
+
+  void addBool(String key, bool? value) {
+    if (value != null) this[key] = value.toString();
+  }
+
+  void addNonEmptyString(String key, String? value) {
+    if (value != null && value.isNotEmpty) this[key] = value;
+  }
+
+  void addStringList(String key, List<String> value) {
+    if (value.isNotEmpty) this[key] = value;
+  }
+
+  void addDouble(String key, double? value) {
+    if (value != null) this[key] = value.toString();
+  }
+}
+
 @immutable
 final class GetMarketsParams {
   const GetMarketsParams({
@@ -48,32 +74,23 @@ final class GetMarketsParams {
 
   Map<String, dynamic> toQuery() {
     final q = <String, dynamic>{};
-    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
-    if (offset != null && offset! > 0) q['offset'] = offset!.toString();
-    if (order != null && order!.isNotEmpty) q['order'] = order;
-    if (ascending != null) q['ascending'] = ascending!.toString();
-    if (slug.isNotEmpty) q['slug'] = slug;
-    if (conditionIds.isNotEmpty) q['condition_ids'] = conditionIds;
-    if (clobTokenIds.isNotEmpty) q['clob_token_ids'] = clobTokenIds;
-    if (tagId != null) q['tag_id'] = tagId!.toString();
-    if (relatedTags != null) q['related_tags'] = relatedTags!.toString();
-    if (closed != null) q['closed'] = closed!.toString();
-    if (active != null) q['active'] = active!.toString();
-    if (liquidityNumMin != null) {
-      q['liquidity_num_min'] = liquidityNumMin!.toString();
-    }
-    if (liquidityNumMax != null) {
-      q['liquidity_num_max'] = liquidityNumMax!.toString();
-    }
-    if (volumeNumMin != null) {
-      q['volume_num_min'] = volumeNumMin!.toString();
-    }
-    if (volumeNumMax != null) {
-      q['volume_num_max'] = volumeNumMax!.toString();
-    }
-    if (sportsMarketTypes.isNotEmpty) {
-      q['sports_market_types'] = sportsMarketTypes;
-    }
+    q
+      ..addPositiveInt('limit', limit)
+      ..addPositiveInt('offset', offset)
+      ..addNonEmptyString('order', order)
+      ..addBool('ascending', ascending)
+      ..addStringList('slug', slug)
+      ..addStringList('condition_ids', conditionIds)
+      ..addStringList('clob_token_ids', clobTokenIds)
+      ..addInt('tag_id', tagId)
+      ..addBool('related_tags', relatedTags)
+      ..addBool('closed', closed)
+      ..addBool('active', active)
+      ..addDouble('liquidity_num_min', liquidityNumMin)
+      ..addDouble('liquidity_num_max', liquidityNumMax)
+      ..addDouble('volume_num_min', volumeNumMin)
+      ..addDouble('volume_num_max', volumeNumMax)
+      ..addStringList('sports_market_types', sportsMarketTypes);
     return q;
   }
 }
@@ -102,17 +119,14 @@ final class SearchParams {
 
   Map<String, dynamic> toQuery() {
     final q = <String, dynamic>{'q': query};
-    if (limitPerType != null) q['limit_per_type'] = limitPerType!.toString();
-    if (page != null) q['page'] = page!.toString();
-    if (eventsTag.isNotEmpty) q['events_tag'] = eventsTag;
-    if (eventsStatus != null && eventsStatus!.isNotEmpty) {
-      q['events_status'] = eventsStatus;
-    }
-    if (ascending != null) q['ascending'] = ascending!.toString();
-    if (sort != null && sort!.isNotEmpty) q['sort'] = sort;
-    if (searchProfiles != null) {
-      q['search_profiles'] = searchProfiles!.toString();
-    }
+    q
+      ..addInt('limit_per_type', limitPerType)
+      ..addInt('page', page)
+      ..addStringList('events_tag', eventsTag)
+      ..addNonEmptyString('events_status', eventsStatus)
+      ..addBool('ascending', ascending)
+      ..addNonEmptyString('sort', sort)
+      ..addBool('search_profiles', searchProfiles);
     return q;
   }
 }
@@ -139,13 +153,14 @@ final class GetEventsParams {
 
   Map<String, dynamic> toQuery() {
     final q = <String, dynamic>{};
-    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
-    if (offset != null && offset! > 0) q['offset'] = offset!.toString();
-    if (closed != null) q['closed'] = closed!.toString();
-    if (tagId != null) q['tag_id'] = tagId!.toString();
-    if (order != null && order!.isNotEmpty) q['order'] = order;
-    if (ascending != null) q['ascending'] = ascending!.toString();
-    if (slug.isNotEmpty) q['slug'] = slug;
+    q
+      ..addPositiveInt('limit', limit)
+      ..addPositiveInt('offset', offset)
+      ..addBool('closed', closed)
+      ..addInt('tag_id', tagId)
+      ..addNonEmptyString('order', order)
+      ..addBool('ascending', ascending)
+      ..addStringList('slug', slug);
     return q;
   }
 }
@@ -168,11 +183,12 @@ final class GetSeriesParams {
 
   Map<String, dynamic> toQuery() {
     final q = <String, dynamic>{};
-    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
-    if (offset != null && offset! > 0) q['offset'] = offset!.toString();
-    if (closed != null) q['closed'] = closed!.toString();
-    if (order != null && order!.isNotEmpty) q['order'] = order;
-    if (ascending != null) q['ascending'] = ascending!.toString();
+    q
+      ..addPositiveInt('limit', limit)
+      ..addPositiveInt('offset', offset)
+      ..addBool('closed', closed)
+      ..addNonEmptyString('order', order)
+      ..addBool('ascending', ascending);
     return q;
   }
 }
@@ -188,10 +204,11 @@ final class GetTagsParams {
 
   Map<String, dynamic> toQuery() {
     final q = <String, dynamic>{};
-    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
-    if (offset != null && offset! > 0) q['offset'] = offset!.toString();
-    if (order != null && order!.isNotEmpty) q['order'] = order;
-    if (ascending != null) q['ascending'] = ascending!.toString();
+    q
+      ..addPositiveInt('limit', limit)
+      ..addPositiveInt('offset', offset)
+      ..addNonEmptyString('order', order)
+      ..addBool('ascending', ascending);
     return q;
   }
 }
@@ -216,12 +233,13 @@ final class GetTeamsParams {
 
   Map<String, dynamic> toQuery() {
     final q = <String, dynamic>{};
-    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
-    if (offset != null && offset! > 0) q['offset'] = offset!.toString();
-    if (order != null && order!.isNotEmpty) q['order'] = order;
-    if (ascending != null) q['ascending'] = ascending!.toString();
-    if (league.isNotEmpty) q['league'] = league;
-    if (name.isNotEmpty) q['name'] = name;
+    q
+      ..addPositiveInt('limit', limit)
+      ..addPositiveInt('offset', offset)
+      ..addNonEmptyString('order', order)
+      ..addBool('ascending', ascending)
+      ..addStringList('league', league)
+      ..addStringList('name', name);
     return q;
   }
 }
@@ -238,12 +256,11 @@ final class CommentQuery {
 
   Map<String, dynamic> toQuery() {
     final q = <String, dynamic>{};
-    if (entityId != null) q['parent_entity_id'] = entityId!.toString();
-    if (entityType != null && entityType!.isNotEmpty) {
-      q['parent_entity_type'] = entityType;
-    }
-    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
-    if (offset != null && offset! > 0) q['offset'] = offset!.toString();
+    q
+      ..addInt('parent_entity_id', entityId)
+      ..addNonEmptyString('parent_entity_type', entityType)
+      ..addPositiveInt('limit', limit)
+      ..addPositiveInt('offset', offset);
     return q;
   }
 }
@@ -269,12 +286,13 @@ final class KeysetParams {
 
   Map<String, dynamic> toQuery() {
     final q = <String, dynamic>{};
-    if (limit != null && limit! > 0) q['limit'] = limit!.toString();
-    if (keysetId != null && keysetId!.isNotEmpty) q['keyset_id'] = keysetId;
-    if (ascending != null) q['ascending'] = ascending!.toString();
-    if (active != null) q['active'] = active!.toString();
-    if (closed != null) q['closed'] = closed!.toString();
-    if (order != null && order!.isNotEmpty) q['order'] = order;
+    q
+      ..addPositiveInt('limit', limit)
+      ..addNonEmptyString('keyset_id', keysetId)
+      ..addBool('ascending', ascending)
+      ..addBool('active', active)
+      ..addBool('closed', closed)
+      ..addNonEmptyString('order', order);
     return q;
   }
 }
