@@ -13,7 +13,6 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import '../config/reconnect_policy.dart';
 import '../config/stream_config.dart';
 import '../models/stream_messages.dart';
-import '../shared/json_array_frame.dart';
 import '../shared/json_frame.dart';
 import '../transport/contracts/channel_factory.dart';
 import '../transport/contracts/default_channel_factory.dart';
@@ -184,14 +183,9 @@ final class MarketClient {
   }
 
   void _dispatch(List<int> bytes) {
-    final split = splitJsonArrayFrame(bytes);
-    if (split.isArray) {
-      for (final child in split.frames) {
-        _dispatchSingle(child);
-      }
-      return;
+    for (final child in streamJsonObjectFrames(bytes)) {
+      _dispatchSingle(child);
     }
-    _dispatchSingle(bytes);
   }
 
   void _dispatchSingle(List<int> bytes) {

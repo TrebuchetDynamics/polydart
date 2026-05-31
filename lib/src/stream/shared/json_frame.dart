@@ -7,6 +7,8 @@ library;
 
 import 'dart:convert';
 
+import 'json_array_frame.dart';
+
 /// Normalizes a WebSocket text/binary frame into UTF-8 bytes.
 ///
 /// Unsupported frame shapes return `null` and should be ignored by callers.
@@ -14,6 +16,17 @@ List<int>? streamFrameBytes(dynamic frame) {
   if (frame is String) return utf8.encode(frame);
   if (frame is List<int>) return frame;
   return null;
+}
+
+/// Expands a WebSocket payload into the JSON object frames it contains.
+///
+/// Market stream frames can arrive as a single object or as a JSON array batch.
+/// Authenticated user streams use the same object envelope, so keeping this
+/// expansion shared prevents clients from disagreeing about batched frames.
+Iterable<List<int>> streamJsonObjectFrames(List<int> bytes) {
+  final split = splitJsonArrayFrame(bytes);
+  if (split.isArray) return split.frames;
+  return <List<int>>[bytes];
 }
 
 /// Decodes [bytes] as a JSON object, reporting parse/shape failures through

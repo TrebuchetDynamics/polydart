@@ -191,6 +191,50 @@ void main() {
       expect(trade.transactionHash, '0xtx');
     });
 
+    test('dispatches order and trade events from a JSON array batch', () async {
+      await client.connect();
+      final orderFuture = client.orders.first;
+      final tradeFuture = client.trades.first;
+
+      channel.push(
+        jsonEncode(<Map<String, dynamic>>[
+          <String, dynamic>{
+            'event_type': 'order',
+            'order_id': 'ord-batched',
+            'market': 'condition-1',
+            'asset_id': 'token-1',
+            'side': 'BUY',
+            'price': '0.5',
+            'size': '10',
+            'status': 'live',
+            'timestamp': '1757908892351',
+          },
+          <String, dynamic>{
+            'event_type': 'trade',
+            'trade_id': 'trade-batched',
+            'order_id': 'ord-batched',
+            'market': 'condition-1',
+            'asset_id': 'token-1',
+            'side': 'BUY',
+            'price': '0.5',
+            'size': '10',
+            'transaction_hash': '0xtx',
+            'timestamp': '1757908892352',
+          },
+        ]),
+      );
+
+      final order = await orderFuture.timeout(
+        const Duration(milliseconds: 250),
+      );
+      expect(order.orderId, 'ord-batched');
+
+      final trade = await tradeFuture.timeout(
+        const Duration(milliseconds: 250),
+      );
+      expect(trade.tradeId, 'trade-batched');
+    });
+
     test('rejects missing credentials before opening a socket', () async {
       final bad = UserClient(
         config: const StreamConfig(url: defaultUserStreamUrl),

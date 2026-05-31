@@ -141,6 +141,12 @@ final class UserClient {
   void _handleFrame(dynamic frame) {
     final bytes = streamFrameBytes(frame);
     if (bytes == null) return;
+    for (final child in streamJsonObjectFrames(bytes)) {
+      _dispatchSingle(child);
+    }
+  }
+
+  void _dispatchSingle(List<int> bytes) {
     final payload = decodeStreamJsonObject(
       bytes,
       expectedObjectMessage: 'user stream: expected JSON object',
@@ -199,13 +205,12 @@ final class UserClient {
 Map<String, dynamic> _userSubscribePayload(
   ApiKey credentials,
   List<String> markets,
-) =>
-    <String, dynamic>{
-      'type': 'user',
-      'markets': markets,
-      'auth': <String, String>{
-        'apiKey': credentials.key,
-        'secret': credentials.secret,
-        'passphrase': credentials.passphrase,
-      },
-    };
+) => <String, dynamic>{
+  'type': 'user',
+  'markets': markets,
+  'auth': <String, String>{
+    'apiKey': credentials.key,
+    'secret': credentials.secret,
+    'passphrase': credentials.passphrase,
+  },
+};
