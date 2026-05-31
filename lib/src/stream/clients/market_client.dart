@@ -14,7 +14,7 @@ import '../config/stream_config.dart';
 import '../dedup/dedup.dart' show splitArray;
 import '../models/stream_messages.dart';
 import '../shared/json_frame.dart';
-import '../transport/channel_factory.dart';
+import '../transport/contracts/channel_factory.dart';
 import '../transport/socket_dispatch.dart' as platform;
 
 /// Factory used to open a [WebSocketChannel] for a given URI. Tests inject a

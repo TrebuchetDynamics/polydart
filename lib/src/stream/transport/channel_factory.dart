@@ -1,10 +1,7 @@
-/// Shared WebSocket channel factory contract for stream clients.
+/// Compatibility export for stream WebSocket channel contracts.
 ///
-/// Tests inject fakes through this contract; production defaults delegate to
-/// the platform-specific opener in `socket_dispatch.dart`.
+/// New internal imports should prefer `contracts/channel_factory.dart`; this
+/// facade preserves the previous transport boundary for existing callers.
 library;
 
-import 'package:web_socket_channel/web_socket_channel.dart';
-
-/// Factory used to open a [WebSocketChannel] for a given URI.
-typedef StreamWebSocketChannelFactory = WebSocketChannel Function(Uri url);
+export 'contracts/channel_factory.dart';

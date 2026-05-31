@@ -13,7 +13,7 @@ import '../../auth/l2.dart' show ApiKey;
 import '../config/stream_config.dart';
 import '../models/stream_messages.dart';
 import '../shared/json_frame.dart';
-import '../transport/channel_factory.dart';
+import '../transport/contracts/channel_factory.dart';
 import '../transport/socket_dispatch.dart' as platform;
 
 const String defaultUserStreamUrl =
