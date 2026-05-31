@@ -389,6 +389,34 @@ void main() {
       expect(holders.first.address, '0xholder');
       expect(holders.first.shares, 500.0);
     });
+
+    test('rejects malformed nested holder candidates instead of dropping them', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode([
+            <String, dynamic>{
+              'token': 'tok123',
+              'holders': [
+                'not-a-holder-object',
+                <String, dynamic>{'proxyWallet': '0xholder', 'amount': '500.0'},
+              ],
+            },
+          ]),
+          200,
+        );
+      });
+
+      await expectLater(
+        client.topHolders('tok123'),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('Data API /holders[0].holders[0]'),
+          ),
+        ),
+      );
+    });
   });
 
   group('totalValue', () {

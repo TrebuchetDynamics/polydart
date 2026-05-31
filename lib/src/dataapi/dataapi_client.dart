@@ -172,17 +172,34 @@ final class DataApiClient {
 
   List<MetaHolder> _metaHolders(List<dynamic> list) {
     final holders = <MetaHolder>[];
-    for (final item in list.whereType<Map<dynamic, dynamic>>()) {
+    for (var i = 0; i < list.length; i++) {
+      final item = _mapCandidateAt(list, i, '/holders');
       final nested = item['holders'];
       if (nested is List) {
-        for (final holder in nested.whereType<Map<dynamic, dynamic>>()) {
-          holders.add(MetaHolder.fromJson(holder.cast<String, dynamic>()));
+        for (var j = 0; j < nested.length; j++) {
+          final holder = _mapCandidateAt(nested, j, '/holders[$i].holders');
+          holders.add(MetaHolder.fromJson(holder));
         }
       } else {
-        holders.add(MetaHolder.fromJson(item.cast<String, dynamic>()));
+        holders.add(MetaHolder.fromJson(item));
       }
     }
     return holders.toList(growable: false);
+  }
+
+  Map<String, dynamic> _mapCandidateAt(
+    List<dynamic> candidates,
+    int index,
+    String path,
+  ) {
+    final candidate = candidates[index];
+    if (candidate is! Map<dynamic, dynamic>) {
+      throw FormatException(
+        'Data API $path[$index]: expected JSON object',
+        candidate,
+      );
+    }
+    return candidate.cast<String, dynamic>();
   }
 
   Map<String, dynamic>? _firstMap(List<dynamic> list) {
