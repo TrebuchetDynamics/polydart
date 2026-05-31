@@ -409,13 +409,25 @@ String _quantity(int value) {
 }
 
 int _parseQuantity(String raw, String label) {
+  final digits = _quantityDigits(raw, label);
+  return BigInt.parse(digits, radix: 16).toInt();
+}
+
+String _quantityDigits(String raw, String label) {
   final clean = raw.trim().toLowerCase();
   if (!clean.startsWith('0x')) {
-    throw FormatException('$label must be 0x-prefixed');
+    throw FormatException('$label must be a JSON-RPC quantity');
   }
   final digits = clean.substring(2);
-  if (digits.isEmpty) return 0;
-  return BigInt.parse(digits, radix: 16).toInt();
+  if (digits.isEmpty || (digits.length > 1 && digits.startsWith('0'))) {
+    throw FormatException('$label must be a JSON-RPC quantity');
+  }
+  try {
+    BigInt.parse(digits, radix: 16);
+  } on FormatException {
+    throw FormatException('$label must be a JSON-RPC quantity');
+  }
+  return digits;
 }
 
 String _requiredString(Object? value, String label) {

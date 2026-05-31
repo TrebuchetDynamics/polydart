@@ -298,6 +298,32 @@ void main() {
 
       expect(await reader.latestBlockNumber(), 12345);
     });
+
+    test('RPC reader rejects malformed JSON-RPC quantities', () async {
+      for (final quantity in <String>['0x', '0x00', '0x01']) {
+        final client = MockClient((request) async {
+          final body = _jsonBody(request);
+          expect(body['method'], 'eth_blockNumber');
+          return _rpcResult(quantity);
+        });
+        final reader = RpcOrderFillsReader(
+          rpcUrl: 'http://polygon.invalid',
+          client: client,
+        );
+
+        expect(
+          () => reader.latestBlockNumber(),
+          throwsA(
+            isA<FormatException>().having(
+              (error) => error.message,
+              'message',
+              contains('eth_blockNumber must be a JSON-RPC quantity'),
+            ),
+          ),
+          reason: quantity,
+        );
+      }
+    });
   });
 }
 
