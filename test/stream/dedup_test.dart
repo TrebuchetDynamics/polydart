@@ -118,6 +118,30 @@ void main() {
       expect(dedup.process(msg), isFalse);
     });
 
+    test('price_change without hash or timestamp has no replayable key', () {
+      final fixed = DateTime.fromMillisecondsSinceEpoch(1700000000000);
+      final dedup = Deduplicator(
+        size: 16,
+        ttl: const Duration(seconds: 1),
+        clock: () => fixed,
+      );
+      final first = _enc(<String, dynamic>{
+        'event_type': 'price_change',
+        'market': 'm1',
+        'price': '0.51',
+      });
+      final second = _enc(<String, dynamic>{
+        'event_type': 'price_change',
+        'market': 'm1',
+        'price': '0.52',
+      });
+
+      expect(dedup.process(first), isTrue);
+      expect(dedup.process(second), isTrue);
+      expect(dedup.outCount, 2);
+      expect(dedup.dupCount, 0);
+    });
+
     test('last_trade_price keys on asset+price+size', () {
       final fixed = DateTime.fromMillisecondsSinceEpoch(1700000000000);
       final dedup = Deduplicator(
