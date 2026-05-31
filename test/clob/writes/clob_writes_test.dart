@@ -2,17 +2,16 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:polydart/src/auth/l2.dart';
 import 'package:polydart/src/clob/clob_client.dart';
 import 'package:polydart/src/clob/clob_writes.dart';
 import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/modes/modes.dart';
 import 'package:polydart/src/orders/order_intent.dart';
-import 'package:polydart/src/transport/http_transport.dart';
-import 'package:polydart/src/transport/transport_config.dart';
 import 'package:polydart/src/types/enums.dart';
 import 'package:test/test.dart';
+
+import '../support/clob_test_client.dart';
 
 const _apiKey = ApiKey(
   key: 'test-key',
@@ -24,14 +23,8 @@ ClobClient _liveClient(
   Future<http.Response> Function(http.BaseRequest) handler, {
   DateTime Function()? clock,
 }) {
-  return ClobClient(
-    transport: HttpTransport(
-      config: const TransportConfig(
-        baseUrl: ClobClient.defaultBaseUrl,
-        retryMax: 0,
-      ),
-      inner: MockClient(handler),
-    ),
+  return clobTestClient(
+    handler,
     mode: PolydartMode.live,
     liveTradingEnabled: true,
     clock: clock ?? () => DateTime.fromMillisecondsSinceEpoch(1700000000000),
@@ -42,17 +35,11 @@ ClobClient _gatedClient({
   PolydartMode mode = PolydartMode.readOnly,
   bool liveFlag = false,
 }) {
-  return ClobClient(
-    transport: HttpTransport(
-      config: const TransportConfig(
-        baseUrl: ClobClient.defaultBaseUrl,
-        retryMax: 0,
-      ),
-      inner: MockClient((req) async {
-        // Should never be called in a gated test.
-        return http.Response('{}', 200);
-      }),
-    ),
+  return clobTestClient(
+    (req) async {
+      // Should never be called in a gated test.
+      return http.Response('{}', 200);
+    },
     mode: mode,
     liveTradingEnabled: liveFlag,
   );
@@ -334,17 +321,11 @@ void main() {
 
     test('rejects empty orderId without hitting the network', () async {
       var hit = false;
-      final c = ClobClient(
-        transport: HttpTransport(
-          config: const TransportConfig(
-            baseUrl: ClobClient.defaultBaseUrl,
-            retryMax: 0,
-          ),
-          inner: MockClient((req) async {
-            hit = true;
-            return http.Response('{}', 200);
-          }),
-        ),
+      final c = clobTestClient(
+        (req) async {
+          hit = true;
+          return http.Response('{}', 200);
+        },
         mode: PolydartMode.live,
         liveTradingEnabled: true,
       );

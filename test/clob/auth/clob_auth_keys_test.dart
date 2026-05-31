@@ -3,14 +3,12 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:polydart/src/auth/l2.dart';
 import 'package:polydart/src/auth/wallet_signer.dart';
-import 'package:polydart/src/clob/clob_client.dart';
 import 'package:polydart/src/errors/errors.dart';
-import 'package:polydart/src/transport/http_transport.dart';
-import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
+
+import '../support/clob_test_client.dart';
 
 class _CannedSigner implements WalletSigner {
   _CannedSigner();
@@ -34,18 +32,6 @@ class _CannedSigner implements WalletSigner {
       Uint8List.fromList(List<int>.filled(65, 0xcd));
 }
 
-ClobClient _client(Future<http.Response> Function(http.BaseRequest) handler) {
-  return ClobClient(
-    transport: HttpTransport(
-      config: const TransportConfig(
-        baseUrl: ClobClient.defaultBaseUrl,
-        retryMax: 0,
-      ),
-      inner: MockClient(handler),
-    ),
-  );
-}
-
 void main() {
   group('createApiKey', () {
     test('POSTs /auth/api-key with L1 headers and parses creds', () async {
@@ -53,7 +39,7 @@ void main() {
       String? capturedMethod;
       Map<String, String>? capturedHeaders;
 
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         capturedPath = req.url.path;
         capturedMethod = req.method;
         capturedHeaders = req.headers;
@@ -87,7 +73,7 @@ void main() {
     });
 
     test('accepts api_key / pass_phrase snake_case variants', () async {
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         return http.Response(
           jsonEncode(<String, dynamic>{
             'api_key': 'aaaa1111-2222-3333-4444-555566667777',
@@ -110,7 +96,7 @@ void main() {
     test('GETs /auth/derive-api-key with L1 headers', () async {
       String? capturedMethod;
       String? capturedPath;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         capturedMethod = req.method;
         capturedPath = req.url.path;
         return http.Response(
@@ -135,7 +121,7 @@ void main() {
   group('createOrDeriveApiKey', () {
     test('falls back to derive when POST fails', () async {
       var calls = 0;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         calls++;
         if (req.method == 'POST') {
           return http.Response('conflict', 409);
@@ -162,7 +148,7 @@ void main() {
 
     test('returns POST result on success without falling through', () async {
       var calls = 0;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         calls++;
         expect(req.method, 'POST');
         return http.Response(
@@ -197,7 +183,7 @@ void main() {
         String? capturedMethod;
         Map<String, String>? capturedHeaders;
 
-        final client = _client((req) async {
+        final client = clobTestClient((req) async {
           capturedPath = req.url.path;
           capturedMethod = req.method;
           capturedHeaders = req.headers;
@@ -237,7 +223,7 @@ void main() {
     test('GETs /auth/builder-api-keys and decodes records', () async {
       String? capturedPath;
       String? capturedMethod;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         capturedPath = req.url.path;
         capturedMethod = req.method;
         return http.Response(
@@ -275,7 +261,7 @@ void main() {
     test('DELETEs /auth/builder-api-key/<key>', () async {
       String? capturedPath;
       String? capturedMethod;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         capturedPath = req.url.path;
         capturedMethod = req.method;
         return http.Response('{}', 200);
@@ -289,7 +275,7 @@ void main() {
 
     test('rejects empty builderKey without hitting the network', () async {
       var hit = false;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         hit = true;
         return http.Response('{}', 200);
       });

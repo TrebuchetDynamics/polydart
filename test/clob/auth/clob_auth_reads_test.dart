@@ -2,31 +2,17 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:polydart/src/auth/l2.dart';
 import 'package:polydart/src/clob/clob_auth_types.dart';
-import 'package:polydart/src/clob/clob_client.dart';
-import 'package:polydart/src/transport/http_transport.dart';
-import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
+
+import '../support/clob_test_client.dart';
 
 const _testApiKey = ApiKey(
   key: 'aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001',
   secret: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
   passphrase: 'pp1',
 );
-
-ClobClient _client(Future<http.Response> Function(http.BaseRequest) handler) {
-  return ClobClient(
-    transport: HttpTransport(
-      config: const TransportConfig(
-        baseUrl: ClobClient.defaultBaseUrl,
-        retryMax: 0,
-      ),
-      inner: MockClient(handler),
-    ),
-  );
-}
 
 void main() {
   group('listOrders', () {
@@ -59,7 +45,7 @@ void main() {
         Map<String, String>? capturedHeaders;
         String? capturedPath;
 
-        final client = _client((req) async {
+        final client = clobTestClient((req) async {
           capturedPath = req.url.path;
           capturedHeaders = req.headers;
           return http.Response(
@@ -123,7 +109,7 @@ void main() {
 
     test('GETs /data/trades with HMAC headers', () async {
       String? capturedPath;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         capturedPath = req.url.path;
         return http.Response(
           jsonEncode(<Map<String, dynamic>>[
@@ -160,7 +146,7 @@ void main() {
   group('order (single by id)', () {
     test('GETs /data/order/:id and parses record', () async {
       String? capturedPath;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         capturedPath = req.url.path;
         return http.Response(
           jsonEncode(<String, dynamic>{
@@ -195,7 +181,7 @@ void main() {
   group('balanceAllowance', () {
     test('GETs /balance-allowance with query + HMAC', () async {
       Uri? capturedUrl;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         capturedUrl = req.url;
         return http.Response(
           jsonEncode(<String, dynamic>{
@@ -242,7 +228,7 @@ void main() {
   group('updateBalanceAllowance', () {
     test('GETs /balance-allowance/update with query + HMAC', () async {
       String? capturedPath;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         capturedPath = req.url.path;
         return http.Response(
           jsonEncode(<String, dynamic>{'balance': '2000000'}),

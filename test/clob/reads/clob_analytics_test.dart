@@ -2,31 +2,17 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:polydart/src/clob/clob_analytics_types.dart';
-import 'package:polydart/src/clob/clob_client.dart';
 import 'package:polydart/src/clob/clob_params.dart';
-import 'package:polydart/src/transport/http_transport.dart';
-import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
 
-ClobClient _client(Future<http.Response> Function(http.BaseRequest) handler) {
-  return ClobClient(
-    transport: HttpTransport(
-      config: const TransportConfig(
-        baseUrl: ClobClient.defaultBaseUrl,
-        retryMax: 0,
-      ),
-      inner: MockClient(handler),
-    ),
-  );
-}
+import '../support/clob_test_client.dart';
 
 void main() {
   group('negRisk', () {
     test('GETs /neg-risk and unwraps the boolean', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<String, dynamic>{'neg_risk': true}),
@@ -43,7 +29,7 @@ void main() {
   group('feeRateBps', () {
     test('GETs /fee-rate and parses an integer', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<String, dynamic>{'fee_rate_bps': 25}),
@@ -57,7 +43,7 @@ void main() {
     });
 
     test('decodes camel-case string fee rate', () async {
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         return http.Response(
           jsonEncode(<String, dynamic>{'feeRateBps': '30'}),
           200,
@@ -71,7 +57,7 @@ void main() {
   group('simplifiedMarkets', () {
     test('GETs /simplified-markets without next_cursor when null', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<String, dynamic>{
@@ -90,7 +76,7 @@ void main() {
 
     test('forwards next_cursor when supplied', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<String, dynamic>{
@@ -110,7 +96,7 @@ void main() {
   group('samplingMarkets', () {
     test('GETs /sampling-markets', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<String, dynamic>{
@@ -131,7 +117,7 @@ void main() {
   group('samplingSimplifiedMarkets', () {
     test('GETs /sampling-simplified-markets', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<String, dynamic>{
@@ -152,7 +138,7 @@ void main() {
     test('POSTs /prices-post and flattens wrapped values', () async {
       String? capturedPath;
       String? capturedBody;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         capturedPath = req.url.path;
         capturedBody = (req as http.Request).body;
         return http.Response(
@@ -178,7 +164,7 @@ void main() {
 
     test('falls back to /prices when /prices-post returns 4xx', () async {
       final hits = <String>[];
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         hits.add(req.url.path);
         if (req.url.path == '/prices-post') {
           return http.Response('not found', 404);
@@ -199,7 +185,7 @@ void main() {
   group('midpoints', () {
     test('POSTs /midpoints and flattens {mid: …}', () async {
       String? capturedPath;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         capturedPath = req.url.path;
         return http.Response(
           jsonEncode(<String, dynamic>{
@@ -219,7 +205,7 @@ void main() {
   group('lastTradesPrices', () {
     test('POSTs /last-trades-prices and flattens {price: …}', () async {
       String? capturedPath;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         capturedPath = req.url.path;
         return http.Response(
           jsonEncode(<String, dynamic>{
@@ -239,7 +225,7 @@ void main() {
   group('orderScoring', () {
     test('GETs /orders/scoring and unwraps boolean', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<String, dynamic>{'scoring': true}),
@@ -253,7 +239,7 @@ void main() {
     });
 
     test('decodes string boolean', () async {
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         return http.Response(
           jsonEncode(<String, dynamic>{'scoring': 'true'}),
           200,
@@ -268,7 +254,7 @@ void main() {
     test('POSTs /orders/scoring with order_ids and decodes a list', () async {
       String? capturedPath;
       String? capturedBody;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         capturedPath = req.url.path;
         capturedBody = (req as http.Request).body;
         return http.Response(jsonEncode(<bool>[true, false, true]), 200);
@@ -282,7 +268,7 @@ void main() {
     });
 
     test('decodes string and numeric booleans', () async {
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         return http.Response(jsonEncode(<Object>['true', 0, 1]), 200);
       });
       final result = await client.ordersScoring(<String>['a', 'b', 'c']);
@@ -341,7 +327,7 @@ void main() {
   group('rewardsConfig', () {
     test('GETs /rewards/config and parses entries', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<Map<String, dynamic>>[
@@ -368,7 +354,7 @@ void main() {
   group('rawRewards', () {
     test('GETs /rewards/raw with market query', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<Map<String, dynamic>>[
@@ -393,7 +379,7 @@ void main() {
   group('userEarnings', () {
     test('GETs /rewards/earnings with date query', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<Map<String, dynamic>>[
@@ -419,7 +405,7 @@ void main() {
   group('totalEarnings', () {
     test('GETs /rewards/total-earnings with date query', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<String, dynamic>{
@@ -439,7 +425,7 @@ void main() {
   group('rewardPercentages', () {
     test('GETs /rewards/percentages and parses entries', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<Map<String, dynamic>>[
@@ -457,7 +443,7 @@ void main() {
   group('userRewardsByMarket', () {
     test('GETs /rewards/markets and forwards optional params', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<Map<String, dynamic>>[
@@ -487,7 +473,7 @@ void main() {
 
     test('omits all query params when none are set', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(jsonEncode(<Object>[]), 200);
       });
@@ -500,7 +486,7 @@ void main() {
   group('rebatedFees', () {
     test('GETs /rebates and parses entries with optional market', () async {
       Uri? captured;
-      final client = _client((req) async {
+      final client = clobTestClient((req) async {
         captured = req.url;
         return http.Response(
           jsonEncode(<Map<String, dynamic>>[
