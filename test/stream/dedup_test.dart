@@ -58,7 +58,10 @@ void main() {
         clock: () => fixed,
       );
       final first = _enc(<String, dynamic>{'event_type': 'book', 'hash': 'h1'});
-      final second = _enc(<String, dynamic>{'event_type': 'book', 'hash': 'h2'});
+      final second = _enc(<String, dynamic>{
+        'event_type': 'book',
+        'hash': 'h2',
+      });
 
       expect(dedup.process(first), isTrue);
       expect(dedup.process(second), isTrue);
@@ -163,6 +166,21 @@ void main() {
       expect(parts, hasLength(2));
       final first = jsonDecode(utf8.decode(parts[0])) as Map<String, dynamic>;
       expect(first['hash'], 'h1');
+    });
+
+    test('splits JSON arrays with leading whitespace', () {
+      final raw = utf8.encode(
+        ' \n\t${jsonEncode(<Map<String, dynamic>>[
+          <String, dynamic>{'event_type': 'book', 'hash': 'h1'},
+          <String, dynamic>{'event_type': 'book', 'hash': 'h2'},
+        ])}',
+      );
+
+      final parts = splitArray(raw);
+
+      expect(parts, hasLength(2));
+      final second = jsonDecode(utf8.decode(parts[1])) as Map<String, dynamic>;
+      expect(second['hash'], 'h2');
     });
 
     test('returns empty when input is a JSON object', () {
