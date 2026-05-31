@@ -12,6 +12,8 @@ import '../clob/clob_client.dart';
 import '../dataapi/dataapi_client.dart';
 import '../dataapi/dataapi_types.dart' as data;
 
+part 'row_identity.dart';
+
 const String orderResultStatusOpen = 'open';
 const String orderResultStatusWon = 'won';
 const String orderResultStatusLost = 'lost';
@@ -667,14 +669,6 @@ String _classifyPosition(data.Position position) {
   }
   if (position.size > 0) return orderResultStatusOpen;
   return orderResultStatusUnknown;
-}
-
-String _rowKey(String market, String tokenId) {
-  final trimmedToken = tokenId.trim();
-  if (trimmedToken.isNotEmpty) return 'token:$trimmedToken';
-  final trimmedMarket = market.trim();
-  if (trimmedMarket.isNotEmpty) return 'market:$trimmedMarket';
-  return 'unknown';
 }
 
 bool _emptyPosition(data.Position position) =>

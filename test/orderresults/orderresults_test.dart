@@ -302,6 +302,48 @@ void main() {
     });
 
     test(
+      'merges market-only rows with case-insensitive condition ids',
+      () async {
+        final report = await buildReport(
+          _FakeDataReader(
+            closedPositions: const [
+              data.ClosedPosition(
+                tokenId: '',
+                conditionId: '0xABC',
+                marketId: '',
+                side: 'Yes',
+                avgPriceBuy: 0.3,
+                avgPriceSell: 0,
+                size: 2,
+                realizedPnl: 1.4,
+                title: 'Resolved market',
+              ),
+            ],
+            trades: const [
+              data.Trade(
+                id: 'data-trade',
+                market: '0xabc',
+                assetId: '',
+                side: 'BUY',
+                price: 0.3,
+                size: 2,
+                feeRateBps: 0,
+                createdAt: '1',
+                outcome: 'Yes',
+              ),
+            ],
+          ),
+          user: '0xwallet',
+        );
+
+        expect(report.rows, hasLength(1));
+        expect(report.rows.single.market, '0xABC');
+        expect(report.rows.single.tradeCount, 1);
+        expect(report.rows.single.trades.single.id, 'data-trade');
+      },
+    );
+
+    test(
       'requires an ApiKey and CLOB reader when CLOB inclusion is enabled',
       () {
         expect(
