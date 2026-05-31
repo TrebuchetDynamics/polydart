@@ -32,6 +32,7 @@ final class RpcOrderFillsReader
   @override
   Future<List<OrderFill>> orderFilled(OrderFillsQuery query) async {
     validateOrderFillsQuery(query);
+    final markets = _MarketIndex(query.markets);
     final logs = await _rpc('eth_getLogs', <Object>[
       <String, Object>{
         'fromBlock': _quantity(query.fromBlock),
@@ -46,7 +47,6 @@ final class RpcOrderFillsReader
       throw const FormatException('eth_getLogs result must be a list');
     }
 
-    final markets = _MarketIndex(query.markets);
     final marketFilter = query.marketId.trim();
     final tokenFilter = _normalizedSet(query.tokenIds, _normalizeTokenId);
     final conditionFilter = _normalizedSet(
@@ -301,6 +301,15 @@ final class _MarketIndex {
       for (final tokenId in <String>[market.yesTokenId, market.noTokenId]) {
         final normalizedToken = _normalizeTokenId(tokenId);
         if (normalizedToken.isEmpty) continue;
+        final previous = byToken[normalizedToken];
+        if (previous != null) {
+          throw ValidationException(
+            code: ErrorCode.invalidValue,
+            message:
+                'orderfills markets duplicate token id $normalizedToken maps to both ${previous.marketId} and ${normalized.marketId}',
+            field: 'markets',
+          );
+        }
         byToken[normalizedToken] = normalized;
       }
     }

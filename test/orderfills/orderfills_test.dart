@@ -173,6 +173,39 @@ void main() {
       expect(fills[1].size, '5');
     });
 
+    test(
+      'RPC reader rejects ambiguous duplicate market token mappings',
+      () async {
+        final client = MockClient((request) async {
+          fail('duplicate market token mappings must be rejected before RPC');
+        });
+        final reader = RpcOrderFillsReader(
+          rpcUrl: 'http://polygon.invalid',
+          client: client,
+        );
+
+        expect(
+          () => reader.orderFilled(
+            const OrderFillsQuery(
+              fromBlock: 10,
+              toBlock: 10,
+              markets: <OrderFillsMarket>[
+                OrderFillsMarket(marketId: 'market-1', yesTokenId: '111'),
+                OrderFillsMarket(marketId: 'market-2', noTokenId: '111'),
+              ],
+            ),
+          ),
+          throwsA(
+            isA<ValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains('duplicate token id'),
+            ),
+          ),
+        );
+      },
+    );
+
     test('RPC reader skips fills outside mapped markets', () async {
       final methods = <String>[];
       final client = MockClient((request) async {
