@@ -162,9 +162,10 @@ void main() {
       expect(cryptoWindowSlug('BTC', '1h', window), isEmpty);
     });
 
-    test('cryptoQueries mirrors Polygolem asset aliases', () {
-      expect(cryptoQueries('BTC'), ['bitcoin 5m', 'bitcoin 15m']);
-      expect(cryptoQueries('ABC'), ['abc 5m', 'abc 15m']);
+    test('crypto asset normalization is shared by query and slug helpers', () {
+      expect(normalizeCryptoAsset(' btc '), 'BTC');
+      expect(cryptoQueries(' BTC '), ['bitcoin 5m', 'bitcoin 15m']);
+      expect(cryptoQueries(' abc '), ['abc 5m', 'abc 15m']);
     });
 
     test('inferTimeframe recognizes 5m and 15m labels', () {
@@ -365,6 +366,39 @@ void main() {
       expect(result.startDate, DateTime.parse('2026-05-06T10:10:00Z'));
       expect(result.source, contains('gamma:slug_hit_window_mismatch'));
     });
+
+    test(
+      'resolveCryptoMarkets normalizes padded asset before searching',
+      () async {
+        final mock = MockClient((req) async {
+          expect(req.url.path, '/public-search');
+          expect(
+            req.url.queryParameters['q'],
+            isIn(['bitcoin 5m', 'bitcoin 15m']),
+          );
+          if (req.url.queryParameters['q'] == 'bitcoin 5m') {
+            return http.Response(
+              jsonEncode(<String, dynamic>{
+                'events': <Map<String, dynamic>>[
+                  _eventJson(markets: <Map<String, dynamic>>[_marketJson()]),
+                ],
+              }),
+              200,
+            );
+          }
+          return http.Response(
+            jsonEncode(<String, dynamic>{'events': <Map<String, dynamic>>[]}),
+            200,
+          );
+        });
+        final resolver = MarketResolver(gamma: _gammaWithMock(mock));
+
+        final result = await resolver.resolveCryptoMarkets(' btc ');
+        expect(result, hasLength(1));
+        expect(result.single.asset, 'BTC');
+        expect(result.single.upTokenId, '111');
+      },
+    );
 
     test('resolveTokenIds falls back to active crypto search', () async {
       var searchCalls = 0;

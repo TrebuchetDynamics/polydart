@@ -258,6 +258,7 @@ export 'src/marketresolver/market_resolver.dart'
         cryptoQueries,
         cryptoWindowSlug,
         inferTimeframe,
+        normalizeCryptoAsset,
         parseClobTokenIds;
 export 'src/modes/modes.dart';
 export 'src/orders/amounts.dart'

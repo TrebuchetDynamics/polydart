@@ -165,7 +165,7 @@ final class CryptoWindowRequest {
     required DateTime windowStart,
   }) {
     return CryptoWindowRequest(
-      asset: asset.trim().toUpperCase(),
+      asset: normalizeCryptoAsset(asset),
       timeframe: normalizeCryptoTimeframe(timeframe),
       windowStart: _truncateToSecond(windowStart)!,
     );
@@ -186,10 +186,11 @@ final class MarketResolver {
 
   /// Resolves active CLOB-enabled crypto up/down markets for [asset].
   Future<List<CryptoMarket>> resolveCryptoMarkets(String asset) async {
+    final normalizedAsset = normalizeCryptoAsset(asset);
     final searches = await Future.wait(
       cryptoQueries(
-        asset.toUpperCase(),
-      ).map((query) => _searchQuery(asset, query)),
+        normalizedAsset,
+      ).map((query) => _searchQuery(normalizedAsset, query)),
     );
     final seen = <String>{};
     final out = <CryptoMarket>[];
@@ -347,7 +348,7 @@ final class MarketResolver {
 
   /// Resolves token IDs for [asset] and [timeframe] through broad Gamma search.
   Future<ResolveResult> resolveTokenIds(String asset, String timeframe) async {
-    final normalizedAsset = asset.trim().toUpperCase();
+    final normalizedAsset = normalizeCryptoAsset(asset);
     final normalizedTimeframe = normalizeCryptoTimeframe(timeframe);
     try {
       final markets = await resolveCryptoMarkets(normalizedAsset);
@@ -566,6 +567,7 @@ String _rfc3339(DateTime? value) =>
 
 /// Crypto search queries used by the Go resolver.
 List<String> cryptoQueries(String asset) {
+  final normalizedAsset = normalizeCryptoAsset(asset);
   final names = <String, List<String>>{
     'BTC': <String>['bitcoin'],
     'ETH': <String>['ethereum'],
@@ -574,7 +576,8 @@ List<String> cryptoQueries(String asset) {
     'DOGE': <String>['doge'],
     'BNB': <String>['bnb'],
   };
-  final nameList = names[asset.toUpperCase()] ?? <String>[asset.toLowerCase()];
+  final nameList =
+      names[normalizedAsset] ?? <String>[normalizedAsset.toLowerCase()];
   return <String>[
     for (final name in nameList)
       for (final timeframe in const <String>['5m', '15m']) '$name $timeframe',
@@ -593,7 +596,7 @@ String cryptoWindowSlug(String asset, String timeframe, DateTime windowStart) {
     'HYPE': 'hype',
   };
   final normalizedTimeframe = normalizeCryptoTimeframe(timeframe);
-  final prefix = prefixes[asset.toUpperCase().trim()];
+  final prefix = prefixes[normalizeCryptoAsset(asset)];
   if (prefix == null) return '';
   if (!_supportedCryptoWindowTimeframes.contains(normalizedTimeframe)) {
     return '';
@@ -626,6 +629,9 @@ String inferTimeframe(String slug, String question) {
   }
   return '';
 }
+
+/// Normalizes caller-supplied crypto resolver asset symbols.
+String normalizeCryptoAsset(String value) => value.trim().toUpperCase();
 
 /// Normalizes caller-supplied crypto resolver timeframe labels.
 String normalizeCryptoTimeframe(String value) {
