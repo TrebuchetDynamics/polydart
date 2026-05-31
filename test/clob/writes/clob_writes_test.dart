@@ -257,6 +257,42 @@ void main() {
       expect(response.orders.map((o) => o.orderId), ['O-1', 'O-2']);
     });
 
+    test('rejects malformed order response candidates', () async {
+      final c = _liveClient((_) async {
+        return http.Response(
+          jsonEncode(<dynamic>[
+            'not-an-object',
+            <String, dynamic>{
+              'success': true,
+              'orderID': 'O-2',
+              'status': 'live',
+            },
+          ]),
+          200,
+        );
+      });
+
+      await expectLater(
+        c.writes.createOrders(
+          requests: <CreateOrderRequest>[
+            CreateOrderRequest(
+              order: _sampleSignedOrder(),
+              owner: 'owner-1',
+              orderType: OrderType.gtc,
+            ),
+          ],
+          apiKey: _apiKey,
+        ),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('orders[0] must be a JSON object'),
+          ),
+        ),
+      );
+    });
+
     test('rejects empty and oversized batches before network', () async {
       var hit = false;
       final c = _liveClient((req) async {

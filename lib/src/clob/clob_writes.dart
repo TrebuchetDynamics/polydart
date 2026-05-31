@@ -23,6 +23,7 @@ import '../modes/modes.dart';
 import '../orders/order_intent.dart';
 import '../transport/http_transport.dart';
 import '../types/enums.dart';
+import 'shared/clob_json.dart';
 
 /// Wire payload for `POST /order`. Mirrors `sendOrderPayload` in polygolem.
 @immutable
@@ -66,10 +67,7 @@ final class BatchOrderResponse {
 
   factory BatchOrderResponse.fromJsonList(List<dynamic> json) {
     return BatchOrderResponse(
-      orders: json
-          .whereType<Map<String, dynamic>>()
-          .map(OrderResponse.fromJson)
-          .toList(growable: false),
+      orders: clobDecodeObjectList(json, 'orders', OrderResponse.fromJson),
     );
   }
 
