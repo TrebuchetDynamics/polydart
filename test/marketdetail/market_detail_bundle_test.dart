@@ -179,6 +179,96 @@ void main() {
       expect(bundle.priceHistory.value, isEmpty);
     });
 
+    test('fetch uses clobTokenIds when Gamma omits token arrays', () async {
+      final gammaWithoutTokenArrays = GammaClient(
+        transport: HttpTransport(
+          config: const TransportConfig(
+            baseUrl: 'https://gamma-api.polymarket.com',
+            timeout: Duration(seconds: 5),
+          ),
+          inner: MockClient(
+            (_) async => http.Response(
+              jsonEncode([
+                <String, dynamic>{
+                  'id': 'test-event-1',
+                  'condition_id': '0xabc',
+                  'question': 'Test market?',
+                  'slug': 'test-market',
+                  'clobTokenIds': '["token-yes","token-no"]',
+                  'active': true,
+                  'closed': false,
+                  'archived': false,
+                  'enableOrderBook': true,
+                  'tags': <Object>[],
+                  'events': <Object>[],
+                },
+              ]),
+              200,
+              headers: {'content-type': 'application/json'},
+            ),
+          ),
+        ),
+      );
+      final seenTradeMarkets = <String>[];
+      final clobWithTrades = ClobClient(
+        transport: HttpTransport(
+          config: const TransportConfig(
+            baseUrl: 'https://clob.polymarket.com',
+            timeout: Duration(seconds: 5),
+          ),
+          inner: MockClient((req) async {
+            if (req.url.path == '/trades') {
+              final market = req.url.queryParameters['market']!;
+              seenTradeMarkets.add(market);
+              return http.Response(
+                jsonEncode([
+                  <String, dynamic>{
+                    'id': 'trade-$market',
+                    'status': 'MATCHED',
+                    'market': market,
+                    'asset_id': market,
+                    'side': 'BUY',
+                    'price': '0.50',
+                    'size': '1',
+                    'fee_rate_bps': '0',
+                    'outcome': market,
+                    'owner': '0xowner',
+                    'builder': '',
+                    'matched_amount': '1',
+                    'transaction_hash': '0x$market',
+                    'created_at': '2026-01-02T00:00:00Z',
+                    'last_updated': '2026-01-02T00:00:00Z',
+                  },
+                ]),
+                200,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            return http.Response(
+              '[]',
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          }),
+        ),
+        mode: PolydartMode.readOnly,
+        liveTradingEnabled: false,
+      );
+
+      final bundle = await MarketDetailFetcher.fetch(
+        gamma: gammaWithoutTokenArrays,
+        clob: clobWithTrades,
+        conditionId: '0xabc',
+        priceHistoryInterval: '',
+      );
+
+      expect(seenTradeMarkets, <String>['token-yes', 'token-no']);
+      expect(bundle.trades.value!.map((trade) => trade.id), <String>[
+        'trade-token-yes',
+        'trade-token-no',
+      ]);
+    });
+
     test('fetch retains distinct trades from the same transaction', () async {
       final clobWithSharedTransaction = ClobClient(
         transport: HttpTransport(

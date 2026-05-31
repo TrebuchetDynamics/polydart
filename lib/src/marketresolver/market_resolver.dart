@@ -5,14 +5,15 @@
 /// helpers that resolve asset/timeframe windows into up/down token IDs.
 library;
 
-import 'dart:convert';
-
 import 'package:meta/meta.dart';
 
 import '../gamma/gamma_client.dart';
 import '../gamma/gamma_params.dart';
 import '../marketdiscovery/market_filter.dart';
+import '../types/clob_token_ids.dart';
 import '../types/market.dart';
+
+export '../types/clob_token_ids.dart' show parseClobTokenIds;
 
 @immutable
 final class ResolvedMarket {
@@ -719,42 +720,3 @@ String normalizeCryptoTimeframe(String value) {
   }
   return text;
 }
-
-/// Parses Gamma's `clobTokenIds` field — a JSON-encoded array of strings
-/// stored as a string. Tolerant of empty / `[]` / malformed input.
-List<String> parseClobTokenIds(String raw) {
-  final s = raw.trim();
-  if (s.isEmpty || s == '[]' || s == 'null') return const <String>[];
-
-  try {
-    final decoded = jsonDecode(s);
-    if (decoded is List) {
-      return decoded
-          .map(_trimmedTokenId)
-          .where((tokenId) => tokenId.isNotEmpty)
-          .toList(growable: false);
-    }
-  } on FormatException {
-    // fall through to manual parse for legacy payloads
-  }
-
-  final out = <String>[];
-  final buffer = StringBuffer();
-  var inQuote = false;
-  for (final code in s.runes) {
-    final c = String.fromCharCode(code);
-    if (c == '"') {
-      inQuote = !inQuote;
-      if (!inQuote) {
-        final tokenId = _trimmedTokenId(buffer.toString());
-        if (tokenId.isNotEmpty) out.add(tokenId);
-        buffer.clear();
-      }
-    } else if (inQuote) {
-      buffer.write(c);
-    }
-  }
-  return out;
-}
-
-String _trimmedTokenId(Object? value) => value?.toString().trim() ?? '';

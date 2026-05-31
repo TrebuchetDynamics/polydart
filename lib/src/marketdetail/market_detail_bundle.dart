@@ -8,6 +8,7 @@ import '../clob/clob_params.dart';
 import '../gamma/gamma_client.dart';
 import '../gamma/gamma_params.dart';
 import '../types/clob.dart';
+import '../types/clob_token_ids.dart';
 import '../types/market.dart';
 
 // ---------------------------------------------------------------------------
@@ -82,12 +83,13 @@ class MarketDetailFetcher {
     final normalizedConditionId = conditionId.trim();
 
     final marketField = await _fetchMarket(gamma, normalizedConditionId);
-    final effectiveTokenIds =
-        tokenIds ??
-        (marketField.isOk
-            ? _allTokenIds(marketField.value!)
-            : const <String>[]);
-    final effectiveInterval = priceHistoryInterval;
+    final candidateData = _MarketDetailCandidateData.from(
+      marketField: marketField,
+      explicitTokenIds: tokenIds,
+      priceHistoryInterval: priceHistoryInterval,
+    );
+    final effectiveTokenIds = candidateData.tokenIds;
+    final effectiveInterval = candidateData.priceHistoryInterval;
 
     BundleField<Event?> eventField;
     BundleField<Map<String, OrderBook>> orderBooksField;
@@ -242,12 +244,38 @@ class MarketDetailFetcher {
       trade.createdAt.trim(),
     ].join('|');
   }
+}
 
-  static List<String> _allTokenIds(Market market) {
+/// Replayable candidate inputs derived before detail-field fanout.
+final class _MarketDetailCandidateData {
+  const _MarketDetailCandidateData({
+    required this.tokenIds,
+    required this.priceHistoryInterval,
+  });
+
+  final List<String> tokenIds;
+  final String priceHistoryInterval;
+
+  factory _MarketDetailCandidateData.from({
+    required BundleField<Market> marketField,
+    required List<String>? explicitTokenIds,
+    required String priceHistoryInterval,
+  }) {
+    return _MarketDetailCandidateData(
+      tokenIds:
+          explicitTokenIds ??
+          (marketField.isOk
+              ? _tokenIdsFromMarket(marketField.value!)
+              : const <String>[]),
+      priceHistoryInterval: priceHistoryInterval,
+    );
+  }
+
+  static List<String> _tokenIdsFromMarket(Market market) {
     if (market.tokenIds.isNotEmpty) return market.tokenIds;
     if (market.tokens.isNotEmpty) {
-      return market.tokens.map((t) => t.tokenId).toList();
+      return market.tokens.map((t) => t.tokenId).toList(growable: false);
     }
-    return const <String>[];
+    return parseClobTokenIds(market.clobTokenIds);
   }
 }

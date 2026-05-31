@@ -9,8 +9,8 @@ import 'package:meta/meta.dart';
 import '../clob/clob_client.dart';
 import '../gamma/gamma_client.dart';
 import '../gamma/gamma_params.dart';
-import '../marketresolver/market_resolver.dart';
 import '../types/clob.dart';
+import '../types/clob_token_ids.dart';
 import '../types/market.dart';
 import 'market_filter.dart';
 
