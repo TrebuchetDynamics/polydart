@@ -553,23 +553,32 @@ String cryptoWindowSlug(String asset, String timeframe, DateTime windowStart) {
   };
   final prefix = prefixes[asset.toUpperCase()];
   if (prefix == null) return '';
-  if (!const <String>{'5m', '15m', '4h'}.contains(timeframe)) return '';
+  if (!_supportedCryptoWindowTimeframes.contains(timeframe)) return '';
   return '$prefix-updown-$timeframe-${windowStart.toUtc().millisecondsSinceEpoch ~/ 1000}';
 }
 
+const Set<String> _supportedCryptoWindowTimeframes = <String>{
+  '5m',
+  '15m',
+  '4h',
+};
+
+const List<(String, String)> _cryptoTimeframeAliases = <(String, String)>[
+  ('15m', '15m'),
+  ('15 min', '15m'),
+  ('15-minute', '15m'),
+  ('5m', '5m'),
+  ('5 min', '5m'),
+  ('5-minute', '5m'),
+  ('4h', '4h'),
+  ('4 hour', '4h'),
+  ('4-hour', '4h'),
+];
+
 String inferTimeframe(String slug, String question) {
   final text = '${slug.toLowerCase()} ${question.toLowerCase()}';
-  for (final timeframe in const <String>[
-    '15m',
-    '15 min',
-    '15-minute',
-    '5m',
-    '5 min',
-    '5-minute',
-  ]) {
-    if (text.contains(timeframe)) {
-      return timeframe.startsWith('5') ? '5m' : '15m';
-    }
+  for (final (alias, timeframe) in _cryptoTimeframeAliases) {
+    if (text.contains(alias)) return timeframe;
   }
   return '';
 }

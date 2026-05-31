@@ -170,6 +170,7 @@ void main() {
     test('inferTimeframe recognizes 5m and 15m labels', () {
       expect(inferTimeframe('btc-updown-5m-1', ''), '5m');
       expect(inferTimeframe('', 'Bitcoin 15m window'), '15m');
+      expect(inferTimeframe('hype-updown-4h-1778114700', ''), '4h');
       expect(inferTimeframe('other', 'no timeframe'), isEmpty);
     });
   });
@@ -222,6 +223,42 @@ void main() {
         window,
       );
       expect(result.status, MarketStatus.available);
+      expect(result.upTokenId, '111');
+      expect(result.downTokenId, '222');
+    });
+
+    test('resolveTokenIdsForWindow returns strict 4h slug match', () async {
+      final window = DateTime.parse('2026-05-06T10:05:00Z');
+      final mock = MockClient((req) async {
+        expect(req.url.path, '/events');
+        expect(req.url.queryParameters['slug'], 'hype-updown-4h-1778061900');
+        return http.Response(
+          jsonEncode([
+            _eventJson(
+              slug: 'hype-updown-4h-1778061900',
+              markets: <Map<String, dynamic>>[
+                _marketJson(
+                  slug: 'hype-updown-4h-1778061900',
+                  question: 'HYPE Up or Down - 4h?',
+                ),
+              ],
+            ),
+          ]),
+          200,
+        );
+      });
+      final resolver = MarketResolver(gamma: _gammaWithMock(mock));
+
+      final result = await resolver.resolveTokenIdsForWindow(
+        'HYPE',
+        '4h',
+        window,
+      );
+      expect(result.status, MarketStatus.available);
+      expect(
+        result.source,
+        'gamma:event_slug_strict:hype-updown-4h-1778061900',
+      );
       expect(result.upTokenId, '111');
       expect(result.downTokenId, '222');
     });
