@@ -27,14 +27,12 @@ Map<String, dynamic> _map(Object? raw) {
   return raw.map<String, dynamic>((k, v) => MapEntry(k.toString(), v));
 }
 
-List<PriceLevel> _levels(Object? raw) {
+List<PriceLevel> _priceLevels(Object? raw, String fieldName) {
   if (raw is! List) return const <PriceLevel>[];
-  return raw
-      .whereType<Map<dynamic, dynamic>>()
-      .map(
-        (m) => PriceLevel.fromJson(m.map((k, v) => MapEntry(k.toString(), v))),
-      )
-      .toList(growable: false);
+  return <PriceLevel>[
+    for (var i = 0; i < raw.length; i++)
+      PriceLevel.fromJson(_objectCandidateAt(raw, i, fieldName)),
+  ];
 }
 
 Map<String, dynamic> _objectCandidateAt(
@@ -91,8 +89,8 @@ final class BookMessage {
     market: _str(json['market']),
     timestamp: _str(json['timestamp']),
     hash: _str(json['hash']),
-    bids: _levels(json['bids']),
-    asks: _levels(json['asks']),
+    bids: _priceLevels(json['bids'], 'bids'),
+    asks: _priceLevels(json['asks'], 'asks'),
   );
 
   final String eventType;

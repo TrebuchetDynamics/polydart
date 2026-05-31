@@ -468,6 +468,48 @@ void main() {
       },
     );
 
+    test(
+      'malformed book level reports an indexed error and is not truncated',
+      () async {
+        await client.connect();
+        final errFuture = client.errors.first;
+        final bookFuture = client.books.first;
+
+        channel.push(
+          jsonEncode(<String, dynamic>{
+            'event_type': 'book',
+            'asset_id': 'a',
+            'market': 'm',
+            'timestamp': 'bad',
+            'hash': 'bad-hash',
+            'bids': <Object>['not an object'],
+            'asks': <Map<String, dynamic>>[],
+          }),
+        );
+        channel.push(
+          jsonEncode(<String, dynamic>{
+            'event_type': 'book',
+            'asset_id': 'a',
+            'market': 'm',
+            'timestamp': 'good',
+            'hash': 'good-hash',
+            'bids': <Map<String, dynamic>>[
+              <String, dynamic>{'price': '0.5', 'size': '10'},
+            ],
+            'asks': <Map<String, dynamic>>[],
+          }),
+        );
+
+        final err = await errFuture.timeout(const Duration(milliseconds: 250));
+        expect(err, isA<FormatException>());
+        expect(err.toString(), contains('bids[0]'));
+
+        final book = await bookFuture.timeout(const Duration(milliseconds: 250));
+        expect(book.timestamp, 'good');
+        expect(book.bids, hasLength(1));
+      },
+    );
+
     test('close shuts down all output streams', () async {
       await client.connect();
       await client.close();
