@@ -237,6 +237,34 @@ void main() {
         {'token_id': '12345'},
       ]);
     });
+
+    test('rejects malformed book candidates with index provenance', () async {
+      final client = clobTestClient((req) async {
+        return http.Response(
+          jsonEncode([
+            'not-an-object',
+            <String, dynamic>{
+              'market': '0xabc',
+              'asset_id': '12345',
+              'bids': <Object>[],
+              'asks': <Object>[],
+            },
+          ]),
+          200,
+        );
+      });
+
+      expect(
+        client.orderBooks([const BookParams(tokenId: '12345')]),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('/books[0] must be a JSON object'),
+          ),
+        ),
+      );
+    });
   });
 
   group('pricesHistory', () {

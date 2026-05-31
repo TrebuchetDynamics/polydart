@@ -17,6 +17,7 @@ import 'clob_analytics_types.dart';
 import 'clob_auth_types.dart';
 import 'clob_params.dart';
 import 'clob_writes.dart';
+import 'shared/clob_json.dart';
 
 final class ClobClient {
   ClobClient({
@@ -100,10 +101,7 @@ final class ClobClient {
       '/books',
       params.map((p) => p.toJson()).toList(growable: false),
     );
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => OrderBook.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return clobDecodeObjectList(list, '/books', OrderBook.fromJson);
   }
 
   /// Best bid/ask for [tokenId] on a side ("BUY" or "SELL").
@@ -282,10 +280,7 @@ final class ClobClient {
     );
     final raw = body is Map ? (body['trades'] ?? body['data']) : body;
     if (raw is! List) return const <TradeRecord>[];
-    return raw
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => TradeRecord.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return clobDecodeObjectList(raw, '/trades', TradeRecord.fromJson);
   }
 
   // --- Order scoring ---
@@ -301,10 +296,11 @@ final class ClobClient {
     );
     final raw = body['trades'];
     if (raw is! List) return const <BuilderTrade>[];
-    return raw
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => BuilderTrade.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return clobDecodeObjectList(
+      raw,
+      '/builder-trades.trades',
+      BuilderTrade.fromJson,
+    );
   }
 
   /// Whether [orderId] is currently scored for rewards.
@@ -334,10 +330,11 @@ final class ClobClient {
   /// Active rewards configuration across all markets.
   Future<List<RewardsConfig>> rewardsConfig() async {
     final list = await _transport.getJsonList('/rewards/config');
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => RewardsConfig.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return clobDecodeObjectList(
+      list,
+      '/rewards/config',
+      RewardsConfig.fromJson,
+    );
   }
 
   /// Raw rewards series for a market (`market` is the condition id).
@@ -346,10 +343,7 @@ final class ClobClient {
       '/rewards/raw',
       query: <String, dynamic>{'market': market},
     );
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => RawRewards.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return clobDecodeObjectList(list, '/rewards/raw', RawRewards.fromJson);
   }
 
   /// Caller-scoped earnings on [date] (YYYY-MM-DD).
@@ -358,10 +352,11 @@ final class ClobClient {
       '/rewards/earnings',
       query: <String, dynamic>{'date': date},
     );
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => UserEarnings.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return clobDecodeObjectList(
+      list,
+      '/rewards/earnings',
+      UserEarnings.fromJson,
+    );
   }
 
   /// Aggregated earnings across all markets on [date] (YYYY-MM-DD).
@@ -376,10 +371,11 @@ final class ClobClient {
   /// Per-market reward percentages.
   Future<List<RewardPercentages>> rewardPercentages() async {
     final list = await _transport.getJsonList('/rewards/percentages');
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => RewardPercentages.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return clobDecodeObjectList(
+      list,
+      '/rewards/percentages',
+      RewardPercentages.fromJson,
+    );
   }
 
   /// Caller-scoped rewards segmented by market. Optional [params]
@@ -394,20 +390,18 @@ final class ClobClient {
           ? null
           : query.map((k, v) => MapEntry<String, dynamic>(k, v)),
     );
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => UserRewardsMarket.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return clobDecodeObjectList(
+      list,
+      '/rewards/markets',
+      UserRewardsMarket.fromJson,
+    );
   }
 
   /// Maker rebated fees, summed across markets when the API returns
   /// rows without a `market` key.
   Future<List<RebatedFees>> rebatedFees() async {
     final list = await _transport.getJsonList('/rebates');
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => RebatedFees.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return clobDecodeObjectList(list, '/rebates', RebatedFees.fromJson);
   }
 
   /// Headless onboarding: creates the L2 API-key triple by signing the
@@ -511,10 +505,11 @@ final class ClobClient {
       path: '/auth/builder-api-keys',
       apiKey: apiKey,
     );
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => BuilderFeeKeyRecord.fromJson(Map<String, dynamic>.from(m)))
-        .toList(growable: false);
+    return clobDecodeObjectList(
+      list,
+      '/auth/builder-api-keys',
+      BuilderFeeKeyRecord.fromJson,
+    );
   }
 
   /// Revokes a builder-fee key via `DELETE /auth/builder-api-key/{key}`.
@@ -546,19 +541,13 @@ final class ClobClient {
   /// derived [ApiKey] — use [createOrDeriveApiKey] to mint one.
   Future<List<OrderRecord>> listOrders({required ApiKey apiKey}) async {
     final list = await _l2GetList(path: '/data/orders', apiKey: apiKey);
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => OrderRecord.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return clobDecodeObjectList(list, '/data/orders', OrderRecord.fromJson);
   }
 
   /// Returns the trade history for the API-key wallet.
   Future<List<TradeRecord>> listTrades({required ApiKey apiKey}) async {
     final list = await _l2GetList(path: '/data/trades', apiKey: apiKey);
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => TradeRecord.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return clobDecodeObjectList(list, '/data/trades', TradeRecord.fromJson);
   }
 
   /// Returns one order by id, scoped to the API-key wallet.

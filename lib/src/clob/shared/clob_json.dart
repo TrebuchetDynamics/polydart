@@ -1,6 +1,30 @@
 /// Shared JSON decoding helpers for CLOB wire types.
 library;
 
+List<T> clobDecodeObjectList<T>(
+  List<dynamic> raw,
+  String fieldName,
+  T Function(Map<String, dynamic>) decode,
+) {
+  final out = <T>[];
+  for (var index = 0; index < raw.length; index++) {
+    out.add(decode(clobObjectCandidateAt(raw, index, fieldName)));
+  }
+  return List<T>.unmodifiable(out);
+}
+
+Map<String, dynamic> clobObjectCandidateAt(
+  List<dynamic> candidates,
+  int index,
+  String fieldName,
+) {
+  final raw = candidates[index];
+  if (raw is! Map<dynamic, dynamic>) {
+    throw FormatException('$fieldName[$index] must be a JSON object');
+  }
+  return raw.cast<String, dynamic>();
+}
+
 Object? clobFirstOf(Map<String, dynamic> json, List<String> keys) {
   for (final key in keys) {
     if (json.containsKey(key)) return json[key];
