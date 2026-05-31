@@ -69,6 +69,30 @@ final class ResolvedMarket {
       tokenIdFor('no') ?? tokenIdFor('down') ?? tokenIdFor('under');
 }
 
+enum CryptoMarketCandidateRejection {
+  notEnrichable,
+  outcomeTokenCountMismatch,
+  missingUpToken,
+  missingDownToken,
+  ambiguousUpOutcome,
+  ambiguousDownOutcome,
+}
+
+@immutable
+final class CryptoMarketCandidateInspection {
+  const CryptoMarketCandidateInspection({
+    required this.rejections,
+    this.upTokenId = '',
+    this.downTokenId = '',
+  });
+
+  final Set<CryptoMarketCandidateRejection> rejections;
+  final String upTokenId;
+  final String downTokenId;
+
+  bool get isEligible => rejections.isEmpty;
+}
+
 @immutable
 final class CryptoMarket {
   const CryptoMarket({
@@ -462,15 +486,15 @@ List<CryptoMarket> _marketsFromGammaWithSource(
   for (final market in gammaMarkets) {
     if (!shouldEnrichMarket(market)) continue;
     final tokenIds = parseClobTokenIds(market.clobTokenIds);
-    final (up, down) = _findUpDownTokenIds(market.outcomes, tokenIds);
-    if (up.isEmpty || down.isEmpty) continue;
+    final inspection = inspectCryptoMarketCandidate(market, tokenIds: tokenIds);
+    if (!inspection.isEligible) continue;
     markets.add(
       CryptoMarket(
         conditionId: market.conditionId,
         asset: asset,
         timeframe: inferTimeframe(market.slug, market.question),
-        upTokenId: up,
-        downTokenId: down,
+        upTokenId: inspection.upTokenId,
+        downTokenId: inspection.downTokenId,
         accepting: market.acceptingOrders,
         closed: market.closed,
         question: market.question,
@@ -544,22 +568,58 @@ ResolveResult _resolveResultForCryptoMarket(
 DateTime? _cryptoMarketWindowStart(Market market) =>
     _truncateToSecond(market.eventStartTime ?? market.startDate);
 
-(String, String) _findUpDownTokenIds(
-  List<String> outcomes,
-  List<String> tokenIds,
-) {
-  if (outcomes.length != tokenIds.length) return ('', '');
+/// Explains whether a Gamma market has exactly one usable up/down token pair.
+CryptoMarketCandidateInspection inspectCryptoMarketCandidate(
+  Market market, {
+  List<String>? tokenIds,
+}) {
+  final rejections = <CryptoMarketCandidateRejection>{};
+  if (!shouldEnrichMarket(market)) {
+    rejections.add(CryptoMarketCandidateRejection.notEnrichable);
+  }
+  final ids = tokenIds ?? parseClobTokenIds(market.clobTokenIds);
+  if (market.outcomes.length != ids.length) {
+    rejections.add(CryptoMarketCandidateRejection.outcomeTokenCountMismatch);
+  }
+
   var up = '';
   var down = '';
-  for (var i = 0; i < outcomes.length; i++) {
-    final outcome = _normalizedOutcomeLabel(outcomes[i]);
+  var upCount = 0;
+  var downCount = 0;
+  final pairCount = market.outcomes.length < ids.length
+      ? market.outcomes.length
+      : ids.length;
+  for (var i = 0; i < pairCount; i++) {
+    final tokenId = ids[i];
+    if (tokenId.isEmpty) continue;
+    final outcome = _normalizedOutcomeLabel(market.outcomes[i]);
     if (_isUpOutcome(outcome)) {
-      up = tokenIds[i];
+      upCount++;
+      up = tokenId;
     } else if (_isDownOutcome(outcome)) {
-      down = tokenIds[i];
+      downCount++;
+      down = tokenId;
     }
   }
-  return (up, down);
+
+  if (upCount == 0) {
+    rejections.add(CryptoMarketCandidateRejection.missingUpToken);
+  }
+  if (downCount == 0) {
+    rejections.add(CryptoMarketCandidateRejection.missingDownToken);
+  }
+  if (upCount > 1) {
+    rejections.add(CryptoMarketCandidateRejection.ambiguousUpOutcome);
+  }
+  if (downCount > 1) {
+    rejections.add(CryptoMarketCandidateRejection.ambiguousDownOutcome);
+  }
+
+  return CryptoMarketCandidateInspection(
+    rejections: Set.unmodifiable(rejections),
+    upTokenId: rejections.isEmpty ? up : '',
+    downTokenId: rejections.isEmpty ? down : '',
+  );
 }
 
 String _normalizedOutcomeLabel(String value) => value.toLowerCase().trim();

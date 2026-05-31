@@ -253,6 +253,8 @@ export 'src/marketdetail/market_detail_bundle.dart'
 export 'src/marketresolver/market_resolver.dart'
     show
         CryptoMarket,
+        CryptoMarketCandidateInspection,
+        CryptoMarketCandidateRejection,
         MarketResolver,
         MarketStatus,
         ResolveResult,
@@ -260,6 +262,7 @@ export 'src/marketresolver/market_resolver.dart'
         cryptoQueries,
         cryptoWindowSlug,
         inferTimeframe,
+        inspectCryptoMarketCandidate,
         normalizeCryptoAsset,
         parseClobTokenIds;
 export 'src/modes/modes.dart';

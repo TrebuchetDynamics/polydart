@@ -6,6 +6,7 @@ import 'package:http/testing.dart';
 import 'package:polydart/src/gamma/gamma_client.dart';
 import 'package:polydart/src/marketresolver/market_resolver.dart';
 import 'package:polydart/src/transport/http_transport.dart';
+import 'package:polydart/src/types/market.dart';
 import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
 
@@ -21,13 +22,14 @@ Map<String, dynamic> _marketJson({
   bool acceptingOrders = true,
   bool enableOrderBook = true,
   String outcomes = '["Up","Down"]',
+  String clobTokenIds = '["111","222"]',
 }) => <String, dynamic>{
   'id': '1',
   'question': question,
   'conditionId': conditionId,
   'slug': slug,
   'outcomes': outcomes,
-  'clobTokenIds': '["111","222"]',
+  'clobTokenIds': clobTokenIds,
   'active': active,
   'closed': closed,
   'archived': archived,
@@ -184,6 +186,24 @@ void main() {
         'btc-updown-5m-1778061900',
       );
     });
+
+    test('rejects ambiguous duplicate up/down outcome candidates', () {
+      final market = Market.fromJson(
+        _marketJson(
+          outcomes: '["Up","Up","Down"]',
+          clobTokenIds: '["first-up","second-up","down"]',
+        ),
+      );
+
+      final inspection = inspectCryptoMarketCandidate(market);
+
+      expect(inspection.isEligible, isFalse);
+      expect(inspection.upTokenId, isEmpty);
+      expect(
+        inspection.rejections,
+        contains(CryptoMarketCandidateRejection.ambiguousUpOutcome),
+      );
+    });
   });
 
   group('MarketResolver', () {
@@ -237,6 +257,37 @@ void main() {
       expect(result.upTokenId, '111');
       expect(result.downTokenId, '222');
     });
+
+    test(
+      'resolveTokenIdsForWindow rejects ambiguous duplicate up tokens',
+      () async {
+        final window = DateTime.parse('2026-05-06T10:05:00Z');
+        final mock = MockClient((req) async {
+          return http.Response(
+            jsonEncode([
+              _eventJson(
+                markets: <Map<String, dynamic>>[
+                  _marketJson(
+                    outcomes: '["Up","Up","Down"]',
+                    clobTokenIds: '["first-up","second-up","down"]',
+                  ),
+                ],
+              ),
+            ]),
+            200,
+          );
+        });
+        final resolver = MarketResolver(gamma: _gammaWithMock(mock));
+
+        final result = await resolver.resolveTokenIdsForWindow(
+          'BTC',
+          '5m',
+          window,
+        );
+        expect(result.status, MarketStatus.unresolved);
+        expect(result.source, contains('slug_event_no_accepting_market'));
+      },
+    );
 
     test('resolveTokenIdsForWindow returns strict 4h slug match', () async {
       final window = DateTime.parse('2026-05-06T10:05:00Z');

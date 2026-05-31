@@ -49,6 +49,13 @@ void main() {
     expect(PusdFundingRouteStatus.ready.name, 'ready');
     expect(planEoaPusdFundingRoute, isA<Function>());
     expect(waitForDepositWalletFundingReadiness, isA<Function>());
+    const candidateInspection = CryptoMarketCandidateInspection(
+      rejections: <CryptoMarketCandidateRejection>{
+        CryptoMarketCandidateRejection.ambiguousUpOutcome,
+      },
+    );
+    expect(candidateInspection.isEligible, isFalse);
+    expect(inspectCryptoMarketCandidate, isA<Function>());
     const confirmationStatus = DepositWalletFundingConfirmationStatus.ready;
     expect(confirmationStatus.name, 'ready');
 
