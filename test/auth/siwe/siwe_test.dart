@@ -1,14 +1,14 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables
 import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:polydart/src/auth/siwe.dart';
 import 'package:test/test.dart';
+
+import '../support/auth_test_fixtures.dart';
 
 void main() {
   group('toEIP55Checksum', () {
     test('matches go-ethereum HexToAddress(...).Hex() output', () {
-      final got = toEIP55Checksum('0x9d8a62f656a8d1615c1294fd71e9cfb3e4855a4f');
+      final got = toEIP55Checksum(canonicalSiweAddress);
       expect(got, '0x9d8A62f656a8d1615C1294fd71e9CFb3E4855A4F');
     });
 
@@ -25,7 +25,7 @@ void main() {
   group('SIWEMessage.toString', () {
     test('matches EIP-4361 layout', () {
       final msg = buildPolymarketSIWE(
-        address: '0x9d8a62f656a8d1615c1294fd71e9cfb3e4855a4f',
+        address: canonicalSiweAddress,
         nonce: 'abc123',
         chainId: 137,
         now: DateTime.utc(2026, 5, 8, 12, 0, 0),
@@ -48,12 +48,12 @@ void main() {
   group('buildSIWEBearerToken', () {
     test('base64-encodes JSON + ":::" + 0x signature', () {
       final msg = buildPolymarketSIWE(
-        address: '0x9d8a62f656a8d1615c1294fd71e9cfb3e4855a4f',
+        address: canonicalSiweAddress,
         nonce: 'abc',
         chainId: 137,
         now: DateTime.utc(2026, 5, 8, 12, 0, 0),
       );
-      final sig = Uint8List.fromList(List<int>.generate(65, (i) => i));
+      final sig = deterministicSignature();
 
       final token = buildSIWEBearerToken(msg, sig);
       final decoded = utf8.decode(base64.decode(token));

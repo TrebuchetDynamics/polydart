@@ -1,31 +1,10 @@
 import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:polydart/src/auth/clob_auth.dart';
-import 'package:polydart/src/auth/wallet_signer.dart';
 import 'package:polydart/src/errors/errors.dart';
 import 'package:test/test.dart';
 
-class _CannedSigner implements WalletSigner {
-  _CannedSigner(this.address, this.chainId, this.signature);
-  @override
-  final String address;
-  @override
-  final int chainId;
-  final Uint8List signature;
-  Map<String, dynamic>? lastTyped;
-  int signTypedDataCalls = 0;
-
-  @override
-  Future<Uint8List> signTypedData(Map<String, dynamic> typedData) async {
-    signTypedDataCalls++;
-    lastTyped = typedData;
-    return signature;
-  }
-
-  @override
-  Future<Uint8List> personalSign(Uint8List message) async => signature;
-}
+import '../support/auth_test_fixtures.dart';
+import '../support/fake_wallet_signer.dart';
 
 void main() {
   group('buildClobAuthTypedData', () {
@@ -70,9 +49,12 @@ void main() {
 
   group('buildL1Headers', () {
     test('returns POLY_* headers wired to signer', () async {
-      final canned = Uint8List.fromList(List<int>.filled(65, 0xab));
-      canned[64] = 27;
-      final signer = _CannedSigner('0xowner', 137, canned);
+      final canned = deterministicSignature((i) => i == 64 ? 27 : 0xab);
+      final signer = FakeWalletSigner(
+        address: '0xowner',
+        chainId: 137,
+        signature: canned,
+      );
       final headers = await buildL1Headers(
         signer: signer,
         timestamp: 1700000000,
@@ -82,13 +64,16 @@ void main() {
       expect(headers['POLY_NONCE'], '0');
       expect(headers['POLY_SIGNATURE'], startsWith('0x'));
       expect(headers['POLY_SIGNATURE']!.length, 2 + 65 * 2);
-      expect(signer.lastTyped!['primaryType'], 'ClobAuth');
+      expect(signer.lastTypedData!['primaryType'], 'ClobAuth');
     });
 
     test('rejects non-Polygon signer before wallet signing', () async {
-      final canned = Uint8List.fromList(List<int>.filled(65, 0xab));
-      canned[64] = 27;
-      final signer = _CannedSigner('0xowner', 1, canned);
+      final canned = deterministicSignature((i) => i == 64 ? 27 : 0xab);
+      final signer = FakeWalletSigner(
+        address: '0xowner',
+        chainId: 1,
+        signature: canned,
+      );
 
       await expectLater(
         buildL1Headers(signer: signer, timestamp: 1700000000),
@@ -103,7 +88,7 @@ void main() {
         ),
       );
       expect(signer.signTypedDataCalls, 0);
-      expect(signer.lastTyped, isNull);
+      expect(signer.lastTypedData, isNull);
     });
   });
 }

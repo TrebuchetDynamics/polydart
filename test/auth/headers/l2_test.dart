@@ -2,13 +2,15 @@ import 'package:polydart/src/auth/l2.dart';
 import 'package:polydart/src/errors/errors.dart';
 import 'package:test/test.dart';
 
+import '../support/auth_test_fixtures.dart';
+
 void main() {
   group('signHmac', () {
     test('parity fixture: matches polygolem output', () {
       // Computed from polygolem (`go run` of internal/auth.SignHMAC) for
       // the same inputs. If this changes, our HMAC pipeline broke parity.
       final sig = signHmac(
-        secret: 'c2VjcmV0',
+        secret: canonicalHmacSecret,
         timestamp: 1700000000,
         method: 'GET',
         path: '/book',
@@ -18,13 +20,13 @@ void main() {
 
     test('deterministic for the same inputs', () {
       final a = signHmac(
-        secret: 'c2VjcmV0',
+        secret: canonicalHmacSecret,
         timestamp: 1700000000,
         method: 'GET',
         path: '/book',
       );
       final b = signHmac(
-        secret: 'c2VjcmV0',
+        secret: canonicalHmacSecret,
         timestamp: 1700000000,
         method: 'GET',
         path: '/book',
@@ -38,13 +40,13 @@ void main() {
 
     test('differs across timestamps', () {
       final a = signHmac(
-        secret: 'c2VjcmV0',
+        secret: canonicalHmacSecret,
         timestamp: 1700000000,
         method: 'GET',
         path: '/book',
       );
       final b = signHmac(
-        secret: 'c2VjcmV0',
+        secret: canonicalHmacSecret,
         timestamp: 1700000001,
         method: 'GET',
         path: '/book',
@@ -54,14 +56,14 @@ void main() {
 
     test('differs when body changes', () {
       final a = signHmac(
-        secret: 'c2VjcmV0',
+        secret: canonicalHmacSecret,
         timestamp: 1700000000,
         method: 'POST',
         path: '/order',
         body: '{"token_id":"123"}',
       );
       final b = signHmac(
-        secret: 'c2VjcmV0',
+        secret: canonicalHmacSecret,
         timestamp: 1700000000,
         method: 'POST',
         path: '/order',
@@ -84,7 +86,11 @@ void main() {
   group('buildL2Headers', () {
     test('full header set', () {
       final headers = buildL2Headers(
-        apiKey: const ApiKey(key: 'k', secret: 'c2VjcmV0', passphrase: 'p'),
+        apiKey: const ApiKey(
+          key: 'k',
+          secret: canonicalHmacSecret,
+          passphrase: 'p',
+        ),
         timestamp: 1700000000,
         method: 'GET',
         path: '/book',
@@ -125,7 +131,7 @@ void main() {
       final headers = buildBuilderHeaders(
         config: const BuilderConfig(
           key: 'bk',
-          secret: 'c2VjcmV0',
+          secret: canonicalHmacSecret,
           passphrase: 'bp',
         ),
         timestamp: 1700000000,

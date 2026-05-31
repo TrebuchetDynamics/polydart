@@ -8,20 +8,20 @@ import 'dart:typed_data';
 
 import 'package:polydart/src/auth/erc7739.dart';
 import 'package:polydart/src/auth/eth_hex.dart';
-import 'package:polydart/src/auth/wallet_signer.dart';
 import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/orders/order_signing.dart';
 import 'package:polydart/src/types/enums.dart';
 import 'package:test/test.dart';
 
-const _depositWallet = '0xfd5041047be8c192c725a66228f141196fa3cf9c';
+import '../support/auth_test_fixtures.dart';
+import '../support/fake_wallet_signer.dart';
 
 OrderV2Draft _draft() => const OrderV2Draft(
   salt: '1',
   // For sigType=poly1271, both maker and signer are the deposit wallet,
   // matching `buildSignedOrderPayload` in polygolem orders.go.
-  maker: _depositWallet,
-  signer: _depositWallet,
+  maker: canonicalDepositWallet,
+  signer: canonicalDepositWallet,
   tokenId: '12345',
   makerAmount: '5500000',
   takerAmount: '10000000',
@@ -50,7 +50,7 @@ void main() {
     test('hashStruct(TypedDataSign) for canonical sample', () {
       final tds = poly1271StructHash(
         contents: orderV2StructHash(draft: _draft()),
-        depositWalletAddress: _depositWallet,
+        depositWalletAddress: canonicalDepositWallet,
       );
       expect(
         bytesToHex(tds),
@@ -61,7 +61,7 @@ void main() {
     test('final hash for canonical regular-market sample', () {
       final digest = computePoly1271FinalHash(
         draft: _draft(),
-        depositWalletAddress: _depositWallet,
+        depositWalletAddress: canonicalDepositWallet,
       );
       expect(
         bytesToHex(digest),
@@ -72,7 +72,7 @@ void main() {
     test('final hash for canonical neg-risk-market sample', () {
       final digest = computePoly1271FinalHash(
         draft: _draft(),
-        depositWalletAddress: _depositWallet,
+        depositWalletAddress: canonicalDepositWallet,
         negRisk: true,
       );
       expect(
@@ -95,11 +95,11 @@ void main() {
       final draft = _draft();
       final a = computePoly1271FinalHash(
         draft: draft,
-        depositWalletAddress: _depositWallet,
+        depositWalletAddress: canonicalDepositWallet,
       );
       final b = poly1271DigestFromEnvelope(
         draft: draft,
-        depositWalletAddress: _depositWallet,
+        depositWalletAddress: canonicalDepositWallet,
       );
       expect(bytesToHex(a), bytesToHex(b));
     });
@@ -180,7 +180,7 @@ void main() {
     test('matches the wallet provider format', () {
       final env = buildPoly1271TypedDataEnvelope(
         draft: _draft(),
-        depositWalletAddress: _depositWallet,
+        depositWalletAddress: canonicalDepositWallet,
       );
       expect(env['primaryType'], 'TypedDataSign');
       final domain = env['domain'] as Map<String, dynamic>;
@@ -191,7 +191,7 @@ void main() {
       final msg = env['message'] as Map<String, dynamic>;
       expect(msg['name'], 'DepositWallet');
       expect(msg['version'], '1');
-      expect(msg['verifyingContract'], _depositWallet);
+      expect(msg['verifyingContract'], canonicalDepositWallet);
       expect(msg['salt'], bytes32Zero);
       // contents must be the full Order struct.
       final contents = msg['contents'] as Map<String, dynamic>;
@@ -203,7 +203,7 @@ void main() {
 
   group('wrapPoly1271Signature (WalletSigner integration)', () {
     test('passes the envelope to the signer and assembles the wrap', () async {
-      final signer = _StubSigner(
+      final signer = FakeWalletSigner(
         signature: Uint8List.fromList(
           List<int>.generate(65, (i) => 0xa0 + (i % 16)),
         ),
@@ -211,23 +211,23 @@ void main() {
       final wrapped = await wrapPoly1271Signature(
         signer: signer,
         draft: _draft(),
-        depositWalletAddress: _depositWallet,
+        depositWalletAddress: canonicalDepositWallet,
       );
       // Sanity: 636 chars and the captured envelope used chainId=137.
       expect(wrapped.length, 636);
-      expect(signer.lastEnvelope, isNotNull);
-      final domain = signer.lastEnvelope!['domain'] as Map<String, dynamic>;
+      expect(signer.lastTypedData, isNotNull);
+      final domain = signer.lastTypedData!['domain'] as Map<String, dynamic>;
       expect(domain['chainId'], 137);
     });
 
     test('rejects non-Polygon signer before wallet signing', () async {
-      final signer = _StubSigner(signature: Uint8List(65), chainId: 80002);
+      final signer = FakeWalletSigner(signature: Uint8List(65), chainId: 80002);
 
       await expectLater(
         () => wrapPoly1271Signature(
           signer: signer,
           draft: _draft(),
-          depositWalletAddress: _depositWallet,
+          depositWalletAddress: canonicalDepositWallet,
         ),
         throwsA(
           isA<ValidationException>()
@@ -240,44 +240,19 @@ void main() {
         ),
       );
       expect(signer.signTypedDataCalls, 0);
-      expect(signer.lastEnvelope, isNull);
+      expect(signer.lastTypedData, isNull);
     });
 
     test('rejects wallet signatures of wrong length', () async {
-      final signer = _StubSigner(signature: Uint8List(64));
+      final signer = FakeWalletSigner(signature: Uint8List(64));
       expect(
         () => wrapPoly1271Signature(
           signer: signer,
           draft: _draft(),
-          depositWalletAddress: _depositWallet,
+          depositWalletAddress: canonicalDepositWallet,
         ),
         throwsA(isA<Exception>()),
       );
     });
   });
-}
-
-class _StubSigner implements WalletSigner {
-  _StubSigner({required this.signature, this.chainId = 137});
-
-  final Uint8List signature;
-
-  @override
-  final int chainId;
-
-  Map<String, dynamic>? lastEnvelope;
-  int signTypedDataCalls = 0;
-
-  @override
-  String get address => '0x2c7536E3605D9C16a7a3D7b1898e529396a65c23';
-
-  @override
-  Future<Uint8List> signTypedData(Map<String, dynamic> typedData) async {
-    signTypedDataCalls++;
-    lastEnvelope = typedData;
-    return signature;
-  }
-
-  @override
-  Future<Uint8List> personalSign(Uint8List message) async => signature;
 }

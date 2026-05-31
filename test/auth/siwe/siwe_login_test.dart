@@ -1,37 +1,13 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
 import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:polydart/src/auth/siwe_login.dart';
-import 'package:polydart/src/auth/wallet_signer.dart';
 import 'package:polydart/src/errors/errors.dart';
 import 'package:test/test.dart';
 
-class _FakeSigner implements WalletSigner {
-  _FakeSigner({this.chainId = 137});
-
-  @override
-  String get address => '0x9d8a62f656a8d1615c1294fd71e9cfb3e4855a4f';
-
-  @override
-  final int chainId;
-
-  Uint8List? lastSignedMessage;
-
-  @override
-  Future<Uint8List> personalSign(Uint8List message) async {
-    lastSignedMessage = message;
-    // Deterministic 65-byte sig — enough for SIWE token assembly.
-    return Uint8List.fromList(List<int>.generate(65, (i) => i & 0xff));
-  }
-
-  @override
-  Future<Uint8List> signTypedData(Map<String, dynamic> typedData) async {
-    return Uint8List(65);
-  }
-}
+import '../support/auth_test_fixtures.dart';
+import '../support/fake_wallet_signer.dart';
 
 void main() {
   group('SIWESession.login', () {
@@ -69,7 +45,10 @@ void main() {
         }
       });
 
-      final signer = _FakeSigner();
+      final signer = FakeWalletSigner(
+        address: canonicalSiweAddress,
+        signature: deterministicSignature((i) => i & 0xff),
+      );
       final session = SIWESession(
         signer: signer,
         gammaBaseUrl: 'https://gamma-api.example.com',
@@ -100,8 +79,8 @@ void main() {
       expect(decoded.contains(':::0x'), isTrue);
 
       // Signer should have been asked to personal-sign the SIWE blob.
-      expect(signer.lastSignedMessage, isNotNull);
-      final signedText = utf8.decode(signer.lastSignedMessage!);
+      expect(signer.lastPersonalSignMessage, isNotNull);
+      final signedText = utf8.decode(signer.lastPersonalSignMessage!);
       expect(
         signedText.contains('Welcome to Polymarket! Sign to connect.'),
         isTrue,
@@ -116,7 +95,10 @@ void main() {
           requestCount++;
           return http.Response(jsonEncode({'nonce': 'test-nonce-abc'}), 200);
         });
-        final signer = _FakeSigner(chainId: 1);
+        final signer = FakeWalletSigner(
+          address: canonicalSiweAddress,
+          chainId: 1,
+        );
         final session = SIWESession(
           signer: signer,
           gammaBaseUrl: 'https://gamma-api.example.com',
@@ -136,14 +118,14 @@ void main() {
           ),
         );
         expect(requestCount, 0);
-        expect(signer.lastSignedMessage, isNull);
+        expect(signer.lastPersonalSignMessage, isNull);
       },
     );
 
     test('throws TransportException when /nonce returns 500', () async {
       final mock = MockClient((req) async => http.Response('boom', 500));
       final session = SIWESession(
-        signer: _FakeSigner(),
+        signer: FakeWalletSigner(address: canonicalSiweAddress),
         gammaBaseUrl: 'https://gamma-api.example.com',
         httpClient: mock,
       );
@@ -155,7 +137,7 @@ void main() {
         return http.Response(jsonEncode({'nonce': ''}), 200);
       });
       final session = SIWESession(
-        signer: _FakeSigner(),
+        signer: FakeWalletSigner(address: canonicalSiweAddress),
         gammaBaseUrl: 'https://gamma-api.example.com',
         httpClient: mock,
       );
@@ -188,7 +170,7 @@ void main() {
         );
       });
       final session = SIWESession(
-        signer: _FakeSigner(),
+        signer: FakeWalletSigner(address: canonicalSiweAddress),
         gammaBaseUrl: 'https://gamma-api.example.com',
         httpClient: mock,
       );
