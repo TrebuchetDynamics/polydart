@@ -6,6 +6,8 @@ library;
 
 import 'package:meta/meta.dart';
 
+import 'shared/clob_json.dart';
+
 /// One row of `GET /data/orders` (or `GET /data/order/:id`).
 @immutable
 final class OrderRecord {
@@ -30,39 +32,29 @@ final class OrderRecord {
   });
 
   factory OrderRecord.fromJson(Map<String, dynamic> json) {
-    String pick(List<String> keys) {
-      for (final key in keys) {
-        final value = json[key];
-        if (value != null) return value.toString();
-      }
-      return '';
-    }
-
     final at = json['associate_trades'] ?? json['associateTrades'];
     final trades = at is List
         ? at.map((e) => e.toString()).toList(growable: false)
         : const <String>[];
     final sigTypeRaw = json['signature_type'] ?? json['signatureType'];
-    final sigType = sigTypeRaw is num
-        ? sigTypeRaw.toInt()
-        : int.tryParse('${sigTypeRaw ?? 0}') ?? 0;
+    final sigType = clobInt(sigTypeRaw);
     return OrderRecord(
-      id: pick(const ['id']),
-      status: pick(const ['status']),
-      owner: pick(const ['owner']),
-      market: pick(const ['market']),
-      assetId: pick(const ['asset_id', 'assetId']),
-      side: pick(const ['side']),
-      originalSize: pick(const ['original_size', 'originalSize']),
-      sizeMatched: pick(const ['size_matched', 'sizeMatched']),
-      price: pick(const ['price']),
-      outcome: pick(const ['outcome']),
-      type: pick(const ['type']),
-      orderType: pick(const ['order_type', 'orderType']),
+      id: clobStringOf(json, const ['id']),
+      status: clobStringOf(json, const ['status']),
+      owner: clobStringOf(json, const ['owner']),
+      market: clobStringOf(json, const ['market']),
+      assetId: clobStringOf(json, const ['asset_id', 'assetId']),
+      side: clobStringOf(json, const ['side']),
+      originalSize: clobStringOf(json, const ['original_size', 'originalSize']),
+      sizeMatched: clobStringOf(json, const ['size_matched', 'sizeMatched']),
+      price: clobStringOf(json, const ['price']),
+      outcome: clobStringOf(json, const ['outcome']),
+      type: clobStringOf(json, const ['type']),
+      orderType: clobStringOf(json, const ['order_type', 'orderType']),
       signatureType: sigType,
-      createdAt: pick(const ['created_at', 'createdAt']),
-      expiration: pick(const ['expiration']),
-      makerAddress: pick(const ['maker_address', 'makerAddress']),
+      createdAt: clobStringOf(json, const ['created_at', 'createdAt']),
+      expiration: clobStringOf(json, const ['expiration']),
+      makerAddress: clobStringOf(json, const ['maker_address', 'makerAddress']),
       associateTrades: trades,
     );
   }
@@ -108,30 +100,28 @@ final class TradeRecord {
   });
 
   factory TradeRecord.fromJson(Map<String, dynamic> json) {
-    String pick(List<String> keys) {
-      for (final key in keys) {
-        final value = json[key];
-        if (value != null) return value.toString();
-      }
-      return '';
-    }
-
     return TradeRecord(
-      id: pick(const ['id']),
-      status: pick(const ['status']),
-      market: pick(const ['market']),
-      assetId: pick(const ['asset_id', 'assetId']),
-      side: pick(const ['side']),
-      price: pick(const ['price']),
-      size: pick(const ['size']),
-      feeRateBps: pick(const ['fee_rate_bps', 'feeRateBps']),
-      outcome: pick(const ['outcome']),
-      owner: pick(const ['owner']),
-      builder: pick(const ['builder']),
-      matchedAmount: pick(const ['matched_amount', 'matchedAmount']),
-      transactionHash: pick(const ['transaction_hash', 'transactionHash']),
-      createdAt: pick(const ['created_at', 'createdAt']),
-      lastUpdated: pick(const ['last_updated', 'lastUpdated']),
+      id: clobStringOf(json, const ['id']),
+      status: clobStringOf(json, const ['status']),
+      market: clobStringOf(json, const ['market']),
+      assetId: clobStringOf(json, const ['asset_id', 'assetId']),
+      side: clobStringOf(json, const ['side']),
+      price: clobStringOf(json, const ['price']),
+      size: clobStringOf(json, const ['size']),
+      feeRateBps: clobStringOf(json, const ['fee_rate_bps', 'feeRateBps']),
+      outcome: clobStringOf(json, const ['outcome']),
+      owner: clobStringOf(json, const ['owner']),
+      builder: clobStringOf(json, const ['builder']),
+      matchedAmount: clobStringOf(json, const [
+        'matched_amount',
+        'matchedAmount',
+      ]),
+      transactionHash: clobStringOf(json, const [
+        'transaction_hash',
+        'transactionHash',
+      ]),
+      createdAt: clobStringOf(json, const ['created_at', 'createdAt']),
+      lastUpdated: clobStringOf(json, const ['last_updated', 'lastUpdated']),
     );
   }
 
@@ -199,11 +189,11 @@ final class BuilderFeeKeyRecord {
 
   factory BuilderFeeKeyRecord.fromJson(Map<String, dynamic> json) {
     return BuilderFeeKeyRecord(
-      key: (json['key'] ?? '').toString(),
-      secret: (json['secret'] ?? '').toString(),
-      passphrase: (json['passphrase'] ?? '').toString(),
-      createdAt: (json['created_at'] ?? json['createdAt'] ?? '').toString(),
-      updatedAt: (json['updated_at'] ?? json['updatedAt'] ?? '').toString(),
+      key: clobStringOf(json, const ['key']),
+      secret: clobStringOf(json, const ['secret']),
+      passphrase: clobStringOf(json, const ['passphrase']),
+      createdAt: clobStringOf(json, const ['created_at', 'createdAt']),
+      updatedAt: clobStringOf(json, const ['updated_at', 'updatedAt']),
     );
   }
 
@@ -230,9 +220,9 @@ final class BalanceAllowanceResponse {
       allowancesRaw.forEach((k, v) => allowances[k.toString()] = v.toString());
     }
     return BalanceAllowanceResponse(
-      balance: (json['balance'] ?? '').toString(),
+      balance: clobStringOf(json, const ['balance']),
       allowances: allowances,
-      allowance: (json['allowance'] ?? '').toString(),
+      allowance: clobStringOf(json, const ['allowance']),
     );
   }
 

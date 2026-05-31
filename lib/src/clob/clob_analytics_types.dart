@@ -9,6 +9,8 @@ library;
 
 import 'package:meta/meta.dart';
 
+import 'shared/clob_json.dart';
+
 /// Active rewards configuration for a market.
 @immutable
 final class RewardsConfig {
@@ -21,15 +23,15 @@ final class RewardsConfig {
   });
 
   factory RewardsConfig.fromJson(Map<String, dynamic> json) => RewardsConfig(
-    market: _stringOf(json, const ['market']),
-    assetAddress: _stringOf(json, const ['asset_address', 'assetAddress']),
-    rewardsMinSize: _double(
-      _firstOf(json, const ['rewards_min_size', 'rewardsMinSize']),
+    market: clobStringOf(json, const ['market']),
+    assetAddress: clobStringOf(json, const ['asset_address', 'assetAddress']),
+    rewardsMinSize: clobDouble(
+      clobFirstOf(json, const ['rewards_min_size', 'rewardsMinSize']),
     ),
-    rewardsMaxSpread: _double(
-      _firstOf(json, const ['rewards_max_spread', 'rewardsMaxSpread']),
+    rewardsMaxSpread: clobDouble(
+      clobFirstOf(json, const ['rewards_max_spread', 'rewardsMaxSpread']),
     ),
-    active: _bool(json['active']),
+    active: clobBool(json['active']),
   );
 
   final String market;
@@ -50,10 +52,12 @@ final class RawRewards {
   });
 
   factory RawRewards.fromJson(Map<String, dynamic> json) => RawRewards(
-    market: _stringOf(json, const ['market']),
-    date: _stringOf(json, const ['date']),
-    rewardsPaid: _double(_firstOf(json, const ['rewards_paid', 'rewardsPaid'])),
-    volume: _double(json['volume']),
+    market: clobStringOf(json, const ['market']),
+    date: clobStringOf(json, const ['date']),
+    rewardsPaid: clobDouble(
+      clobFirstOf(json, const ['rewards_paid', 'rewardsPaid']),
+    ),
+    volume: clobDouble(json['volume']),
   );
 
   final String market;
@@ -71,7 +75,7 @@ final class UserEarnings {
     final market = json['market']?.toString();
     return UserEarnings(
       date: json['date']?.toString() ?? '',
-      earnings: _double(json['earnings']),
+      earnings: clobDouble(json['earnings']),
       market: (market == null || market.isEmpty) ? null : market,
     );
   }
@@ -90,7 +94,7 @@ final class TotalEarnings {
 
   factory TotalEarnings.fromJson(Map<String, dynamic> json) => TotalEarnings(
     date: json['date']?.toString() ?? '',
-    earnings: _double(json['earnings']),
+    earnings: clobDouble(json['earnings']),
   );
 
   final String date;
@@ -107,9 +111,9 @@ final class RewardPercentages {
 
   factory RewardPercentages.fromJson(Map<String, dynamic> json) =>
       RewardPercentages(
-        market: _stringOf(json, const ['market']),
-        rewardPercentage: _double(
-          _firstOf(json, const ['reward_percentage', 'rewardPercentage']),
+        market: clobStringOf(json, const ['market']),
+        rewardPercentage: clobDouble(
+          clobFirstOf(json, const ['reward_percentage', 'rewardPercentage']),
         ),
       );
 
@@ -128,12 +132,12 @@ final class UserRewardsMarket {
 
   factory UserRewardsMarket.fromJson(Map<String, dynamic> json) =>
       UserRewardsMarket(
-        market: _stringOf(json, const ['market']),
-        totalRewards: _double(
-          _firstOf(json, const ['total_rewards', 'totalRewards']),
+        market: clobStringOf(json, const ['market']),
+        totalRewards: clobDouble(
+          clobFirstOf(json, const ['total_rewards', 'totalRewards']),
         ),
-        rewardPercentage: _double(
-          _firstOf(json, const ['reward_percentage', 'rewardPercentage']),
+        rewardPercentage: clobDouble(
+          clobFirstOf(json, const ['reward_percentage', 'rewardPercentage']),
         ),
       );
 
@@ -186,10 +190,10 @@ final class RebatedFees {
   factory RebatedFees.fromJson(Map<String, dynamic> json) {
     final market = json['market']?.toString();
     return RebatedFees(
-      makerAddress: _stringOf(json, const ['maker_address', 'makerAddress']),
+      makerAddress: clobStringOf(json, const ['maker_address', 'makerAddress']),
       market: (market == null || market.isEmpty) ? null : market,
-      totalRebated: _double(
-        _firstOf(json, const ['total_rebated', 'totalRebated']),
+      totalRebated: clobDouble(
+        clobFirstOf(json, const ['total_rebated', 'totalRebated']),
       ),
       date: json['date']?.toString() ?? '',
     );
@@ -199,31 +203,4 @@ final class RebatedFees {
   final String? market;
   final double totalRebated;
   final String date;
-}
-
-Object? _firstOf(Map<String, dynamic> json, List<String> keys) {
-  for (final key in keys) {
-    if (json.containsKey(key)) return json[key];
-  }
-  return null;
-}
-
-String _stringOf(Map<String, dynamic> json, List<String> keys) {
-  return _firstOf(json, keys)?.toString() ?? '';
-}
-
-bool _bool(Object? raw) {
-  if (raw is bool) return raw;
-  if (raw is num) return raw != 0;
-  if (raw is String) {
-    final normalized = raw.toLowerCase();
-    return normalized == 'true' || normalized == '1';
-  }
-  return false;
-}
-
-double _double(Object? raw) {
-  if (raw is num) return raw.toDouble();
-  if (raw is String) return double.tryParse(raw) ?? 0;
-  return 0;
 }
