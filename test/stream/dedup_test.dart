@@ -6,6 +6,74 @@ import 'package:test/test.dart';
 List<int> _enc(Map<String, dynamic> m) => utf8.encode(jsonEncode(m));
 
 void main() {
+  group('extractDedupKey', () {
+    test('exposes replayable keys for supported event shapes', () {
+      expect(
+        extractDedupKey(
+          _enc(<String, dynamic>{'event_type': 'book', 'hash': 'abc'}),
+        ).key,
+        'book:abc',
+      );
+      expect(
+        extractDedupKey(
+          _enc(<String, dynamic>{
+            'event_type': 'price_change',
+            'hash': 'pcH',
+            'market': 'm1',
+            'timestamp': 't1',
+          }),
+        ).key,
+        'pc:pcH',
+      );
+      expect(
+        extractDedupKey(
+          _enc(<String, dynamic>{
+            'event_type': 'price_change',
+            'market': 'm1',
+            'timestamp': 't1',
+          }),
+        ).key,
+        'pc:m1:t1',
+      );
+      expect(
+        extractDedupKey(
+          _enc(<String, dynamic>{
+            'event_type': 'last_trade_price',
+            'asset_id': 'a1',
+            'price': '0.55',
+            'size': '10',
+          }),
+        ).key,
+        'ltp:a1:0.55:10',
+      );
+    });
+
+    test('exposes why unsupported or malformed frames stay unkeyed', () {
+      expect(
+        extractDedupKey(const <int>[]).status,
+        DedupKeyStatus.emptyPayload,
+      );
+      expect(
+        extractDedupKey(utf8.encode('not json')).status,
+        DedupKeyStatus.invalidJson,
+      );
+      expect(
+        extractDedupKey(utf8.encode('[1,2]')).status,
+        DedupKeyStatus.nonObjectJson,
+      );
+      expect(
+        extractDedupKey(
+          _enc(<String, dynamic>{'event_type': 'unknown'}),
+        ).status,
+        DedupKeyStatus.unknownEventType,
+      );
+      expect(
+        extractDedupKey(_enc(<String, dynamic>{'event_type': 'book'})).status,
+        DedupKeyStatus.missingRequiredFields,
+      );
+    });
+  });
+
   group('Deduplicator.process', () {
     test('first book message with hash is new', () {
       final dedup = Deduplicator(size: 64, ttl: const Duration(seconds: 1));

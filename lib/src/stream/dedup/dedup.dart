@@ -51,12 +51,13 @@ final class Deduplicator {
   /// duplicates a still-live key. An empty key (parse failure or unknown
   /// event shape) counts as new.
   bool process(List<int> data) {
-    final key = _extractKey(data);
-    if (key.isEmpty) {
+    final extraction = extractDedupKey(data);
+    if (!extraction.hasKey) {
       _in += 1;
       _out += 1;
       return true;
     }
+    final key = extraction.key;
 
     final nowMs = _clock().millisecondsSinceEpoch;
     _in += 1;
@@ -104,15 +105,45 @@ final class Deduplicator {
   }
 }
 
-String _extractKey(List<int> data) {
-  if (data.isEmpty) return '';
+/// Why a payload did or did not produce a replayable deduplication key.
+enum DedupKeyStatus {
+  keyed,
+  emptyPayload,
+  invalidJson,
+  nonObjectJson,
+  unknownEventType,
+  missingRequiredFields,
+}
+
+/// Replayable result of extracting a deduplication key from one stream frame.
+final class DedupKeyExtraction {
+  const DedupKeyExtraction._(this.status, this.key);
+
+  const DedupKeyExtraction.keyed(String key)
+    : this._(DedupKeyStatus.keyed, key);
+
+  const DedupKeyExtraction.unkeyed(DedupKeyStatus status) : this._(status, '');
+
+  final DedupKeyStatus status;
+  final String key;
+
+  bool get hasKey => status == DedupKeyStatus.keyed;
+}
+
+/// Extracts the canonical deduplication key for a single stream frame.
+DedupKeyExtraction extractDedupKey(List<int> data) {
+  if (data.isEmpty) {
+    return const DedupKeyExtraction.unkeyed(DedupKeyStatus.emptyPayload);
+  }
   Object? decoded;
   try {
     decoded = json.decode(utf8.decode(data));
   } on FormatException {
-    return '';
+    return const DedupKeyExtraction.unkeyed(DedupKeyStatus.invalidJson);
   }
-  if (decoded is! Map) return '';
+  if (decoded is! Map) {
+    return const DedupKeyExtraction.unkeyed(DedupKeyStatus.nonObjectJson);
+  }
   final m = decoded.map((k, v) => MapEntry(k.toString(), v));
   String pick(String key) => (m[key] ?? '').toString();
 
@@ -121,23 +152,33 @@ String _extractKey(List<int> data) {
   switch (eventType) {
     case 'book':
     case 'tick_size_change':
-      if (hash.isNotEmpty) return '$eventType:$hash';
-      return '';
+      if (hash.isNotEmpty) return DedupKeyExtraction.keyed('$eventType:$hash');
+      return const DedupKeyExtraction.unkeyed(
+        DedupKeyStatus.missingRequiredFields,
+      );
     case 'price_change':
-      return _priceChangeKey(
-        hash: hash,
-        market: pick('market'),
-        timestamp: pick('timestamp'),
+      return _keyedOrMissing(
+        _priceChangeKey(
+          hash: hash,
+          market: pick('market'),
+          timestamp: pick('timestamp'),
+        ),
       );
     case 'last_trade_price':
-      return _lastTradePriceKey(
-        assetId: pick('asset_id'),
-        price: pick('price'),
-        size: pick('size'),
+      return _keyedOrMissing(
+        _lastTradePriceKey(
+          assetId: pick('asset_id'),
+          price: pick('price'),
+          size: pick('size'),
+        ),
       );
   }
-  return '';
+  return const DedupKeyExtraction.unkeyed(DedupKeyStatus.unknownEventType);
 }
+
+DedupKeyExtraction _keyedOrMissing(String key) => key.isEmpty
+    ? const DedupKeyExtraction.unkeyed(DedupKeyStatus.missingRequiredFields)
+    : DedupKeyExtraction.keyed(key);
 
 String _priceChangeKey({
   required String hash,
