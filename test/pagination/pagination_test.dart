@@ -212,6 +212,25 @@ void main() {
         expect(calls, 2);
       },
     );
+
+    test('rejects full empty pages instead of looping forever', () async {
+      var calls = 0;
+
+      await expectLater(
+        collectOffset<int>((offset, limit) async {
+          calls++;
+          return const OffsetPageResult(items: [], count: 2);
+        }, 2),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains('reported a full page but returned no items'),
+          ),
+        ),
+      );
+      expect(calls, 1);
+    });
   });
 
   group('batch', () {

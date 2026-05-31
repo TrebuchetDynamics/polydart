@@ -180,9 +180,23 @@ Future<List<T>> collectOffset<T>(OffsetPage<T> pageFn, int limit) async {
     }
 
     items.addAll(page.items);
-    if (page.count < limit) return items;
-    offset += limit;
+    final nextOffset = _nextOffsetOrDone(offset, limit, page);
+    if (nextOffset == null) return items;
+    offset = nextOffset;
   }
+}
+
+int? _nextOffsetOrDone<T>(int offset, int limit, OffsetPageResult<T> page) {
+  if (page.count < 0) {
+    throw StateError('Offset page count must be non-negative.');
+  }
+  if (page.count < limit) return null;
+  if (page.items.isEmpty) {
+    throw StateError(
+      'Offset page at offset $offset reported a full page but returned no items.',
+    );
+  }
+  return offset + limit;
 }
 
 /// Iterates an offset-paginated endpoint.
