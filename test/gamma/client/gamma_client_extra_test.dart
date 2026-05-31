@@ -738,6 +738,30 @@ void main() {
   });
 
   group('eventsKeyset / marketsKeyset', () {
+    test('eventsKeyset rejects malformed data candidates by index', () async {
+      final client = gammaTestClient((req) async {
+        expect(req.url.path, '/events-keyset');
+        return gammaJsonObj(<String, dynamic>{
+          'data': <Object?>[
+            'not-an-object',
+            <String, dynamic>{'id': 'e1', 'slug': 'a'},
+          ],
+          'next_cursor': 'cur-abc',
+        });
+      });
+
+      expect(
+        client.eventsKeyset(const KeysetParams(limit: 50)),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('events[0] must be a JSON object'),
+          ),
+        ),
+      );
+    });
+
     test('eventsKeyset returns (data, nextCursor) record', () async {
       Uri? captured;
       final client = gammaTestClient((req) async {

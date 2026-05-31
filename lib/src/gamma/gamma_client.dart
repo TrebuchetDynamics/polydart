@@ -385,50 +385,56 @@ final class GammaClient {
     return (data: data, nextCursor: body['next_cursor']?.toString() ?? '');
   }
 
-  static List<Market> _markets(List<dynamic> raw) => raw
-      .whereType<Map<dynamic, dynamic>>()
-      .map((m) => Market.fromJson(m.cast<String, dynamic>()))
-      .toList(growable: false);
+  static List<Market> _markets(List<dynamic> raw) =>
+      _decodeObjectList(raw, 'markets', Market.fromJson);
 
-  static List<Event> _events(List<dynamic> raw) => raw
-      .whereType<Map<dynamic, dynamic>>()
-      .map((m) => Event.fromJson(m.cast<String, dynamic>()))
-      .toList(growable: false);
+  static List<Event> _events(List<dynamic> raw) =>
+      _decodeObjectList(raw, 'events', Event.fromJson);
 
-  static List<Series> _seriesList(List<dynamic> raw) => raw
-      .whereType<Map<dynamic, dynamic>>()
-      .map((m) => Series.fromJson(m.cast<String, dynamic>()))
-      .toList(growable: false);
+  static List<Series> _seriesList(List<dynamic> raw) =>
+      _decodeObjectList(raw, 'series', Series.fromJson);
 
-  static List<Tag> _tagList(List<dynamic> raw) => raw
-      .whereType<Map<dynamic, dynamic>>()
-      .map((m) => Tag.fromJson(m.cast<String, dynamic>()))
-      .toList(growable: false);
+  static List<Tag> _tagList(List<dynamic> raw) =>
+      _decodeObjectList(raw, 'tags', Tag.fromJson);
 
-  static List<TagRelationship> _tagRelationships(List<dynamic> raw) => raw
-      .whereType<Map<dynamic, dynamic>>()
-      .map((m) => TagRelationship.fromJson(m.cast<String, dynamic>()))
-      .toList(growable: false);
+  static List<TagRelationship> _tagRelationships(List<dynamic> raw) =>
+      _decodeObjectList(raw, 'tagRelationships', TagRelationship.fromJson);
 
-  static List<Team> _teams(List<dynamic> raw) => raw
-      .whereType<Map<dynamic, dynamic>>()
-      .map((m) => Team.fromJson(m.cast<String, dynamic>()))
-      .toList(growable: false);
+  static List<Team> _teams(List<dynamic> raw) =>
+      _decodeObjectList(raw, 'teams', Team.fromJson);
 
-  static List<Comment> _commentsList(List<dynamic> raw) => raw
-      .whereType<Map<dynamic, dynamic>>()
-      .map((m) => Comment.fromJson(m.cast<String, dynamic>()))
-      .toList(growable: false);
+  static List<Comment> _commentsList(List<dynamic> raw) =>
+      _decodeObjectList(raw, 'comments', Comment.fromJson);
 
-  static List<SportMetadata> _sportsMetadata(List<dynamic> raw) => raw
-      .whereType<Map<dynamic, dynamic>>()
-      .map((m) => SportMetadata.fromJson(m.cast<String, dynamic>()))
-      .toList(growable: false);
+  static List<SportMetadata> _sportsMetadata(List<dynamic> raw) =>
+      _decodeObjectList(raw, 'sportsMetadata', SportMetadata.fromJson);
 
-  static List<SportsMarketType> _sportsMarketTypes(List<dynamic> raw) => raw
-      .whereType<Map<dynamic, dynamic>>()
-      .map((m) => SportsMarketType.fromJson(m.cast<String, dynamic>()))
-      .toList(growable: false);
+  static List<SportsMarketType> _sportsMarketTypes(List<dynamic> raw) =>
+      _decodeObjectList(raw, 'sportsMarketTypes', SportsMarketType.fromJson);
+}
+
+List<T> _decodeObjectList<T>(
+  List<dynamic> raw,
+  String fieldName,
+  T Function(Map<String, dynamic>) decode,
+) {
+  final out = <T>[];
+  for (var index = 0; index < raw.length; index++) {
+    out.add(decode(_objectCandidateAt(raw, index, fieldName)));
+  }
+  return List<T>.unmodifiable(out);
+}
+
+Map<String, dynamic> _objectCandidateAt(
+  List<dynamic> candidates,
+  int index,
+  String fieldName,
+) {
+  final raw = candidates[index];
+  if (raw is! Map<dynamic, dynamic>) {
+    throw FormatException('$fieldName[$index] must be a JSON object');
+  }
+  return raw.cast<String, dynamic>();
 }
 
 /// Returns series in input order, dropping repeated slugs or repeated IDs when
