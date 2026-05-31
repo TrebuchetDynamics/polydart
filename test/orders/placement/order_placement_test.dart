@@ -420,6 +420,42 @@ void main() {
   });
 
   group('market order price discovery', () {
+    test(
+      'wraps malformed omitted-price amount as ValidationException',
+      () async {
+        final client = orderTestClient((req) async {
+          switch (req.url.path) {
+            case '/tick-size':
+              return tickSizeResponse();
+            default:
+              return http.Response('unexpected ${req.url.path}', 500);
+          }
+        });
+
+        await expectLater(
+          createMarketOrder(
+            client: client,
+            signer: cannedOrderSigner(),
+            apiKey: testOrderApiKey,
+            params: const CreateMarketOrderParams(
+              tokenId: '12345',
+              side: Side.buy,
+              amount: 'not-a-number',
+            ),
+          ),
+          throwsA(
+            isA<ValidationException>()
+                .having((error) => error.field, 'field', 'amount')
+                .having(
+                  (error) => error.message,
+                  'message',
+                  'amount must be a decimal',
+                ),
+          ),
+        );
+      },
+    );
+
     test('uses best opposing price when price is omitted', () async {
       String? orderBody;
       final client = orderTestClient((req) async {

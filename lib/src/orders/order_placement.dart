@@ -18,6 +18,7 @@ import '../bookreader/bookreader.dart';
 import '../clob/clob_client.dart';
 import '../clob/clob_writes.dart';
 import '../errors/errors.dart';
+import '../types/decimal.dart';
 import '../types/enums.dart';
 import 'deposit_wallet_order_signing.dart';
 import 'order_builder.dart';
@@ -399,14 +400,7 @@ Future<String> _marketOrderPrice({
   required String amount,
   required OrderType orderType,
 }) async {
-  final amountValue = double.parse(amount);
-  if (amountValue <= 0) {
-    throw const ValidationException(
-      code: ErrorCode.invalidValue,
-      message: 'amount must be positive',
-      field: 'amount',
-    );
-  }
+  final amountValue = _parsePositiveMarketAmount(amount);
 
   final book = BookReader(await client.orderBook(tokenId));
   final levels = side == Side.buy ? book.asks : book.bids;
@@ -434,4 +428,24 @@ Future<String> _marketOrderPrice({
     );
   }
   return levels.first.price;
+}
+
+double _parsePositiveMarketAmount(String amount) {
+  final decimal = Decimal.tryParse(amount);
+  if (decimal == null) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'amount must be a decimal',
+      field: 'amount',
+    );
+  }
+  final value = decimal.toDouble();
+  if (value <= 0) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'amount must be positive',
+      field: 'amount',
+    );
+  }
+  return value;
 }
