@@ -248,6 +248,34 @@ void main() {
       );
       expect(calls, 1);
     });
+
+    test(
+      'rejects a full page count with fewer items before skipping offsets',
+      () async {
+        var calls = 0;
+
+        await expectLater(
+          collectOffset<int>((offset, limit) async {
+            calls++;
+            if (offset == 0) {
+              return const OffsetPageResult(items: [0, 1], count: 3);
+            }
+            return OffsetPageResult(
+              items: List.generate(limit, (i) => offset + i),
+              count: limit,
+            );
+          }, 3),
+          throwsA(
+            isA<StateError>().having(
+              (error) => error.message,
+              'message',
+              contains('reported full page count 3 but returned 2 items'),
+            ),
+          ),
+        );
+        expect(calls, 1);
+      },
+    );
   });
 
   group('batch', () {
