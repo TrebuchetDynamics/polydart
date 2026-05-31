@@ -109,5 +109,6 @@ This planning flow does not:
 - Store wallet keys.
 - Bypass live gates.
 - Infer user consent from configuration alone.
+- Store or mint relayer credentials without an application-owned boundary.
 
-Use [live safety gates](/protocol-safety/live-safety-gates/) before any application-owned live submission path.
+Use [live safety gates](/protocol-safety/live-safety-gates/) before any application-owned live submission path, and keep relayer API keys behind the [credential boundary](/protocol-safety/credential-boundaries/).

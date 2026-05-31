@@ -94,20 +94,7 @@ The returned value is a hex signature. It is not a private key, API key, or CLOB
 
 ## Browser Cookie Boundary
 
-`SIWESession.login()` and `mintV2APIKey()` use HTTP cookies. They are suitable
-for Dart VM, mobile, desktop, tests, and backend/proxy code that can read
-`Set-Cookie` and send `Cookie` headers. Flutter Web code cannot rely on that
-same API shape because browsers hide `Set-Cookie` from JavaScript and block
-manual `Cookie` headers.
-
-`LiveCredentialService.ensure()` uses those same primitives when a Relayer V2
-API key is missing: it asks the app-provided `WalletSigner` for SIWE
-`personal_sign`, captures the session cookie, mints the relayer key, and stores
-it only through the app-provided `CredentialStore`.
-
-For Flutter Web, keep wallet signature prompts in the app and put any
-cookie-backed SIWE or relayer-key minting behind a backend/proxy boundary unless
-you have a browser-native credential flow with the upstream service.
+`SIWESession.login()`, `mintV2APIKey()`, `LiveCredentialService.ensure()`, and `CredentialStore` form a separate credential boundary from wallet signing. Use [credential boundaries](/protocol-safety/credential-boundaries/) for the shared policy on cookie-backed SIWE sessions, relayer key storage, and Flutter Web proxy requirements.
 
 ## Address And Chain Checks
 
