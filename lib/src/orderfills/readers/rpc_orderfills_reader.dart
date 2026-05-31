@@ -8,10 +8,10 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../auth/eth_hex.dart';
-import '../contracts/contracts.dart' as contracts;
-import '../errors/errors.dart';
-import 'orderfills_core.dart';
+import '../../auth/eth_hex.dart';
+import '../../contracts/contracts.dart' as contracts;
+import '../../errors/errors.dart';
+import '../orderfills_core.dart';
 
 final class RpcOrderFillsReader
     implements OrderFillsReader, OrderFillsBlockNumberReader {

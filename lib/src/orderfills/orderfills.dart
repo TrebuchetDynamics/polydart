@@ -5,4 +5,4 @@
 library;
 
 export 'orderfills_core.dart';
-export 'rpc_orderfills_reader.dart';
+export 'readers/rpc_orderfills_reader.dart';
