@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:polydart/polydart.dart';
@@ -175,6 +177,68 @@ void main() {
       // Price history was skipped (empty interval).
       expect(bundle.priceHistory.isOk, isTrue);
       expect(bundle.priceHistory.value, isEmpty);
+    });
+
+    test('fetch retains distinct trades from the same transaction', () async {
+      final clobWithSharedTransaction = ClobClient(
+        transport: HttpTransport(
+          config: const TransportConfig(
+            baseUrl: 'https://clob.polymarket.com',
+            timeout: Duration(seconds: 5),
+          ),
+          inner: MockClient((req) async {
+            if (req.url.path == '/trades') {
+              final market = req.url.queryParameters['market']!;
+              return http.Response(
+                jsonEncode([
+                  <String, dynamic>{
+                    'id': 'trade-$market',
+                    'status': 'MATCHED',
+                    'market': market,
+                    'asset_id': market,
+                    'side': 'BUY',
+                    'price': '0.50',
+                    'size': '1',
+                    'fee_rate_bps': '0',
+                    'outcome': market,
+                    'owner': '0xowner',
+                    'builder': '',
+                    'matched_amount': '1',
+                    'transaction_hash': '0xsame',
+                    'created_at': market == 'token-yes'
+                        ? '2026-01-02T00:00:00Z'
+                        : '2026-01-01T00:00:00Z',
+                    'last_updated': '2026-01-02T00:00:00Z',
+                  },
+                ]),
+                200,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            return http.Response(
+              '[]',
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          }),
+        ),
+        mode: PolydartMode.readOnly,
+        liveTradingEnabled: false,
+      );
+
+      final bundle = await MarketDetailFetcher.fetch(
+        gamma: gamma,
+        clob: clobWithSharedTransaction,
+        conditionId: '0xabc',
+        tokenIds: const <String>['token-yes', 'token-no'],
+        priceHistoryInterval: '',
+      );
+
+      expect(bundle.trades.isOk, isTrue);
+      expect(bundle.trades.value!.map((trade) => trade.id), <String>[
+        'trade-token-yes',
+        'trade-token-no',
+      ]);
     });
 
     test('fetch returns error bundle for unknown condition', () async {
