@@ -5,6 +5,8 @@ import 'package:polydart/src/types/clob.dart';
 import 'package:polydart/src/types/market.dart';
 import 'package:test/test.dart';
 
+import '../shared/json_contracts.dart';
+
 const _fixtureRoot = 'test/fixtures/polymarket/events/fed-decision-in-june-825';
 
 void main() {
@@ -163,8 +165,7 @@ void _expectGammaMarketTruth(Market market) {
 }
 
 Map<String, dynamic> _fixtureMap(String name) {
-  return (jsonDecode(File('$_fixtureRoot/$name').readAsStringSync()) as Map)
-      .cast<String, dynamic>();
+  return decodeJsonObject(File('$_fixtureRoot/$name').readAsStringSync());
 }
 
 List<dynamic> _fixtureList(String name) {

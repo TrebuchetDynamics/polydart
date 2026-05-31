@@ -1,8 +1,8 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables
-import 'dart:convert';
-
 import 'package:polydart/src/types/clob.dart';
 import 'package:test/test.dart';
+
+import '../shared/json_contracts.dart';
 
 void main() {
   group('OrderBook.fromJson', () {
@@ -22,7 +22,7 @@ void main() {
         ]
       }
       ''';
-      final book = OrderBook.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      final book = OrderBook.fromJson(decodeJsonObject(raw));
       expect(book.market, '0xabc');
       expect(book.assetId, '12345');
       expect(book.bids, hasLength(2));

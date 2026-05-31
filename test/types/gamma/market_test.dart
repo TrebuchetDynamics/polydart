@@ -1,8 +1,8 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables
-import 'dart:convert';
-
 import 'package:polydart/src/types/market.dart';
 import 'package:test/test.dart';
+
+import '../shared/json_contracts.dart';
 
 void main() {
   group('Market.fromJson', () {
@@ -36,7 +36,7 @@ void main() {
         "tags": [{"id": "1", "label": "Bitcoin", "slug": "bitcoin"}]
       }
       ''';
-      final m = Market.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      final m = Market.fromJson(decodeJsonObject(raw));
       expect(m.id, '100');
       expect(m.outcomes, ['Yes', 'No']);
       expect(m.outcomePrices, ['0.42', '0.58']);
