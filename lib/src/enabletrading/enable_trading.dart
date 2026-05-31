@@ -11,6 +11,7 @@ import '../auth/wallet_signer.dart';
 import '../contracts/contracts.dart' as contracts;
 import '../errors/errors.dart';
 import '../relayer/relayer_types.dart';
+import '../relayer/shared/approval_calldata.dart' as approval_calldata;
 import '../wallet/deposit_wallet_signing.dart' as wallet;
 
 /// Polygon mainnet chain id used by Polymarket.
@@ -19,10 +20,6 @@ const int polygonChainId = contracts.PolygonChainID;
 /// CLOB L1 auth control message used by Polymarket.
 const String clobAuthControlMessage =
     'This message attests that I control the given wallet';
-
-const String _approveSelector = '095ea7b3';
-const String _maxUint256 =
-    'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 
 /// Builds the ClobAuth EIP-712 typed-data payload for wallet signing.
 Map<String, dynamic> buildEnableTradingClobAuthTypedData({
@@ -77,17 +74,17 @@ List<DepositWalletCall> buildEnableTradingApprovalCalls() {
       target: contracts.PUSD,
       value: '0',
       data:
-          '0x$_approveSelector'
+          '0x${approval_calldata.erc20ApproveSelector}'
           '0000000000000000000000004d97dcd97ec945f40cf65f87097ace5ea0476045'
-          '$_maxUint256',
+          '${approval_calldata.maxUint256Hex}',
     ),
     DepositWalletCall(
       target: contracts.USDCE,
       value: '0',
       data:
-          '0x$_approveSelector'
+          '0x${approval_calldata.erc20ApproveSelector}'
           '00000000000000000000000093070a847efef7f70739046a929d47a521f5b8ee'
-          '$_maxUint256',
+          '${approval_calldata.maxUint256Hex}',
     ),
   ];
 }
@@ -201,7 +198,7 @@ void _validateApprovalCall(
   required String target,
   required String spender,
 }) {
-  if (!_sameHexAddress(call.target, target)) {
+  if (!approval_calldata.sameHexAddress(call.target, target)) {
     throw ValidationException(
       code: ErrorCode.invalidValue,
       message: 'approval call $index target is not allowed',
@@ -219,7 +216,7 @@ void _validateApprovalCall(
 }
 
 void _validateApproveCalldata(String data, String spender, int index) {
-  final clean = _strip0x(data.trim()).toLowerCase();
+  final clean = approval_calldata.strip0x(data.trim()).toLowerCase();
   if (clean.length != 8 + 64 + 64) {
     throw ValidationException(
       code: ErrorCode.invalidValue,
@@ -227,7 +224,7 @@ void _validateApproveCalldata(String data, String spender, int index) {
       field: 'calls[$index].data',
     );
   }
-  if (!clean.startsWith(_approveSelector)) {
+  if (!clean.startsWith(approval_calldata.erc20ApproveSelector)) {
     throw ValidationException(
       code: ErrorCode.invalidValue,
       message: 'approval call $index calldata is not ERC20 approve',
@@ -236,29 +233,18 @@ void _validateApproveCalldata(String data, String spender, int index) {
   }
   final spenderWord = clean.substring(8, 8 + 64);
   final actualSpender = '0x${spenderWord.substring(24)}';
-  if (!_sameHexAddress(actualSpender, spender)) {
+  if (!approval_calldata.sameHexAddress(actualSpender, spender)) {
     throw ValidationException(
       code: ErrorCode.invalidValue,
       message: 'approval call $index spender is not allowed',
       field: 'calls[$index].data',
     );
   }
-  if (clean.substring(8 + 64) != _maxUint256) {
+  if (clean.substring(8 + 64) != approval_calldata.maxUint256Hex) {
     throw ValidationException(
       code: ErrorCode.invalidValue,
       message: 'approval call $index amount must be max uint256',
       field: 'calls[$index].data',
     );
   }
-}
-
-bool _sameHexAddress(String a, String b) =>
-    _strip0x(a).toLowerCase() == _strip0x(b).toLowerCase();
-
-String _strip0x(String value) {
-  final trimmed = value.trim();
-  if (trimmed.startsWith('0x') || trimmed.startsWith('0X')) {
-    return trimmed.substring(2);
-  }
-  return trimmed;
 }
