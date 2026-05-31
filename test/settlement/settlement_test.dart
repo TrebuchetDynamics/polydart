@@ -192,6 +192,27 @@ void main() {
       },
     );
 
+    test(
+      'uses owner, not deposit wallet, for Data API position lookup',
+      () async {
+        const differentOwner = '0x2c7536E3605D9C16a7a3D7b1898e529396a65c23';
+        final reader = _Reader(<Position>[
+          _position(conditionId: conditionA, redeemable: true),
+        ]);
+
+        await checkReadiness(
+          depositWallet: owner,
+          owner: '  $differentOwner  ',
+          reader: reader,
+          relayerConfigured: false,
+          rpcUrl: 'http://rpc.test',
+          httpClient: _RpcClient(<String>['0x60016000', _word(1), _word(1)]),
+        );
+
+        expect(reader.users, <String>[differentOwner]);
+      },
+    );
+
     test('returns missing approval status', () async {
       final readiness = await checkReadiness(
         depositWallet: owner,

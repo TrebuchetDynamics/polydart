@@ -317,7 +317,10 @@ Future<SettlementReadiness> checkReadiness({
   var redeemablePositions = const <RedeemablePosition>[];
   if (reader != null) {
     try {
-      redeemablePositions = await findRedeemable(reader, wallet);
+      redeemablePositions = await findRedeemable(
+        reader,
+        _settlementPositionOwner(owner: owner, depositWallet: wallet),
+      );
     } catch (e) {
       return _readiness(
         status: settlementStatusDataApiUnavailable,
@@ -405,6 +408,14 @@ Future<SettlementReadiness> checkReadiness({
     adapterApprovals: approvals,
     redeemablePositions: redeemablePositions,
   );
+}
+
+String _settlementPositionOwner({
+  required String owner,
+  required String depositWallet,
+}) {
+  final trimmedOwner = owner.trim();
+  return trimmedOwner.isNotEmpty ? trimmedOwner : depositWallet;
 }
 
 RedeemablePosition _redeemableFromPosition(Position p) {
