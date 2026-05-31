@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:polydart/src/auth/l2.dart';
 import 'package:polydart/src/relayer/relayer_client.dart';
 import 'package:polydart/src/relayer/relayer_errors.dart';
 import 'package:polydart/src/relayer/relayer_types.dart';
@@ -10,11 +9,7 @@ import 'package:polydart/src/transport/http_transport.dart';
 import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
 
-const _builder = BuilderConfig(
-  key: 'aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001',
-  secret: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-  passphrase: 'pass',
-);
+import '../support/relayer_test_support.dart';
 
 void main() {
   group('RelayerError', () {
@@ -67,7 +62,7 @@ void main() {
 
   test('submitWalletBatch wraps allowlist transport errors', () async {
     final client = RelayerClient(
-      builderConfig: _builder,
+      builderConfig: testBuilderConfig,
       transport: HttpTransport(
         config: const TransportConfig(
           baseUrl: defaultRelayerBaseUrl,
@@ -83,7 +78,7 @@ void main() {
           );
         }),
       ),
-      clock: () => DateTime.fromMillisecondsSinceEpoch(1700000000 * 1000),
+      clock: fixedRelayerClock,
     );
 
     await expectLater(

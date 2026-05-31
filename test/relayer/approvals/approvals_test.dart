@@ -1,6 +1,8 @@
 import 'package:polydart/src/relayer/approvals.dart';
 import 'package:test/test.dart';
 
+import '../support/relayer_calldata.dart';
+
 void main() {
   group('buildAdapterApprovalCalls', () {
     final calls = buildAdapterApprovalCalls();
@@ -17,10 +19,7 @@ void main() {
       for (var i = 0; i < spenders.length; i++) {
         final approveCall = calls[i * 2];
         final ctfCall = calls[i * 2 + 1];
-        final spenderHex = spenders[i]
-            .substring(2)
-            .toLowerCase()
-            .padLeft(64, '0');
+        final spenderHex = encodedAddressWord(spenders[i]);
         expect(approveCall.target.toLowerCase(), pusdAddress.toLowerCase());
         expect(ctfCall.target.toLowerCase(), ctfAddress.toLowerCase());
         expect(approveCall.data.toLowerCase().contains(spenderHex), isTrue);
@@ -72,10 +71,7 @@ void main() {
         // Both calls embed the spender right-padded into the calldata.
         final approveCall = calls[i * 2];
         final ctfCall = calls[i * 2 + 1];
-        final spenderHex = spenders[i]
-            .substring(2)
-            .toLowerCase()
-            .padLeft(64, '0');
+        final spenderHex = encodedAddressWord(spenders[i]);
         expect(
           approveCall.data.toLowerCase().contains(spenderHex),
           isTrue,

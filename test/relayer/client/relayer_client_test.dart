@@ -12,28 +12,11 @@ import 'package:polydart/src/transport/http_transport.dart';
 import 'package:polydart/src/transport/transport_config.dart';
 import 'package:test/test.dart';
 
-const _builder = BuilderConfig(
-  key: 'aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001',
-  // 32 bytes of zeros, base64-encoded.
-  secret: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-  passphrase: 'pass',
-);
+import '../support/relayer_test_support.dart';
 
 RelayerClient _client(
   Future<http.Response> Function(http.BaseRequest) handler,
-) {
-  return RelayerClient(
-    builderConfig: _builder,
-    transport: HttpTransport(
-      config: const TransportConfig(
-        baseUrl: defaultRelayerBaseUrl,
-        retryMax: 0,
-      ),
-      inner: MockClient(handler),
-    ),
-    clock: () => DateTime.fromMillisecondsSinceEpoch(1700000000 * 1000),
-  );
-}
+) => createRelayerClient(handler);
 
 void main() {
   group('constructor', () {
@@ -124,10 +107,10 @@ void main() {
           '0xb72dbe5d44c1b549351bef276ba48a1cca5df662',
         );
         expect(capturedUrl!.queryParameters['type'], 'WALLET');
-        expect(capturedHeaders!['POLY_BUILDER_API_KEY'], _builder.key);
+        expect(capturedHeaders!['POLY_BUILDER_API_KEY'], testBuilderConfig.key);
         expect(
           capturedHeaders!['POLY_BUILDER_PASSPHRASE'],
-          _builder.passphrase,
+          testBuilderConfig.passphrase,
         );
         expect(capturedHeaders!['POLY_BUILDER_TIMESTAMP'], '1700000000');
         expect(capturedHeaders!['POLY_BUILDER_SIGNATURE'], isNotNull);
