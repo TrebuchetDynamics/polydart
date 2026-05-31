@@ -17,6 +17,7 @@ Map<String, dynamic> _marketJson({
   String resolutionSource = 'UMA',
   bool active = true,
   bool closed = false,
+  bool archived = false,
   bool acceptingOrders = true,
   bool enableOrderBook = true,
   String outcomes = '["Up","Down"]',
@@ -29,7 +30,7 @@ Map<String, dynamic> _marketJson({
   'clobTokenIds': '["111","222"]',
   'active': active,
   'closed': closed,
-  'archived': false,
+  'archived': archived,
   'acceptingOrders': acceptingOrders,
   'enableOrderBook': enableOrderBook,
   'resolutionSource': resolutionSource,
@@ -248,6 +249,29 @@ void main() {
       expect(result.resolutionSource, 'UMA');
       expect(result.minOrderSize, 5.0);
       expect(result.tickSize, 0.01);
+    });
+
+    test('resolveTokenIdsForWindow skips archived slug markets', () async {
+      final window = DateTime.parse('2026-05-06T10:05:00Z');
+      final mock = MockClient((req) async {
+        return http.Response(
+          jsonEncode([
+            _eventJson(
+              markets: <Map<String, dynamic>>[_marketJson(archived: true)],
+            ),
+          ]),
+          200,
+        );
+      });
+      final resolver = MarketResolver(gamma: _gammaWithMock(mock));
+
+      final result = await resolver.resolveTokenIdsForWindow(
+        'BTC',
+        '5m',
+        window,
+      );
+      expect(result.status, MarketStatus.unresolved);
+      expect(result.source, contains('slug_event_no_accepting_market'));
     });
 
     test('resolveTokenIdsForWindow detects window mismatch', () async {

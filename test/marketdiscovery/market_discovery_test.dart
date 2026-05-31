@@ -75,6 +75,30 @@ void main() {
         isFalse,
       );
     });
+
+    test('exposes every rejection reason for replayable filtering', () {
+      final eligibility = inspectMarketEnrichment(
+        Market.fromJson(
+          _marketJson(
+            active: false,
+            closed: true,
+            archived: true,
+            enableOrderBook: false,
+          ),
+        ),
+      );
+
+      expect(eligibility.isEligible, isFalse);
+      expect(
+        eligibility.rejections,
+        containsAll(<MarketEnrichmentRejection>{
+          MarketEnrichmentRejection.inactive,
+          MarketEnrichmentRejection.closed,
+          MarketEnrichmentRejection.archived,
+          MarketEnrichmentRejection.orderBookDisabled,
+        }),
+      );
+    });
   });
 
   test('enrichMarket fans out CLOB reads in parallel', () async {

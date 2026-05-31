@@ -11,6 +11,7 @@ import 'package:meta/meta.dart';
 
 import '../gamma/gamma_client.dart';
 import '../gamma/gamma_params.dart';
+import '../marketdiscovery/market_filter.dart';
 import '../types/market.dart';
 
 @immutable
@@ -415,7 +416,7 @@ List<CryptoMarket> _marketsFromGammaWithSource(
 ) {
   final markets = <CryptoMarket>[];
   for (final market in gammaMarkets) {
-    if (!market.active || market.closed || !market.enableOrderBook) continue;
+    if (!shouldEnrichMarket(market)) continue;
     final tokenIds = parseClobTokenIds(market.clobTokenIds);
     final (up, down) = _findUpDownTokenIds(market.outcomes, tokenIds);
     if (up.isEmpty || down.isEmpty) continue;
