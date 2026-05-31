@@ -1,80 +1,24 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:polydart/src/auth/create2.dart';
-import 'package:polydart/src/auth/l2.dart';
-import 'package:polydart/src/auth/wallet_signer.dart';
-import 'package:polydart/src/clob/clob_client.dart';
 import 'package:polydart/src/errors/errors.dart';
-import 'package:polydart/src/modes/modes.dart';
 import 'package:polydart/src/orders/deposit_wallet_order_signing.dart';
 import 'package:polydart/src/orders/order_builder.dart';
 import 'package:polydart/src/orders/order_placement.dart';
 import 'package:polydart/src/orders/order_signing.dart';
-import 'package:polydart/src/transport/http_transport.dart';
-import 'package:polydart/src/transport/transport_config.dart';
 import 'package:polydart/src/types/enums.dart';
 import 'package:test/test.dart';
 
-class _CannedSigner implements WalletSigner {
-  _CannedSigner({this.chainId = 137});
-  @override
-  String get address => '0x0000000000000000000000000000000000001234';
-  @override
-  final int chainId;
-
-  Map<String, dynamic>? lastTyped;
-  int signTypedDataCalls = 0;
-
-  @override
-  Future<Uint8List> signTypedData(Map<String, dynamic> typedData) async {
-    signTypedDataCalls++;
-    lastTyped = typedData;
-    final bytes = Uint8List(65);
-    for (var i = 0; i < 65; i++) {
-      bytes[i] = i;
-    }
-    return bytes;
-  }
-
-  @override
-  Future<Uint8List> personalSign(Uint8List message) async => Uint8List(65);
-}
-
-const _testApiKey = ApiKey(
-  key: 'aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001',
-  secret: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-  passphrase: 'pp1',
-);
-
-ClobClient _client(Future<http.Response> Function(http.BaseRequest) handler) {
-  return ClobClient(
-    transport: HttpTransport(
-      config: const TransportConfig(
-        baseUrl: ClobClient.defaultBaseUrl,
-        retryMax: 0,
-      ),
-      inner: MockClient(handler),
-    ),
-    mode: PolydartMode.live,
-    liveTradingEnabled: true,
-  );
-}
+import '../support/order_test_support.dart';
 
 void main() {
   group('signOrderV2', () {
     test('produces a SignedOrder for an EOA limit-buy intent', () async {
-      final intent =
-          (OrderBuilder(tokenId: '12345', side: Side.buy)
-                ..price('0.50')
-                ..size('10')
-                ..tickSize('0.01'))
-              .build();
+      final intent = limitBuyIntent();
 
-      final signer = _CannedSigner();
+      final signer = cannedOrderSigner();
       final signed = await signOrderV2(intent: intent, signer: signer);
 
       expect(signed.maker, signer.address);
@@ -85,18 +29,13 @@ void main() {
       // Signed timestamp should be a recent millis epoch.
       expect(signed.timestamp, isNotNull);
       // typed-data presented to the wallet should have primaryType=Order
-      expect(signer.lastTyped!['primaryType'], 'Order');
+      expect(signer.lastTypedData!['primaryType'], 'Order');
     });
 
     test('rejects non-Polygon signer before wallet signing', () async {
-      final intent =
-          (OrderBuilder(tokenId: '12345', side: Side.buy)
-                ..price('0.50')
-                ..size('10')
-                ..tickSize('0.01'))
-              .build();
+      final intent = limitBuyIntent();
 
-      final signer = _CannedSigner(chainId: 1);
+      final signer = cannedOrderSigner(chainId: 1);
 
       await expectLater(
         signOrderV2(intent: intent, signer: signer),
@@ -123,7 +62,7 @@ void main() {
                 ..funder('0xDeposit'))
               .build();
 
-      final signer = _CannedSigner();
+      final signer = cannedOrderSigner();
       final signed = await signOrderV2(intent: intent, signer: signer);
 
       expect(signed.maker, '0xDeposit');
@@ -134,7 +73,7 @@ void main() {
     test(
       'wraps deposit-wallet orders with ERC-7739 approval envelope',
       () async {
-        final signer = _CannedSigner();
+        final signer = cannedOrderSigner();
         final depositWallet = deriveDepositWallet(signer.address);
         final intent =
             (OrderBuilder(tokenId: '12345', side: Side.buy)
@@ -155,8 +94,9 @@ void main() {
         expect(signed.signer, depositWallet);
         expect(signed.signatureType, SignatureType.poly1271);
         expect(signed.signature.length, 636);
-        expect(signer.lastTyped!['primaryType'], 'TypedDataSign');
-        final message = signer.lastTyped!['message'] as Map<String, dynamic>;
+        expect(signer.lastTypedData!['primaryType'], 'TypedDataSign');
+        final message =
+            signer.lastTypedData!['message'] as Map<String, dynamic>;
         expect(message['verifyingContract'], depositWallet);
         final contents = message['contents'] as Map<String, dynamic>;
         expect(contents['maker'], depositWallet);
@@ -169,18 +109,11 @@ void main() {
   group('createLimitOrder', () {
     test('looks up tickSize, signs, and POSTs /order', () async {
       String? lastPath;
-      final client = _client((req) async {
+      final client = orderTestClient((req) async {
         lastPath = req.url.path;
         switch (req.url.path) {
           case '/tick-size':
-            return http.Response(
-              jsonEncode(<String, dynamic>{
-                'minimum_tick_size': '0.01',
-                'minimum_order_size': '5',
-                'tick_size': '0.01',
-              }),
-              200,
-            );
+            return tickSizeResponse();
           case '/order':
             return http.Response(
               jsonEncode(<String, dynamic>{
@@ -197,8 +130,8 @@ void main() {
 
       final resp = await createLimitOrder(
         client: client,
-        signer: _CannedSigner(),
-        apiKey: _testApiKey,
+        signer: cannedOrderSigner(),
+        apiKey: testOrderApiKey,
         params: const CreateLimitOrderParams(
           tokenId: '12345',
           side: Side.buy,
@@ -216,19 +149,12 @@ void main() {
       () async {
         http.BaseRequest? orderRequest;
         String? orderBody;
-        final signer = _CannedSigner();
+        final signer = cannedOrderSigner();
         final depositWallet = deriveDepositWallet(signer.address);
-        final client = _client((req) async {
+        final client = orderTestClient((req) async {
           switch (req.url.path) {
             case '/tick-size':
-              return http.Response(
-                jsonEncode(<String, dynamic>{
-                  'minimum_tick_size': '0.01',
-                  'minimum_order_size': '5',
-                  'tick_size': '0.01',
-                }),
-                200,
-              );
+              return tickSizeResponse();
             case '/order':
               orderRequest = req;
               orderBody = (req as http.Request).body;
@@ -248,7 +174,7 @@ void main() {
         final resp = await createDepositWalletLimitOrder(
           client: client,
           signer: signer,
-          apiKey: _testApiKey,
+          apiKey: testOrderApiKey,
           params: const CreateDepositWalletLimitOrderParams(
             tokenId: '12345',
             side: Side.buy,
@@ -259,9 +185,9 @@ void main() {
 
         expect(resp.orderId, 'ord-dw-1');
         expect(orderRequest!.headers['POLY_ADDRESS'], signer.address);
-        expect(signer.lastTyped!['primaryType'], 'TypedDataSign');
+        expect(signer.lastTypedData!['primaryType'], 'TypedDataSign');
         final body = jsonDecode(orderBody!) as Map<String, dynamic>;
-        expect(body['owner'], _testApiKey.key);
+        expect(body['owner'], testOrderApiKey.key);
         final order = body['order'] as Map<String, dynamic>;
         expect(order['maker'], depositWallet);
         expect(order['signer'], depositWallet);
@@ -277,19 +203,12 @@ void main() {
       () async {
         http.BaseRequest? orderRequest;
         String? orderBody;
-        final signer = _CannedSigner();
+        final signer = cannedOrderSigner();
         final depositWallet = deriveDepositWallet(signer.address);
-        final client = _client((req) async {
+        final client = orderTestClient((req) async {
           switch (req.url.path) {
             case '/tick-size':
-              return http.Response(
-                jsonEncode(<String, dynamic>{
-                  'minimum_tick_size': '0.01',
-                  'minimum_order_size': '5',
-                  'tick_size': '0.01',
-                }),
-                200,
-              );
+              return tickSizeResponse();
             case '/orders':
               orderRequest = req;
               orderBody = (req as http.Request).body;
@@ -316,7 +235,7 @@ void main() {
         final resp = await createDepositWalletLimitOrders(
           client: client,
           signer: signer,
-          apiKey: _testApiKey,
+          apiKey: testOrderApiKey,
           orders: const <CreateDepositWalletLimitOrderParams>[
             CreateDepositWalletLimitOrderParams(
               tokenId: '12345',
@@ -345,7 +264,7 @@ void main() {
         expect(body, hasLength(2));
         expect((body.last as Map<String, dynamic>)['postOnly'], isTrue);
         for (final row in body.cast<Map<String, dynamic>>()) {
-          expect(row['owner'], _testApiKey.key);
+          expect(row['owner'], testOrderApiKey.key);
           final order = row['order'] as Map<String, dynamic>;
           expect(order['maker'], depositWallet);
           expect(order['signer'], depositWallet);
@@ -362,18 +281,11 @@ void main() {
       () async {
         String? lastPath;
         String? orderBody;
-        final client = _client((req) async {
+        final client = orderTestClient((req) async {
           lastPath = req.url.path;
           switch (req.url.path) {
             case '/tick-size':
-              return http.Response(
-                jsonEncode(<String, dynamic>{
-                  'minimum_tick_size': '0.01',
-                  'minimum_order_size': '5',
-                  'tick_size': '0.01',
-                }),
-                200,
-              );
+              return tickSizeResponse();
             case '/order':
               orderBody = (req as http.Request).body;
               return http.Response(
@@ -391,8 +303,8 @@ void main() {
 
         final resp = await createMarketOrder(
           client: client,
-          signer: _CannedSigner(),
-          apiKey: _testApiKey,
+          signer: cannedOrderSigner(),
+          apiKey: testOrderApiKey,
           params: const CreateMarketOrderParams(
             tokenId: '12345',
             side: Side.buy,
@@ -412,17 +324,10 @@ void main() {
 
     test('supports explicit-price sell market orders', () async {
       String? orderBody;
-      final client = _client((req) async {
+      final client = orderTestClient((req) async {
         switch (req.url.path) {
           case '/tick-size':
-            return http.Response(
-              jsonEncode(<String, dynamic>{
-                'minimum_tick_size': '0.01',
-                'minimum_order_size': '5',
-                'tick_size': '0.01',
-              }),
-              200,
-            );
+            return tickSizeResponse();
           case '/order':
             orderBody = (req as http.Request).body;
             return http.Response(
@@ -440,8 +345,8 @@ void main() {
 
       final resp = await createMarketOrder(
         client: client,
-        signer: _CannedSigner(),
-        apiKey: _testApiKey,
+        signer: cannedOrderSigner(),
+        apiKey: testOrderApiKey,
         params: const CreateMarketOrderParams(
           tokenId: '12345',
           side: Side.sell,
@@ -463,19 +368,12 @@ void main() {
       () async {
         http.BaseRequest? orderRequest;
         String? orderBody;
-        final signer = _CannedSigner();
+        final signer = cannedOrderSigner();
         final depositWallet = deriveDepositWallet(signer.address);
-        final client = _client((req) async {
+        final client = orderTestClient((req) async {
           switch (req.url.path) {
             case '/tick-size':
-              return http.Response(
-                jsonEncode(<String, dynamic>{
-                  'minimum_tick_size': '0.01',
-                  'minimum_order_size': '5',
-                  'tick_size': '0.01',
-                }),
-                200,
-              );
+              return tickSizeResponse();
             case '/order':
               orderRequest = req;
               orderBody = (req as http.Request).body;
@@ -495,7 +393,7 @@ void main() {
         final resp = await createDepositWalletMarketOrder(
           client: client,
           signer: signer,
-          apiKey: _testApiKey,
+          apiKey: testOrderApiKey,
           params: const CreateDepositWalletMarketOrderParams(
             tokenId: '12345',
             side: Side.buy,
@@ -506,9 +404,9 @@ void main() {
 
         expect(resp.orderId, 'ord-dw-mkt-1');
         expect(orderRequest!.headers['POLY_ADDRESS'], signer.address);
-        expect(signer.lastTyped!['primaryType'], 'TypedDataSign');
+        expect(signer.lastTypedData!['primaryType'], 'TypedDataSign');
         final body = jsonDecode(orderBody!) as Map<String, dynamic>;
-        expect(body['owner'], _testApiKey.key);
+        expect(body['owner'], testOrderApiKey.key);
         expect(body['orderType'], 'FOK');
         final order = body['order'] as Map<String, dynamic>;
         expect(order['maker'], depositWallet);
@@ -524,17 +422,10 @@ void main() {
   group('market order price discovery', () {
     test('uses best opposing price when price is omitted', () async {
       String? orderBody;
-      final client = _client((req) async {
+      final client = orderTestClient((req) async {
         switch (req.url.path) {
           case '/tick-size':
-            return http.Response(
-              jsonEncode(<String, dynamic>{
-                'minimum_tick_size': '0.01',
-                'minimum_order_size': '5',
-                'tick_size': '0.01',
-              }),
-              200,
-            );
+            return tickSizeResponse();
           case '/book':
             return http.Response(
               jsonEncode(<String, dynamic>{
@@ -563,8 +454,8 @@ void main() {
 
       final resp = await createMarketOrder(
         client: client,
-        signer: _CannedSigner(),
-        apiKey: _testApiKey,
+        signer: cannedOrderSigner(),
+        apiKey: testOrderApiKey,
         params: const CreateMarketOrderParams(
           tokenId: '12345',
           side: Side.buy,
@@ -581,17 +472,10 @@ void main() {
 
     test('uses bids for sell price discovery', () async {
       String? orderBody;
-      final client = _client((req) async {
+      final client = orderTestClient((req) async {
         switch (req.url.path) {
           case '/tick-size':
-            return http.Response(
-              jsonEncode(<String, dynamic>{
-                'minimum_tick_size': '0.01',
-                'minimum_order_size': '5',
-                'tick_size': '0.01',
-              }),
-              200,
-            );
+            return tickSizeResponse();
           case '/book':
             return http.Response(
               jsonEncode(<String, dynamic>{
@@ -621,8 +505,8 @@ void main() {
 
       final resp = await createMarketOrder(
         client: client,
-        signer: _CannedSigner(),
-        apiKey: _testApiKey,
+        signer: cannedOrderSigner(),
+        apiKey: testOrderApiKey,
         params: const CreateMarketOrderParams(
           tokenId: '12345',
           side: Side.sell,
