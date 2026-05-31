@@ -177,6 +177,13 @@ void main() {
       expect(inferTimeframe('other', 'no timeframe'), isEmpty);
     });
 
+    test('inferTimeframe prefers slug evidence over stale question labels', () {
+      expect(
+        inferTimeframe('btc-updown-5m-1778061900', 'Bitcoin 15m window'),
+        '5m',
+      );
+    });
+
     test('normalizes caller-supplied timeframe aliases before slugging', () {
       final window = DateTime.parse('2026-05-06T10:05:00Z');
       expect(normalizeCryptoTimeframe(' 5M '), '5m');
@@ -343,6 +350,37 @@ void main() {
       expect(result.timeframe, '5m');
       expect(result.upTokenId, '111');
     });
+
+    test(
+      'resolveTokenIdsForWindow trusts slug timeframe before question text',
+      () async {
+        final window = DateTime.parse('2026-05-06T10:05:00Z');
+        final mock = MockClient((req) async {
+          expect(req.url.path, '/events');
+          expect(req.url.queryParameters['slug'], 'btc-updown-5m-1778061900');
+          return http.Response(
+            jsonEncode([
+              _eventJson(
+                markets: <Map<String, dynamic>>[
+                  _marketJson(question: 'Bitcoin Up or Down - 15m?'),
+                ],
+              ),
+            ]),
+            200,
+          );
+        });
+        final resolver = MarketResolver(gamma: _gammaWithMock(mock));
+
+        final result = await resolver.resolveTokenIdsForWindow(
+          'BTC',
+          '5m',
+          window,
+        );
+        expect(result.status, MarketStatus.available);
+        expect(result.timeframe, '5m');
+        expect(result.upTokenId, '111');
+      },
+    );
 
     test('resolveTokenIdsForWindow returns strict slug match', () async {
       final window = DateTime.parse('2026-05-06T10:05:00Z');

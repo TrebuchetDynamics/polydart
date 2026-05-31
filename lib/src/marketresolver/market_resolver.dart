@@ -710,7 +710,13 @@ const List<(String, String)> _cryptoTimeframeAliases = <(String, String)>[
 ];
 
 String inferTimeframe(String slug, String question) {
-  final text = '${slug.toLowerCase()} ${question.toLowerCase()}';
+  final fromSlug = _inferTimeframeFromText(slug);
+  if (fromSlug.isNotEmpty) return fromSlug;
+  return _inferTimeframeFromText(question);
+}
+
+String _inferTimeframeFromText(String value) {
+  final text = value.toLowerCase();
   for (final (alias, timeframe) in _cryptoTimeframeAliases) {
     if (text.contains(alias)) return timeframe;
   }
