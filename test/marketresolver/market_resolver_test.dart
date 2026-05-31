@@ -19,12 +19,13 @@ Map<String, dynamic> _marketJson({
   bool closed = false,
   bool acceptingOrders = true,
   bool enableOrderBook = true,
+  String outcomes = '["Up","Down"]',
 }) => <String, dynamic>{
   'id': '1',
   'question': question,
   'conditionId': conditionId,
   'slug': slug,
-  'outcomes': '["Up","Down"]',
+  'outcomes': outcomes,
   'clobTokenIds': '["111","222"]',
   'active': active,
   'closed': closed,
@@ -196,6 +197,32 @@ void main() {
       expect(r.outcomes, ['Yes', 'No']);
       expect(r.yesTokenId, '111');
       expect(r.isAvailable, isTrue);
+    });
+
+    test('resolveTokenIdsForWindow normalizes padded outcome labels', () async {
+      final window = DateTime.parse('2026-05-06T10:05:00Z');
+      final mock = MockClient((req) async {
+        return http.Response(
+          jsonEncode([
+            _eventJson(
+              markets: <Map<String, dynamic>>[
+                _marketJson(outcomes: '[" Up "," Down "]'),
+              ],
+            ),
+          ]),
+          200,
+        );
+      });
+      final resolver = MarketResolver(gamma: _gammaWithMock(mock));
+
+      final result = await resolver.resolveTokenIdsForWindow(
+        'BTC',
+        '5m',
+        window,
+      );
+      expect(result.status, MarketStatus.available);
+      expect(result.upTokenId, '111');
+      expect(result.downTokenId, '222');
     });
 
     test('resolveTokenIdsForWindow returns strict slug match', () async {

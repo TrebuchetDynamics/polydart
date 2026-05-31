@@ -52,9 +52,9 @@ final class ResolvedMarket {
   /// Token id matching the supplied outcome label (case-insensitive).
   String? tokenIdFor(String outcomeLabel) {
     if (outcomes.length != tokenIds.length) return null;
-    final target = outcomeLabel.toLowerCase().trim();
+    final target = _normalizedOutcomeLabel(outcomeLabel);
     for (var i = 0; i < outcomes.length; i++) {
-      if (outcomes[i].toLowerCase().trim() == target) return tokenIds[i];
+      if (_normalizedOutcomeLabel(outcomes[i]) == target) return tokenIds[i];
     }
     return null;
   }
@@ -482,17 +482,23 @@ DateTime? _cryptoMarketWindowStart(Market market) =>
   var up = '';
   var down = '';
   for (var i = 0; i < outcomes.length; i++) {
-    switch (outcomes[i].toLowerCase()) {
-      case 'up':
-      case 'yes':
-        up = tokenIds[i];
-      case 'down':
-      case 'no':
-        down = tokenIds[i];
+    final outcome = _normalizedOutcomeLabel(outcomes[i]);
+    if (_isUpOutcome(outcome)) {
+      up = tokenIds[i];
+    } else if (_isDownOutcome(outcome)) {
+      down = tokenIds[i];
     }
   }
   return (up, down);
 }
+
+String _normalizedOutcomeLabel(String value) => value.toLowerCase().trim();
+
+bool _isUpOutcome(String normalizedOutcome) =>
+    normalizedOutcome == 'up' || normalizedOutcome == 'yes';
+
+bool _isDownOutcome(String normalizedOutcome) =>
+    normalizedOutcome == 'down' || normalizedOutcome == 'no';
 
 String _firstNonEmpty(String a, String b) {
   final first = a.trim();
