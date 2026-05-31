@@ -62,6 +62,7 @@ final class ItemResult<T> {
 /// If [pageFn] throws, the error is emitted as the final [StreamResult].
 Stream<StreamResult<T>> streamPages<T>(Page<T> pageFn) async* {
   var cursor = '';
+  final seenCursors = <String>{cursor};
   while (true) {
     final CursorPage<T> page;
     try {
@@ -74,8 +75,14 @@ Stream<StreamResult<T>> streamPages<T>(Page<T> pageFn) async* {
     if (page.items.isNotEmpty) {
       yield StreamResult<T>.items(page.items);
     }
-    if (!page.hasMore) return;
-    cursor = page.nextCursor!;
+    try {
+      final nextCursor = _nextCursorOrDone(cursor, page, seenCursors);
+      if (nextCursor == null) return;
+      cursor = nextCursor;
+    } catch (error, stackTrace) {
+      yield StreamResult<T>.error(error, stackTrace);
+      return;
+    }
   }
 }
 
@@ -118,13 +125,15 @@ final class CursorPager<T> {
   /// Emits every item by walking pages until no cursor remains.
   Stream<T> all() async* {
     String? cursor;
+    final seenCursors = <String>{''};
     while (true) {
       final page = await _fetch(cursor);
       for (final item in page.items) {
         yield item;
       }
-      if (!page.hasMore) return;
-      cursor = page.nextCursor;
+      final nextCursor = _nextCursorOrDone(cursor ?? '', page, seenCursors);
+      if (nextCursor == null) return;
+      cursor = nextCursor;
     }
   }
 
@@ -182,6 +191,22 @@ Future<List<T>> collectOffset<T>(OffsetPage<T> pageFn, int limit) async {
     if (nextOffset == null) return items;
     offset = nextOffset;
   }
+}
+
+String? _nextCursorOrDone<T>(
+  String cursor,
+  CursorPage<T> page,
+  Set<String> seenCursors,
+) {
+  if (!page.hasMore) return null;
+  final nextCursor = page.nextCursor!;
+  if (!seenCursors.add(nextCursor)) {
+    throw StateError(
+      'Cursor page at cursor "$cursor" returned repeated cursor "$nextCursor"; '
+      'continuing would replay pages forever.',
+    );
+  }
+  return nextCursor;
 }
 
 int? _nextOffsetOrDone<T>(int offset, int limit, OffsetPageResult<T> page) {

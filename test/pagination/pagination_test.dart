@@ -39,6 +39,24 @@ void main() {
       );
       expect(await pager.toList(), isEmpty);
     });
+
+    test('throws on repeated cursors instead of looping forever', () async {
+      final pager = CursorPager<int>(
+        fetch: (cursor) async =>
+            CursorPage(items: [cursor?.length ?? 0], nextCursor: 'repeat'),
+      );
+
+      await expectLater(
+        pager.toList(),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains('returned repeated cursor "repeat"'),
+          ),
+        ),
+      );
+    });
   });
 
   group('OffsetPager', () {
@@ -120,6 +138,32 @@ void main() {
       expect(results.first.items, [1]);
       expect(results.last.hasError, isTrue);
       expect(results.last.error, same(error));
+    });
+
+    test('reports repeated cursors instead of looping forever', () async {
+      final results = await streamPages<int>((cursor) async {
+        return CursorPage(items: [cursor.length], nextCursor: 'repeat');
+      }).toList();
+
+      expect(
+        results
+            .where((result) => !result.hasError)
+            .map((result) => result.items)
+            .toList(),
+        [
+          [0],
+          [6],
+        ],
+      );
+      expect(results.last.hasError, isTrue);
+      expect(
+        results.last.error,
+        isA<StateError>().having(
+          (error) => error.message,
+          'message',
+          contains('returned repeated cursor "repeat"'),
+        ),
+      );
     });
   });
 
