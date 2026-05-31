@@ -6,4 +6,4 @@
 /// js) and the IO branch otherwise (Flutter mobile/desktop, Dart VM).
 library;
 
-export '_io_socket.dart' if (dart.library.html) '_html_socket.dart';
+export 'io_socket.dart' if (dart.library.html) 'html_socket.dart';

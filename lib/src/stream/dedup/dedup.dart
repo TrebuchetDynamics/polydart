@@ -1,0 +1,141 @@
+/// Cross-stream message deduplication.
+///
+/// Mirrors `internal/stream/dedup.go`. The CLOB market feed is often
+/// consumed across multiple WebSocket connections for redundancy; this
+/// deduplicator keeps a small TTL-bounded set of recently-seen message keys
+/// so the consumer only sees each event once.
+///
+/// The canonical key rules (`extractKey`) match polygolem verbatim:
+///
+/// * `book` / `tick_size_change` → `eventType:hash`
+/// * `price_change` → `pc:hash`, falling back to `pc:market:timestamp`
+/// * `last_trade_price` → `ltp:assetId:price:size`
+///
+/// When no key can be extracted (parse failure, unknown event, missing
+/// hash/asset) the message is treated as new.
+library;
+
+import 'dart:convert';
+
+/// TTL-bounded set of recently seen message keys.
+final class Deduplicator {
+  Deduplicator({
+    required int size,
+    required Duration ttl,
+    DateTime Function()? clock,
+  }) : _size = size,
+       _ttlMs = ttl.inMilliseconds,
+       _clock = clock ?? DateTime.now;
+
+  final int _size;
+  final int _ttlMs;
+  final DateTime Function() _clock;
+  final Map<String, int> _seen = <String, int>{};
+
+  int _in = 0;
+  int _dup = 0;
+  int _out = 0;
+
+  /// Total messages observed (whether new or duplicate).
+  int get inCount => _in;
+
+  /// Messages dropped as duplicates within TTL.
+  int get dupCount => _dup;
+
+  /// Messages forwarded to consumers.
+  int get outCount => _out;
+
+  /// Returns `true` if [data] is a brand-new message, `false` if it
+  /// duplicates a still-live key. An empty key (parse failure or unknown
+  /// event shape) counts as new.
+  bool process(List<int> data) {
+    final key = _extractKey(data);
+    if (key.isEmpty) {
+      _in += 1;
+      _out += 1;
+      return true;
+    }
+
+    final nowMs = _clock().millisecondsSinceEpoch;
+    _in += 1;
+
+    final seenAt = _seen[key];
+    if (seenAt != null && (nowMs - seenAt) < _ttlMs) {
+      _dup += 1;
+      return false;
+    }
+
+    _seen[key] = nowMs;
+    if (_seen.length > _size) {
+      _evict(nowMs);
+    }
+    _out += 1;
+    return true;
+  }
+
+  /// Drops every key and zeroes the counters.
+  void reset() {
+    _seen.clear();
+    _in = 0;
+    _dup = 0;
+    _out = 0;
+  }
+
+  void _evict(int nowMs) {
+    _seen.removeWhere((_, ts) => (nowMs - ts) >= _ttlMs);
+  }
+}
+
+String _extractKey(List<int> data) {
+  if (data.isEmpty) return '';
+  Object? decoded;
+  try {
+    decoded = json.decode(utf8.decode(data));
+  } on FormatException {
+    return '';
+  }
+  if (decoded is! Map) return '';
+  final m = decoded.map((k, v) => MapEntry(k.toString(), v));
+  String pick(String key) => (m[key] ?? '').toString();
+
+  final eventType = pick('event_type');
+  final hash = pick('hash');
+  switch (eventType) {
+    case 'book':
+    case 'tick_size_change':
+      if (hash.isNotEmpty) return '$eventType:$hash';
+      return '';
+    case 'price_change':
+      if (hash.isNotEmpty) return 'pc:$hash';
+      final market = pick('market');
+      if (market.isNotEmpty) return 'pc:$market:${pick('timestamp')}';
+      return '';
+    case 'last_trade_price':
+      final assetId = pick('asset_id');
+      final price = pick('price');
+      if (assetId.isNotEmpty && price.isNotEmpty) {
+        return 'ltp:$assetId:$price:${pick('size')}';
+      }
+      return '';
+  }
+  return '';
+}
+
+/// Splits a JSON array of CLOB market events into individual byte payloads.
+/// Mirrors `internal/stream::SplitArray`. Returns an empty list if [data] is
+/// empty, isn't a JSON array, or fails to parse.
+List<List<int>> splitArray(List<int> data) {
+  if (data.isEmpty || data.first != 0x5B /* '[' */ ) {
+    return const <List<int>>[];
+  }
+  Object? decoded;
+  try {
+    decoded = json.decode(utf8.decode(data));
+  } on FormatException {
+    return const <List<int>>[];
+  }
+  if (decoded is! List) return const <List<int>>[];
+  return decoded
+      .map((m) => utf8.encode(json.encode(m)))
+      .toList(growable: false);
+}
