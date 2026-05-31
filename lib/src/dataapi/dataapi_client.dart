@@ -49,10 +49,11 @@ final class DataApiClient {
       '/closed-positions',
       query: _userQuery(user, limit),
     );
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => ClosedPosition.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return _decodeObjectList(
+      list,
+      '/closed-positions',
+      ClosedPosition.fromJson,
+    );
   }
 
   /// Returns [user]'s most recent trades. The Go reference always sends
@@ -63,10 +64,7 @@ final class DataApiClient {
       '/trades',
       query: <String, dynamic>{'user': user, 'limit': limit.toString()},
     );
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => Trade.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return _decodeObjectList(list, '/trades', Trade.fromJson);
   }
 
   /// Returns recent public trades for [market], a market condition ID.
@@ -75,10 +73,7 @@ final class DataApiClient {
       '/trades',
       query: <String, dynamic>{'market': market, 'limit': limit.toString()},
     );
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => Trade.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return _decodeObjectList(list, '/trades', Trade.fromJson);
   }
 
   /// Returns [user]'s recent on/off-chain activity.
@@ -87,10 +82,7 @@ final class DataApiClient {
       '/activity',
       query: <String, dynamic>{'user': user, 'limit': limit.toString()},
     );
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => Activity.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return _decodeObjectList(list, '/activity', Activity.fromJson);
   }
 
   /// Returns the top holders for [market].
@@ -141,10 +133,11 @@ final class DataApiClient {
       '/v1/leaderboard',
       query: <String, dynamic>{'limit': limit.toString()},
     );
-    return list
-        .whereType<Map<dynamic, dynamic>>()
-        .map((m) => TraderLeaderboardEntry.fromJson(m.cast<String, dynamic>()))
-        .toList(growable: false);
+    return _decodeObjectList(
+      list,
+      '/v1/leaderboard',
+      TraderLeaderboardEntry.fromJson,
+    );
   }
 
   /// Returns live volume for [eventId].
@@ -165,10 +158,20 @@ final class DataApiClient {
     return q;
   }
 
-  List<Position> _positions(List<dynamic> list) => list
-      .whereType<Map<dynamic, dynamic>>()
-      .map((m) => Position.fromJson(m.cast<String, dynamic>()))
-      .toList(growable: false);
+  List<Position> _positions(List<dynamic> list) =>
+      _decodeObjectList(list, '/positions', Position.fromJson);
+
+  List<T> _decodeObjectList<T>(
+    List<dynamic> list,
+    String path,
+    T Function(Map<String, dynamic>) decode,
+  ) {
+    final decoded = <T>[];
+    for (var i = 0; i < list.length; i++) {
+      decoded.add(decode(_mapCandidateAt(list, i, path)));
+    }
+    return decoded.toList(growable: false);
+  }
 
   List<MetaHolder> _metaHolders(List<dynamic> list) {
     final holders = <MetaHolder>[];

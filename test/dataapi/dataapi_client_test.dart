@@ -76,6 +76,38 @@ void main() {
       expect(captured!.queryParameters['limit'], '25');
     });
 
+    test('rejects malformed position candidates instead of dropping them', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode([
+            'not-a-position-object',
+            <String, dynamic>{
+              'token_id': 'tok',
+              'condition_id': 'cond',
+              'market_id': 'mkt',
+              'side': 'YES',
+              'avg_price': 0.42,
+              'size': 100.0,
+              'current_price': 0.51,
+              'unrealized_pnl': 9.0,
+            },
+          ]),
+          200,
+        );
+      });
+
+      await expectLater(
+        client.currentPositions('0xuser'),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('Data API /positions[0]'),
+          ),
+        ),
+      );
+    });
+
     test('decodes Polygolem V2 camelCase position fields', () async {
       final client = _client((req) async {
         return http.Response(
