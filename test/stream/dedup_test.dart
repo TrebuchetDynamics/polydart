@@ -160,6 +160,30 @@ void main() {
       expect(dedup.dupCount, 1);
     });
 
+    test('last_trade_price without size has no replayable key', () {
+      final fixed = DateTime.fromMillisecondsSinceEpoch(1700000000000);
+      final dedup = Deduplicator(
+        size: 16,
+        ttl: const Duration(seconds: 1),
+        clock: () => fixed,
+      );
+      final first = _enc(<String, dynamic>{
+        'event_type': 'last_trade_price',
+        'asset_id': 'a1',
+        'price': '0.55',
+      });
+      final second = _enc(<String, dynamic>{
+        'event_type': 'last_trade_price',
+        'asset_id': 'a1',
+        'price': '0.55',
+      });
+
+      expect(dedup.process(first), isTrue);
+      expect(dedup.process(second), isTrue);
+      expect(dedup.outCount, 2);
+      expect(dedup.dupCount, 0);
+    });
+
     test('reset clears state and counters', () {
       final fixed = DateTime.fromMillisecondsSinceEpoch(1700000000000);
       final dedup = Deduplicator(

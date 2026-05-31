@@ -130,12 +130,11 @@ String _extractKey(List<int> data) {
         timestamp: pick('timestamp'),
       );
     case 'last_trade_price':
-      final assetId = pick('asset_id');
-      final price = pick('price');
-      if (assetId.isNotEmpty && price.isNotEmpty) {
-        return 'ltp:$assetId:$price:${pick('size')}';
-      }
-      return '';
+      return _lastTradePriceKey(
+        assetId: pick('asset_id'),
+        price: pick('price'),
+        size: pick('size'),
+      );
   }
   return '';
 }
@@ -148,6 +147,15 @@ String _priceChangeKey({
   if (hash.isNotEmpty) return 'pc:$hash';
   if (market.isEmpty || timestamp.isEmpty) return '';
   return 'pc:$market:$timestamp';
+}
+
+String _lastTradePriceKey({
+  required String assetId,
+  required String price,
+  required String size,
+}) {
+  if (assetId.isEmpty || price.isEmpty || size.isEmpty) return '';
+  return 'ltp:$assetId:$price:$size';
 }
 
 /// Splits a JSON array of CLOB market events into individual byte payloads.
