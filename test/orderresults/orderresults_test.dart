@@ -302,6 +302,68 @@ void main() {
     });
 
     test(
+      'updates matched notional when a CLOB trade replaces Data API trade',
+      () async {
+        final clobReader = _FakeClobReader(
+          trades: const [
+            clob.TradeRecord(
+              id: 'clob-trade',
+              status: 'CONFIRMED',
+              market: '0xsol',
+              assetId: 'token-sol-up',
+              side: 'BUY',
+              price: '0.52',
+              size: '3',
+              feeRateBps: '',
+              outcome: 'Up',
+              owner: '',
+              builder: '',
+              matchedAmount: '',
+              transactionHash: '0xdupe',
+              createdAt: '',
+              lastUpdated: '',
+            ),
+          ],
+        );
+
+        final report = await buildReport(
+          _FakeDataReader(
+            trades: const [
+              data.Trade(
+                id: '',
+                market: '0xsol',
+                assetId: 'token-sol-up',
+                side: 'BUY',
+                price: 0.51,
+                size: 2,
+                feeRateBps: 0,
+                createdAt: '',
+                outcome: 'Up',
+                transactionHash: '0xdupe',
+              ),
+            ],
+          ),
+          user: '0xwallet',
+          options: OrderResultsOptions(
+            includeClob: true,
+            clobReader: clobReader,
+            clobApiKey: const ApiKey(
+              key: 'key',
+              secret: 'secret',
+              passphrase: 'pass',
+            ),
+          ),
+        );
+
+        final row = report.rowByToken('token-sol-up');
+        expect(row, isNotNull);
+        expect(row!.trades.single.source, orderResultSourceClob);
+        expect(row.trades.single.price * row.trades.single.size, 1.56);
+        expect(report.summary.matchedNotional, 1.56);
+      },
+    );
+
+    test(
       'merges market-only rows with case-insensitive condition ids',
       () async {
         final report = await buildReport(

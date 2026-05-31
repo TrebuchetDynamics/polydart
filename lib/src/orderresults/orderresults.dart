@@ -430,7 +430,7 @@ final class _ReportBuilder {
       ..slug = _firstNonEmpty(row.slug, trade.slug)
       ..outcome = _firstNonEmpty(row.outcome, trade.outcome);
     if (row.status.isEmpty) row.status = orderResultStatusUnknown;
-    final added = _appendTrade(
+    final matchedNotionalDelta = _appendTrade(
       row,
       OrderResultsTradeSummary(
         source: orderResultSourceData,
@@ -446,8 +446,7 @@ final class _ReportBuilder {
     );
     summary = summary.copyWith(
       dataTrades: summary.dataTrades + 1,
-      matchedNotional:
-          summary.matchedNotional + (added ? trade.price * trade.size : 0),
+      matchedNotional: summary.matchedNotional + matchedNotionalDelta,
     );
   }
 
@@ -484,7 +483,7 @@ final class _ReportBuilder {
     if (row.status.isEmpty) row.status = orderResultStatusUnknown;
     final price = _parseDouble(trade.price);
     final size = _parseDouble(trade.size);
-    final added = _appendTrade(
+    final matchedNotionalDelta = _appendTrade(
       row,
       OrderResultsTradeSummary(
         source: orderResultSourceClob,
@@ -500,7 +499,7 @@ final class _ReportBuilder {
     );
     summary = summary.copyWith(
       clobTrades: summary.clobTrades + 1,
-      matchedNotional: summary.matchedNotional + (added ? price * size : 0),
+      matchedNotional: summary.matchedNotional + matchedNotionalDelta,
     );
   }
 
@@ -518,11 +517,18 @@ final class _ReportBuilder {
       if (title != 0) return title;
       return a.index.compareTo(b.index);
     });
+    final rows = List<OrderResultsRow>.unmodifiable(
+      indexedRows.map((entry) => entry.row),
+    );
+    assert(
+      (_visibleMatchedNotional(rows) - summary.matchedNotional).abs() < 1e-9,
+      'matchedNotional must equal visible non-duplicate trade notional',
+    );
     return OrderResultsReport(
       user: user,
       limit: limit,
       summary: summary,
-      rows: List.unmodifiable(indexedRows.map((entry) => entry.row)),
+      rows: rows,
     );
   }
 
@@ -610,20 +616,34 @@ final class _MutableRow {
   );
 }
 
-bool _appendTrade(_MutableRow row, OrderResultsTradeSummary trade) {
+double _appendTrade(_MutableRow row, OrderResultsTradeSummary trade) {
   for (var i = 0; i < row.trades.length; i++) {
-    switch (_compareTradeIdentity(row.trades[i], trade)) {
+    final existing = row.trades[i];
+    switch (_compareTradeIdentity(existing, trade)) {
       case _TradeIdentityAction.append:
         continue;
       case _TradeIdentityAction.skip:
-        return false;
+        return 0;
       case _TradeIdentityAction.replace:
         row.trades[i] = trade;
-        return false;
+        return _tradeNotional(trade) - _tradeNotional(existing);
     }
   }
   row.trades.add(trade);
-  return true;
+  return _tradeNotional(trade);
+}
+
+double _tradeNotional(OrderResultsTradeSummary trade) =>
+    trade.price * trade.size;
+
+double _visibleMatchedNotional(List<OrderResultsRow> rows) {
+  var total = 0.0;
+  for (final row in rows) {
+    for (final trade in row.trades) {
+      total += _tradeNotional(trade);
+    }
+  }
+  return total;
 }
 
 enum _TradeIdentityAction { append, skip, replace }
