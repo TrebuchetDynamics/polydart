@@ -31,3 +31,5 @@ Thumbs.db
 # Agent/local analysis state
 .pi/
 .understand-anything/
+
+.refactorignore

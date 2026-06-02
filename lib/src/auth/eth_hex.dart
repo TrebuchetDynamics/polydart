@@ -15,6 +15,14 @@ String bytesToHex0x(List<int> bytes) => '0x${hex.encode(bytes)}';
 /// Bare lowercase hex (no `0x` prefix).
 String bytesToHex(List<int> bytes) => hex.encode(bytes);
 
+/// Removes a lowercase or uppercase `0x` prefix when present.
+String stripHexPrefix(String input) {
+  final clean = input.trim();
+  return clean.startsWith('0x') || clean.startsWith('0X')
+      ? clean.substring(2)
+      : clean;
+}
+
 /// Decodes a 0x-prefixed or bare hex string to bytes.
 ///
 /// Accepts mixed-case input. Throws [ValidationException] on malformed

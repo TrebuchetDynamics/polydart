@@ -16,4 +16,18 @@ final class OrderFillsMarket {
   final String conditionId;
   final String yesTokenId;
   final String noTokenId;
+
+  /// Non-empty outcome token IDs in market order.
+  List<String> get tokenIds => <String>[
+    if (yesTokenId.trim().isNotEmpty) yesTokenId.trim(),
+    if (noTokenId.trim().isNotEmpty) noTokenId.trim(),
+  ];
+
+  /// Returns a copy with stable, trimmed identifiers for indexing/errors.
+  OrderFillsMarket normalizedIdentity() => OrderFillsMarket(
+    marketId: marketId.trim(),
+    conditionId: conditionId.trim(),
+    yesTokenId: yesTokenId.trim(),
+    noTokenId: noTokenId.trim(),
+  );
 }
