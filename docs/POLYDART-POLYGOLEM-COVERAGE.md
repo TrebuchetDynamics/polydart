@@ -6,13 +6,15 @@ custody architecture as described in `docs/adr/0001-wallet-mediated-eoa-signing.
 
 - Canonical upstream source: `polygolem/`
 - Last scaffolded Polygolem commit: `2b7cde7`
-- Last fidelity sync commit: `21f1982`
+- Last fidelity sync commit: `fb092d8b`
 - Scaffold command: `python3 skills/polydart/scripts/polygolem_inventory.py --root .`
 - Upstream delta after `21f1982`: Gamma comment profiles normalization, market
   trades Data API, batch orderbooks exposure, and market metadata are ported.
-  Polygolem `91876cf` added `pkg/orderfills`; Polydart now covers public
-  models, validation, reader interfaces, and read-only Polygon JSON-RPC log
-  decoding with mocked RPC tests.
+  Polygolem `91876cf` added `pkg/orderfills`; Polydart covers public models,
+  validation, reader interfaces, and read-only Polygon JSON-RPC log decoding
+  with mocked RPC tests. Polygolem `fb092d8b` added Wallet Intelligence V1;
+  Polydart covers read-only DTOs, shrinkage scoring, Data API-backed dossiers,
+  leaderboard rows, alerts, and market-flow summaries.
 
 Status values: `implemented`, `partial`, `missing`, `intentional Dart
 divergence`, `not applicable`.
@@ -46,6 +48,7 @@ all accounted for.
 | pkg/experimental | polygolem/pkg/experimental |  | not applicable |  | not_required | 2b7cde7 | Revisit only if promoted upstream |
 | pkg/funding | polygolem/pkg/funding | lib/src/funding | intentional Dart divergence | test/funding | required | 2b7cde7 | EOA pUSD balance route planning and direct wallet transaction request covered; raw live transfer submission intentionally omitted |
 | pkg/gamma | polygolem/pkg/gamma | lib/src/gamma | implemented | test/gamma | not_required | 2b7cde7 | Health, markets, events, series, tags, comments, teams, sports metadata/types, public profiles, market-by-token, keyset pagination, profile creation helper, routing, params, and DTO decode coverage are in place |
+| pkg/intel | polygolem/pkg/intel, polygolem/internal/intel | lib/src/intel | implemented | test/intel, test/e2e | not_required | fb092d8b | Wallet Intelligence V1 DTOs, shrinkage win-rate scoring, ROI, explainable `scoreWallet`, closed-position-authority wallet dossiers, Data API leaderboard rows, threshold alerts, market-flow summaries, source provenance, conflict/warning statuses, `Polydart.intel`, `UniversalClient` delegation, and local/mock E2E parity covered; output language remains candidate-only and not a finding of misconduct |
 | pkg/marketdata | polygolem/pkg/marketdata | lib/src/marketdata | implemented | test/marketdata | not_required | 2b7cde7 | Market-data tracker covered |
 | pkg/marketresolver | polygolem/pkg/marketresolver | lib/src/marketresolver | implemented | test/marketresolver | not_required | 2b7cde7 | Slug/id resolution, CLOB token parsing, crypto window slugging, strict/best-effort up/down token resolution, status mapping, and token validation covered |
 | pkg/orderbook | polygolem/pkg/orderbook | lib/src/orderbook | implemented | test/orderbook | not_required | 21f1982 | ClobOrderBookReader (single + batch fetches), ValidationException on empty tokenId, empty-skip behavior, BookReader integration, and 5 mock HTTP tests covered; matches polygolem Reader/BatchReader interfaces |
@@ -68,6 +71,7 @@ all accounted for.
 | internal/errors | polygolem/internal/errors | lib/src/errors | implemented | test/errors | not_required | 21f1982 | All 20 ErrorCode values match 1:1 (NET-*, AUTH-*, CLOB-*, VAL-*, SAFETY-*, GAMMA-*); typed exception hierarchy (TransportException, AuthException, ClobException, ValidationException, SafetyException, GammaException) with 10 tests; ClobErrorResponse structured decoding covered |
 | internal/execution | polygolem/internal/execution | lib/src/execution | implemented | test/execution | not_required | 21f1982 | Executor interface, PaperExecutor with Place/Cancel/GetOrder/ListOrders, PaperOrderEntry, PaperFillEntry, and 10 tests covered; maps executor semantics to polydart's paper/live/read-only boundaries |
 | internal/gamma | polygolem/internal/gamma | lib/src/gamma | implemented | test/gamma | not_required | 2b7cde7 | Search/event/tag/series/profile/team/sports endpoints, params, profile creation helper, and DTO decode coverage are in place |
+| internal/intel | polygolem/internal/intel | lib/src/intel | implemented | test/intel, test/e2e | not_required | fb092d8b | Read-only service composition over Data API current positions, closed positions, trades, market trades, holders, open interest, and trader leaderboard covered; partial/conflicted dossier behavior mirrors Polygolem; local/mock E2E tests exercise both Polydart and Polygolem services |
 | internal/marketdiscovery | polygolem/internal/marketdiscovery | lib/src/marketdiscovery | implemented | test/marketdiscovery | not_required | 2b7cde7 | Gamma active-market search, full-event search enrichment, first-token CLOB enrichment, tick size, neg-risk, fee-rate, midpoint, spread, last trade, order book, and tolerant failure handling covered |
 | internal/modes | polygolem/internal/modes | lib/src/modes | implemented | test/modes | not_required | 2b7cde7 | Parse defaults and live-gate validation covered |
 | internal/orders | polygolem/internal/orders | lib/src/orders, lib/src/wallet | partial | test/orders, test/wallet | required | 5220881a | Deposit-wallet single and batch placement helpers, market amount semantics, validation, default expiration, salt building, price bounds, Polygolem-matched tick-floor rounding, and wallet-batch deadline clamping covered; continue authenticated edge-case parity |
@@ -82,6 +86,7 @@ all accounted for.
 | internal/telemetry | polygolem/internal/telemetry | lib/src/telemetry | implemented | test/telemetry | not_required | 2b7cde7 | Request/retry/rate-limit/circuit-open telemetry and redaction covered |
 | internal/transport | polygolem/internal/transport | lib/src/transport | implemented | test/transport | not_required | 21f1982 | CircuitBreaker (3-state closed/open/halfOpen, maxFailures=5, resetTimeout=60s, halfOpenMaxRequests=3), RateLimiter (token bucket, tryAcquire/acquire/stop), HttpTransport (GET/POST with retry on 5xx/429, no-retry on POST/4xx, circuit breaker + rate limiter integration, timeout, redaction), and 38 tests covered; matches polygolem behavior |
 | internal/wallet | polygolem/internal/wallet | lib/src/wallet, lib/src/auth/create2.dart | partial | test/wallet, test/auth | required | 2b7cde7 | Proxy/Safe/Deposit CREATE2 derivation vectors align across Polygolem and Polydart; continue deploy/status/batch semantics without raw EOA keys |
+| internal/workflows | polygolem/internal/workflows | composed public SDK modules | not applicable | test/* by mapped module | mixed | 762829cf | Go workflow packages exist to decouple Cobra CLI commands from SDK adapters. Polydart does not mirror the workflow folder; mapped behavior lives in typed SDK modules (`marketresolver`, `marketdiscovery`, `orderbook`, `marketdata`, `dataapi`, `settlement`, `wallet`, `paper`, `stream`, `universal`, and `intel`). Port a dedicated Dart workflow only if upstream adds product behavior not already represented by a public SDK module. |
 | cli/* | polygolem/internal/cli |  | not applicable |  | mixed | 2b7cde7 | Port behavior only when it maps to public SDK APIs |
 
 ## Tracked Non-Protocol Cleanup

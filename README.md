@@ -8,9 +8,10 @@ Dart-native Polymarket SDK — peer implementation to [polygolem](https://github
 ## What it is
 
 A spec-for-spec mirror of polygolem in Dart. Polydart currently provides
-tested public market reads, Data API reads, paper-mode primitives,
-wallet-mediated signing helpers, guarded CLOB write helpers, stream clients,
-and relayer/readiness building blocks for Dart and Flutter applications.
+tested public market reads, Data API reads, wallet intelligence research
+helpers, paper-mode primitives, wallet-mediated signing helpers, guarded CLOB
+write helpers, stream clients, and relayer/readiness building blocks for Dart
+and Flutter applications.
 
 ## Install
 

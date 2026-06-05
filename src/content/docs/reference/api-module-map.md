@@ -36,7 +36,8 @@ configuration plus safety gates.
 | `MarketResolver`, `ResolvedMarket` | Resolve slugs or Gamma ids to condition ids, outcomes, and token ids. |
 | `MarketDiscovery`, `EnrichedMarket` | Compose Gamma markets with CLOB midpoint, spread, tick, last price, and book reads. |
 | `DataApiClient`, `LiveVolumeMarket` | Public positions, trades, activity, holders, open interest, volume, and leaderboard reads. |
-| `UniversalClient` | Read facade across Gamma, CLOB, Data API, discovery, streams, and health. |
+| `WalletIntelService`, `scoreWallet`, `WalletDossier` | Read-only wallet intelligence dossiers, shrinkage scoring, alerts, and market-flow summaries. |
+| `UniversalClient` | Read facade across Gamma, CLOB, Data API, wallet intelligence, discovery, streams, and health. |
 | `MarketClient`, `StreamConfig`, `NewMarketMessage`, `MarketResolvedMessage` | CLOB WebSocket market stream client, configuration, and lifecycle event DTOs. |
 
 ## Wallets, Auth, And Signing

@@ -175,6 +175,39 @@ export 'src/dataapi/dataapi_types.dart'
         TotalValue,
         Trade,
         TraderLeaderboardEntry;
+export 'src/intel/intel.dart'
+    show
+        AlertOptions,
+        DataApiWalletIntelReader,
+        DossierAlerts,
+        DossierOptions,
+        LeaderboardOptions,
+        LeaderboardRow,
+        MarketFlow,
+        MarketFlowOptions,
+        ScoreInput,
+        Signal,
+        SourceConflict,
+        SourceRef,
+        WalletDossier,
+        WalletIntelDataReader,
+        WalletIntelException,
+        WalletIntelService,
+        WalletScore,
+        WalletScoreMetrics,
+        WalletSummary,
+        confidenceHigh,
+        confidenceLow,
+        confidenceMedium,
+        confidenceNone,
+        dossierStatusComplete,
+        dossierStatusConflicted,
+        dossierStatusPartial,
+        formulaShrinkageWinRateV1,
+        formulaWalletScoreV1,
+        scoreWallet,
+        shrinkageWinRate,
+        walletRoi;
 export 'src/credentials/live_credentials.dart'
     show
         CredentialKey,
@@ -493,6 +526,7 @@ import 'src/config/config.dart';
 import 'src/dataapi/dataapi_client.dart';
 import 'src/errors/errors.dart';
 import 'src/gamma/gamma_client.dart';
+import 'src/intel/intel.dart';
 import 'src/marketdiscovery/market_discovery.dart';
 import 'src/marketresolver/market_resolver.dart';
 import 'src/modes/modes.dart';
@@ -524,6 +558,7 @@ final class Polydart {
     required this.gamma,
     required this.clob,
     required this.data,
+    required this.intel,
     required this.resolver,
     required this.discovery,
   });
@@ -602,6 +637,9 @@ final class Polydart {
 
   /// Data API surface — positions, activity, holders, analytics, …
   final DataApiClient data;
+
+  /// Wallet intelligence surface — read-only dossiers, scoring, and flows.
+  final WalletIntelService intel;
 
   /// Slug ↔ id ↔ token resolver layered on top of [gamma].
   final MarketResolver resolver;
@@ -682,6 +720,7 @@ final class Polydart {
       gamma: gamma,
       clob: clob,
       data: data,
+      intel: WalletIntelService.fromDataApi(data),
       resolver: MarketResolver(gamma: gamma),
       discovery: MarketDiscovery(gamma: gamma, clob: clob),
     );

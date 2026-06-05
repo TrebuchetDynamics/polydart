@@ -9,6 +9,7 @@ import '../dataapi/dataapi_client.dart';
 import '../dataapi/dataapi_types.dart';
 import '../gamma/gamma_client.dart';
 import '../gamma/gamma_params.dart';
+import '../intel/intel.dart';
 import '../marketdiscovery/market_discovery.dart';
 import '../stream/market_client.dart';
 import '../stream/stream_config.dart';
@@ -118,6 +119,7 @@ final class UniversalClient {
       _ownsClob = config.clobClient == null,
       _ownsData = config.dataClient == null {
     clob = UniversalClobReadClient._(_clob);
+    intel = WalletIntelService.fromDataApi(_data);
     _discovery =
         config.marketDiscovery ?? MarketDiscovery(gamma: _gamma, clob: _clob);
   }
@@ -134,6 +136,9 @@ final class UniversalClient {
 
   /// Read-only CLOB view.
   late final UniversalClobReadClient clob;
+
+  /// Read-only wallet intelligence view backed by the Data API.
+  late final WalletIntelService intel;
 
   /// Underlying Gamma client. Gamma is read-only in Polydart.
   GammaClient get gamma => _gamma;
@@ -448,6 +453,32 @@ final class UniversalClient {
 
   Future<LiveVolumeResponse> liveVolume(int eventId) {
     return _data.liveVolume(eventId);
+  }
+
+  // Wallet intelligence
+
+  Future<WalletDossier> walletDossier(
+    String wallet, {
+    DossierOptions options = const DossierOptions(),
+  }) {
+    return intel.walletDossier(wallet, options: options);
+  }
+
+  Future<List<LeaderboardRow>> walletIntelLeaderboard({
+    LeaderboardOptions options = const LeaderboardOptions(),
+  }) {
+    return intel.leaderboard(options: options);
+  }
+
+  Future<List<Signal>> walletIntelAlerts(AlertOptions options) {
+    return intel.alerts(options);
+  }
+
+  Future<MarketFlow> marketFlow(
+    String market, {
+    MarketFlowOptions options = const MarketFlowOptions(),
+  }) {
+    return intel.marketFlow(market, options: options);
   }
 
   // Market discovery

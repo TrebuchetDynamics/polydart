@@ -32,11 +32,12 @@ void main() {
       p.close();
     });
 
-    test('exposes resolver, discovery, and data surfaces', () {
+    test('exposes resolver, discovery, data, and intel surfaces', () {
       final p = Polydart.readOnly();
       expect(p.resolver, isNotNull);
       expect(p.discovery, isNotNull);
       expect(p.data, isNotNull);
+      expect(p.intel, isA<WalletIntelService>());
       p.close();
     });
 

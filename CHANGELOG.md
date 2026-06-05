@@ -4,6 +4,13 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Added
+
+- Added Polygolem Wallet Intelligence V1 parity: read-only wallet dossier DTOs,
+  shrinkage scoring helpers, Data API-backed dossier/leaderboard/alert/market
+  flow service, `Polydart.intel`, `UniversalClient` convenience methods, and a
+  local/mock E2E regression.
+
 ### Changed
 
 - Typed additional Polygolem Gamma metadata fields: `Market.marketType`,
