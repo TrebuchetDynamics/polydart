@@ -21,12 +21,13 @@ custody architecture as described in `docs/adr/0001-wallet-mediated-eoa-signing.
   `SmartWalletTrades` (public trades annotated with watched-wallet source
   metadata); both are now ported to Polydart as `ClobClient.marketOutcome` and
   `DataApiClient.smartWalletTrades` with mocked HTTP tests (the Gamma fallback
-  exercised against a loopback server). The remaining delta is not yet ported:
-  Polygolem `766b58be` added read-only agent surfaces —
-  `pkg/mcp` (a no-credential Model Context Protocol server), `pkg/openapi` (a
-  read-only OpenAPI spec emitter), `pkg/rfq` (RFQ request/quote DTOs and
-  validation with live submission intentionally unimplemented), and
-  `pkg/signers` (an HTTP/KMS/Turnkey remote-signer abstraction). Polygolem
+  exercised against a loopback server). Polygolem `766b58be` added read-only
+  agent surfaces, of which `pkg/openapi` (a read-only OpenAPI 3.1 spec emitter)
+  is now ported as `openApiSpec()`. The remaining `766b58be` delta is not yet
+  ported: `pkg/mcp` (a no-credential Model Context Protocol server), `pkg/rfq`
+  (RFQ request/quote DTOs and validation with live submission intentionally
+  unimplemented), and `pkg/signers` (an HTTP/KMS/Turnkey remote-signer
+  abstraction). Polygolem
   `12f5cecd` added the opportunity-scan workflow (`internal/workflows/
   opportunities`), `fixtures/conformance` byte-level golden vectors
   (`builder_headers`, `clob_auth_v2`, `ctf_calldata`, `order_v2_poly1271`), and
@@ -69,7 +70,7 @@ all accounted for.
 | pkg/marketdata | polygolem/pkg/marketdata | lib/src/marketdata | implemented | test/marketdata | not_required | 2b7cde7 | Market-data tracker covered |
 | pkg/marketresolver | polygolem/pkg/marketresolver | lib/src/marketresolver | implemented | test/marketresolver | not_required | 2b7cde7 | Slug/id resolution, CLOB token parsing, crypto window slugging, strict/best-effort up/down token resolution, status mapping, and token validation covered |
 | pkg/mcp | polygolem/pkg/mcp |  | missing |  | not_required | 766b58be | Read-only Model Context Protocol server (`tools/list`, `tools/call` over no-credential reads) added upstream; port a Dart agent-integration surface mapped onto existing read-only SDK modules, or document intentional omission |
-| pkg/openapi | polygolem/pkg/openapi |  | missing |  | not_required | 766b58be | Read-only OpenAPI spec emitter for the public surface added upstream; port a Dart spec generator or document intentional omission |
+| pkg/openapi | polygolem/pkg/openapi | lib/src/openapi | implemented | test/openapi | not_required | 766b58be | Read-only OpenAPI 3.1 spec emitter ported as `openApiSpec()`; same six read-only paths (`/health`, `/diag`, `/discover/search`, `/data/positions`, `/orderbook/{token_id}`, `/marketdata/snapshot`), sorted query params, path-vs-query distinction, and mutating-wording exclusion covered |
 | pkg/rfq | polygolem/pkg/rfq |  | missing |  | required | 766b58be | RFQ request/quote DTOs and validation added upstream; live submission is intentionally unimplemented in Go — port DTOs/validation read-only and keep submission gated under ADR 0001 |
 | pkg/signers | polygolem/pkg/signers | lib/src/wallet, lib/src/auth | missing |  | required | 766b58be | HTTP/KMS/Turnkey remote-signer abstraction added upstream; evaluate against ADR 0001 wallet-mediated custody before porting — prefer wallet-mediated framing over raw signer backends |
 | pkg/orderbook | polygolem/pkg/orderbook | lib/src/orderbook | implemented | test/orderbook | not_required | 21f1982 | ClobOrderBookReader (single + batch fetches), ValidationException on empty tokenId, empty-skip behavior, BookReader integration, and 5 mock HTTP tests covered; matches polygolem Reader/BatchReader interfaces |

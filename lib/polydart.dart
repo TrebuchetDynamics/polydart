@@ -302,6 +302,7 @@ export 'src/marketresolver/market_resolver.dart'
         normalizeCryptoAsset,
         parseClobTokenIds;
 export 'src/modes/modes.dart';
+export 'src/openapi/openapi.dart' show openApiSpec;
 export 'src/orders/amounts.dart'
     show
         OrderAmounts,
