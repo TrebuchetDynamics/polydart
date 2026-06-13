@@ -464,6 +464,72 @@ final class PriceHistory {
   final List<PricePoint> history;
 }
 
+/// Resolution state of a CLOB market. Mirrors
+/// `polytypes.CLOBMarketOutcomeStatus`.
+enum ClobMarketOutcomeStatus {
+  resolved('resolved'),
+  unresolved('unresolved');
+
+  const ClobMarketOutcomeStatus(this.wire);
+
+  /// JSON wire value emitted by the Go reference.
+  final String wire;
+
+  /// Parses a wire value, defaulting to [unresolved] for anything else.
+  static ClobMarketOutcomeStatus fromWire(Object? raw) {
+    final value = raw?.toString();
+    for (final status in values) {
+      if (status.wire == value) return status;
+    }
+    return ClobMarketOutcomeStatus.unresolved;
+  }
+}
+
+/// Result of resolving a market's outcome by condition id. Mirrors
+/// `polytypes.CLOBMarketOutcome`.
+@immutable
+final class ClobMarketOutcome {
+  const ClobMarketOutcome({
+    required this.status,
+    required this.conditionId,
+    this.winningTokenId = '',
+    this.closed = false,
+    this.source = '',
+  });
+
+  factory ClobMarketOutcome.fromJson(Map<String, dynamic> json) =>
+      ClobMarketOutcome(
+        status: ClobMarketOutcomeStatus.fromWire(json['status']),
+        conditionId: _stringOf(json, const ['condition_id', 'conditionId']),
+        winningTokenId: _stringOf(
+          json,
+          const ['winning_token_id', 'winningTokenId'],
+        ),
+        closed: json['closed'] == true,
+        source: _stringOf(json, const ['source']),
+      );
+
+  /// `resolved` when CLOB confirms the market closed with a single winner.
+  final ClobMarketOutcomeStatus status;
+  final String conditionId;
+
+  /// Winning token id — populated only when [status] is
+  /// [ClobMarketOutcomeStatus.resolved].
+  final String winningTokenId;
+  final bool closed;
+
+  /// Provenance string describing which source resolved the outcome.
+  final String source;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'status': status.wire,
+    'condition_id': conditionId,
+    if (winningTokenId.isNotEmpty) 'winning_token_id': winningTokenId,
+    'closed': closed,
+    'source': source,
+  };
+}
+
 double _double(Object? raw) {
   if (raw is num) return raw.toDouble();
   if (raw is String) return double.tryParse(raw) ?? 0;

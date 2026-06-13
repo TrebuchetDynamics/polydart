@@ -466,6 +466,53 @@ final class LiveVolumeResponse {
   final List<LiveVolumeMarket> markets;
 }
 
+/// One public smart wallet to query as a read-only signal source. Mirrors
+/// `types.SmartWallet`.
+@immutable
+final class SmartWallet {
+  const SmartWallet({required this.address, this.label = ''});
+
+  factory SmartWallet.fromJson(Map<String, dynamic> json) => SmartWallet(
+    address: _string(json, 'address'),
+    label: _string(json, 'label'),
+  );
+
+  final String address;
+
+  /// Optional human-readable tag carried through onto each annotated trade.
+  final String label;
+}
+
+/// Read-only configuration for collecting public trades across watched
+/// wallets. Mirrors `types.SmartWalletTradesQuery`.
+@immutable
+final class SmartWalletTradesQuery {
+  const SmartWalletTradesQuery({
+    required this.wallets,
+    this.limitPerWallet = 0,
+  });
+
+  final List<SmartWallet> wallets;
+
+  /// Forwarded as the per-wallet `limit`. 0 uses the server default.
+  final int limitPerWallet;
+}
+
+/// A public [Trade] annotated with the watched wallet that sourced it. Mirrors
+/// `types.SmartWalletTrade`.
+@immutable
+final class SmartWalletTrade {
+  const SmartWalletTrade({
+    required this.walletAddress,
+    this.walletLabel = '',
+    required this.trade,
+  });
+
+  final String walletAddress;
+  final String walletLabel;
+  final Trade trade;
+}
+
 // ---- helpers ----
 
 Object? _first(Map<String, dynamic> json, String first, String second) {

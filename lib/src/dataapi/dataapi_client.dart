@@ -67,6 +67,47 @@ final class DataApiClient {
     return _decodeObjectList(list, '/trades', Trade.fromJson);
   }
 
+  /// Returns public trades for each watched wallet in [query], annotated with
+  /// the sourcing wallet's address and label. Trades are deduplicated across
+  /// wallets by trade id (falling back to a composite key when the id is
+  /// empty), so a fill seen from two watched wallets is emitted once.
+  ///
+  /// Read-only: this only reads each wallet's public `/trades`. Mirrors
+  /// `pkg/data.Client.SmartWalletTrades`.
+  Future<List<SmartWalletTrade>> smartWalletTrades(
+    SmartWalletTradesQuery query,
+  ) async {
+    final out = <SmartWalletTrade>[];
+    final seen = <String>{};
+    for (final wallet in query.wallets) {
+      final address = wallet.address.trim();
+      if (address.isEmpty) continue;
+      final rows = await trades(address, limit: query.limitPerWallet);
+      final label = wallet.label.trim();
+      for (final row in rows) {
+        final key = row.id.isNotEmpty
+            ? row.id
+            : <String>[
+                address,
+                row.transactionHash,
+                row.market,
+                row.assetId,
+                row.side,
+                row.createdAt,
+              ].join('\x00');
+        if (!seen.add(key)) continue;
+        out.add(
+          SmartWalletTrade(
+            walletAddress: address,
+            walletLabel: label,
+            trade: row,
+          ),
+        );
+      }
+    }
+    return out;
+  }
+
   /// Returns recent public trades for [market], a market condition ID.
   Future<List<Trade>> marketTrades(String market, {int limit = 0}) async {
     final list = await _transport.getJsonList(

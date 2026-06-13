@@ -9,6 +9,8 @@ import '../auth/clob_auth.dart';
 import '../auth/l2.dart';
 import '../auth/wallet_signer.dart';
 import '../errors/errors.dart';
+import '../gamma/gamma_client.dart';
+import '../gamma/gamma_params.dart';
 import '../modes/modes.dart';
 import '../transport/http_transport.dart';
 import '../transport/transport_config.dart';
@@ -84,6 +86,111 @@ final class ClobClient {
   Future<ClobMarketByTokenResponse> marketByToken(String tokenId) async {
     final body = await _transport.getJson('/markets-by-token/$tokenId');
     return ClobMarketByTokenResponse.fromJson(body);
+  }
+
+  /// Resolves a market's outcome by condition id.
+  ///
+  /// Queries the CLOB API first. When CLOB knows the market but it is not yet
+  /// closed (or has no single winner) the result is
+  /// [ClobMarketOutcomeStatus.unresolved]. If the CLOB lookup fails (for
+  /// example a 404) and [gammaBaseUrl] is non-empty, resolution falls back to
+  /// the Gamma API. The winning token id is carried only when CLOB confirms
+  /// the market closed with exactly one winning token.
+  ///
+  /// Mirrors `pkg/clob.Client.MarketOutcome`.
+  Future<ClobMarketOutcome> marketOutcome(
+    String conditionId, {
+    String gammaBaseUrl = '',
+  }) async {
+    final id = conditionId.trim();
+    if (id.isEmpty) {
+      throw const ValidationException(
+        code: ErrorCode.missingField,
+        message: 'conditionId must not be empty',
+        field: 'conditionId',
+      );
+    }
+
+    // First try CLOB.
+    try {
+      final marketRow = await market(id);
+      final winner = _winningTokenId(marketRow);
+      if (marketRow.closed && winner.isNotEmpty) {
+        return ClobMarketOutcome(
+          status: ClobMarketOutcomeStatus.resolved,
+          conditionId: id,
+          winningTokenId: winner,
+          closed: true,
+          source: 'clob:/markets/$id',
+        );
+      }
+      // CLOB knows the market but it is not yet closed or has no winner.
+      return ClobMarketOutcome(
+        status: ClobMarketOutcomeStatus.unresolved,
+        conditionId: id,
+        closed: marketRow.closed,
+        source: 'clob:/markets/$id:not_closed_or_no_winner',
+      );
+    } catch (_) {
+      // Fall back to Gamma when CLOB returned an error (e.g. 404).
+      final gammaUrl = gammaBaseUrl.trim();
+      if (gammaUrl.isEmpty) {
+        rethrow;
+      }
+      final outcome = await _resolveViaGamma(gammaUrl, id);
+      if (outcome != null) {
+        return outcome;
+      }
+      // Both CLOB and Gamma failed — surface the original CLOB error.
+      rethrow;
+    }
+  }
+
+  /// Returns the single winning token id, or '' when zero or more than one
+  /// token is flagged as the winner. Mirrors `winningTokenID`.
+  static String _winningTokenId(ClobMarket market) {
+    var winner = '';
+    var count = 0;
+    for (final token in market.tokens) {
+      if (token.winner) {
+        winner = token.tokenId;
+        count++;
+      }
+    }
+    return count == 1 ? winner : '';
+  }
+
+  /// Resolves an outcome through the Gamma API. Returns null when no closed
+  /// market is found or the Gamma lookup itself fails, so the caller can fall
+  /// back to the original CLOB error. Mirrors `resolveViaGamma`.
+  Future<ClobMarketOutcome?> _resolveViaGamma(
+    String gammaBaseUrl,
+    String conditionId,
+  ) async {
+    final gamma = GammaClient(
+      transport: HttpTransport(
+        config: TransportConfig(baseUrl: gammaBaseUrl),
+      ),
+    );
+    try {
+      final markets = await gamma.markets(
+        GetMarketsParams(conditionIds: <String>[conditionId]),
+      );
+      for (final m in markets) {
+        if (!m.closed) continue;
+        return ClobMarketOutcome(
+          status: ClobMarketOutcomeStatus.unresolved,
+          conditionId: conditionId,
+          closed: true,
+          source: 'gamma:closed_condition_id=$conditionId',
+        );
+      }
+      return null;
+    } catch (_) {
+      return null;
+    } finally {
+      gamma.close();
+    }
   }
 
   /// Returns L2 order book depth for [tokenId].
