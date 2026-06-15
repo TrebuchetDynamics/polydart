@@ -15,6 +15,7 @@ import '../config/stream_config.dart';
 import '../models/stream_messages.dart';
 import '../shared/json_frame.dart';
 import '../shared/socket_lifecycle.dart';
+import '../stats.dart';
 import '../transport/contracts/channel_factory.dart';
 import '../transport/contracts/default_channel_factory.dart';
 
@@ -61,6 +62,7 @@ final class UserClient {
   Timer? _reconnectTimer;
   _UserSubscription _subscriptionFilter = _UserSubscription.none;
   int _reconnects = 0;
+  final StreamStats _stats = StreamStats('user');
   bool _connected = false;
   bool _closed = false;
 
@@ -68,6 +70,9 @@ final class UserClient {
   Stream<UserTradeMessage> get trades => _trades.stream;
   Stream<Object> get errors => _errors.stream;
   bool get isConnected => _connected;
+
+  /// Current lifecycle/counter telemetry for this stream.
+  StreamStatsSnapshot get stats => _stats.snapshot();
 
   Future<void> connect() async {
     _credentials.validate();
@@ -87,6 +92,7 @@ final class UserClient {
     final channel = _channelFactory(Uri.parse(_config.url));
     _channel = channel;
     _connected = true;
+    _stats.markConnected();
     _subscription = channel.stream.listen(
       _handleFrame,
       onError: _handleSocketError,
@@ -104,6 +110,7 @@ final class UserClient {
     }
     _writeSubscribe(channel, markets);
     _subscriptionFilter = _UserSubscription.active(markets);
+    _stats.setSubscriptions(markets: markets);
   }
 
   void _resubscribe() {
@@ -125,6 +132,7 @@ final class UserClient {
     if (_closed) return;
     _closed = true;
     _connected = false;
+    _stats.markDisconnected();
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
     final sub = _subscription;
@@ -139,7 +147,10 @@ final class UserClient {
 
   void _handleFrame(dynamic frame) {
     final bytes = streamFrameBytes(frame);
-    if (bytes == null) return;
+    if (bytes == null) {
+      _stats.recordInvalid();
+      return;
+    }
     for (final child in streamJsonObjectFrames(bytes)) {
       _dispatchSingle(child);
     }
@@ -151,13 +162,18 @@ final class UserClient {
       expectedObjectMessage: 'user stream: expected JSON object',
       emitError: _emitError,
     );
-    if (payload == null) return;
+    if (payload == null) {
+      _stats.recordInvalid();
+      return;
+    }
     final eventType = (payload['event_type'] ?? payload['type'] ?? '')
         .toString();
     switch (eventType) {
       case 'order':
+        _stats.recordMessage();
         _orders.add(UserOrderMessage.fromJson(payload));
       case 'trade':
+        _stats.recordMessage();
         _trades.add(UserTradeMessage.fromJson(payload));
       default:
         return;
@@ -167,11 +183,13 @@ final class UserClient {
   void _handleSocketError(Object error, StackTrace stack) {
     _emitError(error);
     _connected = false;
+    _stats.markDisconnected();
     _scheduleReconnect();
   }
 
   void _handleSocketDone() {
     _connected = false;
+    _stats.markDisconnected();
     if (_closed) return;
     _scheduleReconnect();
   }
@@ -180,6 +198,7 @@ final class UserClient {
     if (_closed || !_config.reconnect) return;
     if (_reconnects >= _config.reconnectMax) return;
     _reconnects += 1;
+    _stats.recordReconnect();
     final delay = reconnectDelayForAttempt(_config, _reconnects);
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(delay, () async {

@@ -92,9 +92,10 @@ making the app infer protocol state from exceptions.
 When readiness returns `ready`, use `createDepositWalletLimitOrder(...)` for
 live limit orders, `createDepositWalletLimitOrders(...)` for batch limit
 orders, or `createDepositWalletMarketOrder(...)` for buy market orders. These
-helpers derive the deposit wallet from `signer.address`, ask the app-owned
-`WalletSigner` to approve each ERC-7739 `TypedDataSign` payload, post
-`signatureType=3`, and leave raw private keys outside Polydart. Cancellations
+helpers derive the deposit wallet from `signer.address`, ask the app-owned EOA
+Signer with ReownWallet (adapted through `WalletSigner`) to approve each
+ERC-7739 `TypedDataSign` payload, post `signatureType=3`, and keep private-key
+signing out of the normal Flutter live path. Cancellations
 use the same EOA-bound CLOB auth address through the `polyAddress` argument on
 `ClobWrites`. If the CLOB rejects a write with a 4xx JSON body, Polydart throws
 `ClobException` with `upstream` set to a `ClobErrorResponse` containing the
@@ -111,7 +112,7 @@ After the wallet provider returns a transaction hash, call
 `eth_getTransactionReceipt`, then refreshes deposit-wallet readiness until CLOB
 collateral moves to `ready` or the returned
 `DepositWalletFundingConfirmationStatus` says the transaction is still pending,
-failed, or another readiness action remains. Polydart still performs no wallet
+failed, or another readiness action remains. In the normal Flutter wallet-provider path, Polydart still performs no wallet
 submission and stores no private key material.
 
 Signature flows assume Polygon mainnet unless a lower-level helper documents a
@@ -144,12 +145,12 @@ See [`example/flutter_read_only.dart`](../example/flutter_read_only.dart) for a
 plain-Dart repository class that can be owned by a Flutter provider or widget
 state.
 
-## WalletSigner Adapter Pattern
+## EOA Signer with ReownWallet Adapter Pattern
 
-Polydart never stores private keys. Wallet-backed flows use the `WalletSigner`
-interface, and the Flutter app owns the actual wallet integration. A Reown,
-WalletConnect, embedded wallet, hardware bridge, or platform-channel signer can
-adapt its RPC calls to:
+Normal Flutter app usage goes through an EOA Signer with ReownWallet or an
+equivalent wallet-provider adapter. The Flutter app owns the actual wallet
+integration and adapts ReownWallet, WalletConnect, embedded-wallet, hardware
+bridge, or platform-channel RPC calls to Polydart's `WalletSigner` interface:
 
 - `eth_signTypedData_v4` for EIP-712 typed data.
 - `personal_sign` for SIWE and other EIP-191 messages.
@@ -167,12 +168,18 @@ For a mock-only deposit-wallet limit-order smoke path, see
 [`example/flutter_deposit_wallet_order.dart`](../example/flutter_deposit_wallet_order.dart).
 It uses a fake wallet signer, a mock CLOB transport, and a local readiness
 state so Flutter Web consumers can validate the `signatureType=3` order path
-without live endpoints, private keys, funds, or product-specific code.
+without live endpoints, funds, or product-specific code. If an alpha app wants
+a no-sign-in trial, generate a Paper Wallet for paper-mode only; do not upgrade
+that generated key into live custody.
 
 ## Safety Boundaries
 
+- Normal Flutter live flows should use an EOA Signer with ReownWallet or an
+  equivalent wallet-provider adapter.
 - Do not put raw private keys, seed phrases, or funded test secrets in Flutter
-  code, assets, environment files, or examples.
+  code, assets, environment files, or examples. `LocalEoaSigner` is for CLI
+  tests, alpha/test apps, headless users, server automation, and generated
+  paper-mode wallets — not the normal Flutter live path.
 - The bundled Flutter examples do not submit orders, cancel orders, fund
   wallets, transfer tokens, or request live API-key creation.
 - `Polydart.readOnly()` has no wallet and live writes are blocked.

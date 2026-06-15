@@ -15,6 +15,7 @@ import '../config/stream_config.dart';
 import '../models/stream_messages.dart';
 import '../shared/json_frame.dart';
 import '../shared/socket_lifecycle.dart';
+import '../stats.dart';
 import '../transport/contracts/channel_factory.dart';
 import '../transport/contracts/default_channel_factory.dart';
 
@@ -61,6 +62,7 @@ final class MarketClient {
   Timer? _reconnectTimer;
   List<String> _subscribedAssetIds = const <String>[];
   int _reconnects = 0;
+  final StreamStats _stats = StreamStats('market');
   bool _connected = false;
   bool _closed = false;
 
@@ -93,6 +95,9 @@ final class MarketClient {
   /// True between a successful [connect] and the next read error or [close].
   bool get isConnected => _connected;
 
+  /// Current lifecycle/counter telemetry for this stream.
+  StreamStatsSnapshot get stats => _stats.snapshot();
+
   /// Opens the WebSocket and starts the read loop. Safe to call again after
   /// a reconnect bubbles up; the existing stream subscribers are preserved.
   Future<void> connect() async {
@@ -113,6 +118,7 @@ final class MarketClient {
     final channel = _channelFactory(url);
     _channel = channel;
     _connected = true;
+    _stats.markConnected();
     _subscription = channel.stream.listen(
       _handleFrame,
       onError: _handleSocketError,
@@ -130,6 +136,7 @@ final class MarketClient {
     }
     _writeSubscribe(channel, assetIds);
     _subscribedAssetIds = List<String>.unmodifiable(assetIds);
+    _stats.setSubscriptions(assetIds: _subscribedAssetIds);
   }
 
   void _resubscribe() {
@@ -158,6 +165,7 @@ final class MarketClient {
     if (_closed) return;
     _closed = true;
     _connected = false;
+    _stats.markDisconnected();
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
     final sub = _subscription;
@@ -177,7 +185,10 @@ final class MarketClient {
 
   void _handleFrame(dynamic frame) {
     final bytes = streamFrameBytes(frame);
-    if (bytes == null) return;
+    if (bytes == null) {
+      _stats.recordInvalid();
+      return;
+    }
     _dispatch(bytes);
   }
 
@@ -193,29 +204,40 @@ final class MarketClient {
       expectedObjectMessage: 'stream: expected JSON object',
       emitError: _emitError,
     );
-    if (payload == null) return;
+    if (payload == null) {
+      _stats.recordInvalid();
+      return;
+    }
     final eventType = (payload['event_type'] ?? '').toString();
     try {
       switch (eventType) {
         case 'book':
+          _stats.recordMessage();
           _books.add(BookMessage.fromJson(payload));
         case 'price_change':
+          _stats.recordMessage();
           _priceChanges.add(PriceChangeMessage.fromJson(payload));
         case 'last_trade_price':
+          _stats.recordMessage();
           _lastTrades.add(LastTradeMessage.fromJson(payload));
         case 'tick_size_change':
+          _stats.recordMessage();
           _tickSizeChanges.add(TickSizeChangeMessage.fromJson(payload));
         case 'best_bid_ask':
+          _stats.recordMessage();
           _bestBidAsks.add(BestBidAskMessage.fromJson(payload));
         case 'new_market':
+          _stats.recordMessage();
           _newMarkets.add(NewMarketMessage.fromJson(payload));
         case 'market_resolved':
+          _stats.recordMessage();
           _marketResolutions.add(MarketResolvedMessage.fromJson(payload));
         default:
           // Unknown / unsupported event — drop silently to match polygolem.
           return;
       }
     } on FormatException catch (e) {
+      _stats.recordInvalid();
       _emitError(e);
     }
   }
@@ -228,11 +250,13 @@ final class MarketClient {
   void _handleSocketError(Object error, StackTrace stack) {
     _emitError(error);
     _connected = false;
+    _stats.markDisconnected();
     _scheduleReconnect();
   }
 
   void _handleSocketDone() {
     _connected = false;
+    _stats.markDisconnected();
     if (_closed) return;
     _scheduleReconnect();
   }
@@ -241,6 +265,7 @@ final class MarketClient {
     if (_closed || !_config.reconnect) return;
     if (_reconnects >= _config.reconnectMax) return;
     _reconnects += 1;
+    _stats.recordReconnect();
     final delay = reconnectDelayForAttempt(_config, _reconnects);
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(delay, () async {

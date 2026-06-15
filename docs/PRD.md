@@ -26,7 +26,7 @@ Polydart is the **official Dart-native Polymarket SDK** — a peer implementatio
 | **HTTP** | `net/http` with custom retry | `http` package with interceptor stack |
 | **WebSocket** | Gorilla + custom reconnect | `web_socket_channel` with reconnect |
 | **State** | File-based paper state | `shared_preferences` / `hive` |
-| **Signing** | Local private key | Reown/WalletConnect to MetaMask |
+| **Signing** | Local private key | EOA Signer with ReownWallet for normal apps; explicit `LocalEoaSigner` for CLI/test/headless special cases |
 
 **Synchronization rule:** When polygolem adds a new protocol client, signing scheme, or API endpoint, polydart adds the equivalent within the same release cycle. Both repos share the same version numbering.
 
@@ -79,7 +79,7 @@ polydart/
 | Deposit wallet CREATE2 | Keccak-256 + `eth_call` to factory |
 | Address derivation | `ecdsa` pubKey → keccak → last 20 bytes |
 
-**Key constraint:** No private key storage. All signing flows through Reown/WalletConnect.
+**Signer constraint:** Normal app signing flows through an EOA Signer with ReownWallet (or an equivalent wallet-provider adapter). Explicit private-key EOA signing is allowed for CLI tests, headless users, alpha/test apps, server automation, and generated paper-mode wallets; it must stay opt-in and redacted.
 
 ### 4.2 `clob` — CLOB V2 Client
 
@@ -87,7 +87,7 @@ polydart/
 
 - **Read endpoints** (no auth): book, trades, prices, spread, orders
 - **Write endpoints** (signing required): create-order, cancel, update-balance
-- **Signature type:** wallet-mediated signatures only in the public SDK; deposit-wallet/POLY_1271 is the preferred Flutter live path, while direct EOA signing requires explicit app-owned user approval and live gates.
+- **Signature type:** normal app signing uses an EOA Signer with ReownWallet or equivalent wallet-provider approval; deposit-wallet/POLY_1271 is the preferred Flutter live path. `LocalEoaSigner` supports explicit private-key EOA signing for CLI/test/headless special cases and remains behind live gates for real submissions.
 
 ### 4.3 `gamma` — Market Discovery
 
@@ -115,7 +115,7 @@ polydart/
 - `derive(eoaAddress)` → predict CREATE2 address
 - `deploy()` → relayer client uses injected relayer credentials
 - `status()` → on-chain check
-- `batch(calls)` → EIP-712 sign via Reown → submit
+- `batch(calls)` → EIP-712 sign via EOA Signer with ReownWallet (or explicit advanced signer) → submit
 
 ### 4.6 `orders` — Order Building
 
@@ -140,26 +140,27 @@ final order = await client.orders
 
 ---
 
-## 5. Security Model (Reown/WalletConnect)
+## 5. Security Model (EOA Signer with ReownWallet)
 
 ### 5.1 Threat Model
 
 | Threat | Mitigation |
 |--------|-----------|
-| Private key exposure | **Eliminated** — keys never leave MetaMask |
+| Normal-app private key exposure | **Eliminated** — normal app flows use an EOA Signer with ReownWallet or equivalent wallet-provider signer; keys stay in the wallet layer |
+| Explicit private-key signer misuse | **Gated** — `LocalEoaSigner` is for CLI tests, alpha/test apps, headless users, server automation, or generated paper-mode wallets, not the normal Flutter live path |
 | Relayer credential leak | **Minimized** — no shared embedded creds; consumer-managed per-EOA secure storage; optional proxy later |
 | Man-in-the-middle | HTTPS + certificate pinning |
-| Malicious signing requests | User sees full transaction in MetaMask |
-| App compromise | Damage limited to current session orders |
+| Malicious signing requests | User sees the wallet-provider signing prompt in ReownWallet / equivalent wallet UI |
+| App compromise | Damage limited by current-session orders, live gates, and signer/user approval |
 
 ### 5.2 Key Flow
 
 ```
-User MetaMask (holds private key)
+User EOA wallet (ReownWallet / WalletConnect / equivalent provider)
     ↑
-    │ WalletConnect / Reown
+    │ eth_signTypedData_v4 / personal_sign
     │
-Flutter App (Polydart)
+Flutter App (Polydart WalletSigner adapter)
     │
     │ HTTP / WebSocket / relayer client
     ↓
@@ -229,7 +230,7 @@ if (!gates.allowed) throw StateError('live mode blocked');
 |------|------------|--------------|-------------------|
 | **Read-only** | Not needed | Not needed | Blocked |
 | **Paper** | EOA address only | Not needed | Blocked (local sim) |
-| **Live** | Reown provider | Injected app-local credentials or optional proxy | Full access |
+| **Live** | EOA Signer with ReownWallet or explicit advanced signer | Injected app-local credentials or optional proxy | Full access |
 
 **Gates:**
 - Live mode requires `preflight` checks (balance, allowance, nonce)
@@ -249,7 +250,7 @@ if (!gates.allowed) throw StateError('live mode blocked');
 - [ ] Unit tests for all above
 
 ### Phase 2 — Authentication (v0.2.0)
-- [ ] `auth` — EIP-712 typed data signing via Reown
+- [ ] `auth` — EIP-712 typed data signing via EOA Signer with ReownWallet and explicit advanced signers
 - [ ] `wallet` — CREATE2 derivation, status checks
 - [ ] `orders` — OrderIntent builder
 - [ ] `clob` — write endpoints (create-order, cancel)
@@ -310,7 +311,7 @@ dev_dependencies:
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
 | EIP-712 encoding mismatch | Medium | High | Manual encoding validated against polygolem parity vectors |
-| Mobile signing latency (Reown) | High | Medium | Pre-build orders, queue for batch sign |
+| Mobile signing latency (ReownWallet) | High | Medium | Pre-build orders, queue for batch sign |
 | Polymarket API drift | Medium | High | Automated contract tests against live API weekly |
 | Relayer credential leak | Low | Critical | Per-EOA secure storage in the consumer app; never embed shared creds; redact logs; optional proxy later |
 | CREATE2 derivation mismatch | Low | Critical | Cross-validate every address against polygolem Go impl |
@@ -331,7 +332,7 @@ dev_dependencies:
 
 ## 13. Open Questions
 
-1. **Reown vs WalletConnect v3:** Which library is more stable for production?
+1. **ReownWallet vs raw WalletConnect naming:** Which user-facing term is clearest for production?
 2. **Optional server proxy:** defer until public SDK hardening, or add immediately for relayer credential isolation?
 3. **Paper state storage:** `shared_preferences` vs `hive` vs `drift`?
 4. **Flutter minimum version:** 3.16+ or 3.19+?

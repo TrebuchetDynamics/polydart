@@ -1,4 +1,4 @@
-# ADR 0001: Wallet-Mediated EOA Signing
+# ADR 0001: EOA Signer Compatibility
 
 ## Status
 
@@ -8,30 +8,38 @@ Accepted
 
 Polydart is a public Dart SDK that mirrors Polygolem protocol semantics for
 Polymarket clients. Polygolem may use local private keys in CLI or server
-contexts, but Flutter and mobile consumers need a safer default custody model.
-Future agents porting from Polygolem could accidentally copy local-key custody
-patterns into Polydart unless the boundary is explicit.
+contexts, while Flutter, web, and mobile consumers often use wallet-provider
+signing standards such as MetaMask, Reown / WalletConnect, or equivalent EOA
+signer interfaces.
+
+Some Polydart users also need local/private-key EOA signing for tests,
+headless tools, and server-side automation. Future agents porting from
+Polydart must preserve both needs without making one signer style block the
+other.
 
 ## Decision
 
-Polydart's default public SDK signing architecture must not handle raw EOA
-private keys.
+Polydart must accept standard EOA signer abstractions for browser/mobile wallet
+flows, including MetaMask-style `eth_signTypedData_v4` / `personal_sign` and
+Reown / WalletConnect-backed signers.
 
-EOA authority flows through consumer-provided wallet signing abstractions, such
-as `WalletSigner`, and user-approved signing flows. `WalletSigner` may request
-signatures, but it must not expose key material.
+Polydart may also provide private-key EOA signer adapters for users who need
+headless operation, local testing, or server-side automation. Private-key
+support is allowed when it is explicit, opt-in, testable, and redacts key
+material from diagnostics.
 
-Polygolem local-key behavior is a protocol-byte reference for hashes, typed
-data, request bodies, and signatures. It is not the custody architecture for
-Polydart.
-
-Private-key signer support, if ever added, requires a separate explicit design
-decision outside the default public SDK flow.
+Protocol parity and signer-provider compatibility are both goals: Polygolem
+local-key behavior remains a protocol-byte reference for hashes, typed data,
+request bodies, and signatures, while Polydart should expose compatible EOA
+signer seams for wallet-provider and private-key implementations.
 
 ## Consequences
 
-- Signing parity tests use fake signers, public vectors, or sanitized fixtures.
-- Code paths that ask for, store, log, derive from, or transmit raw EOA private
-  keys are blockers.
-- Protocol parity and custody parity are separate concerns.
+- Signing parity tests may use fake signers, public vectors, sanitized
+  fixtures, or explicit local/private-key signer adapters.
+- Private-key APIs must be opt-in and must not log or expose raw key material.
+- Wallet-provider EOA signing remains a first-class path for Flutter, web, and
+  mobile consumers.
+- Protocol parity and custody/provider choices are related but separable
+  concerns.
 - ADRs override blind Polygolem porting when Dart product constraints differ.

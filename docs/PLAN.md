@@ -11,7 +11,7 @@ Companion to `PRD.md`. Translates the PRD into concrete modules, ordering, and a
 ### AD-1 — Pure-Dart core, no Flutter dependency in `polydart`
 The PRD lists `reown_appkit`, `shared_preferences`, and `hive` as dependencies. Pulling those into the SDK forces a Flutter-only consumer story and prevents reuse from CLI tools, server agents, or pure-Dart bots.
 
-**Decision:** `polydart` is a pure-Dart package. Wallet signing, wallet-connect transport, and persistent storage are abstracted as interfaces (`WalletSigner`, `KeyValueStore`, …). Flutter/mobile consumers provide Reown, secure-storage, and app-session adapters in app code. Adapter extraction is deferred until the live flow works. Until then no consumer is blocked: read-only, paper, and pre-built-order flows do not need a wallet.
+**Decision:** `polydart` is a pure-Dart package. EOA signing, ReownWallet / WalletConnect transport, and persistent storage are abstracted as interfaces (`WalletSigner`, `KeyValueStore`, …). Flutter/mobile consumers provide ReownWallet, secure-storage, and app-session adapters in app code. Adapter extraction is deferred until the live flow works. Until then no consumer is blocked: read-only, paper, and pre-built-order flows do not need a wallet.
 
 ### AD-2 — Mirror layout, not slavish copy
 `polygolem/internal/<module>/` maps to `lib/src/<module>/`. Module **names** match exactly so the parity check is mechanical. File-level layout can diverge — Dart idioms (sealed classes, extension methods, async streams) differ from Go.
@@ -136,7 +136,7 @@ Highlights:
 - `wallet/deposit_wallet.dart` — `derive`, `status`, `deploy` (delegates to `RelayerProxyClient`).
 - `orders/order_builder.dart` — fluent API matching PRD §4.6.
 - `clob/` write paths gated by `Mode.live`.
-- New `WalletSigner` interface; **no concrete Reown impl in `polydart`** — Flutter/mobile consumers wire Reown or equivalent wallet approval in app code.
+- New `WalletSigner` interface for normal-app EOA Signer with ReownWallet flows; **no concrete Reown impl in `polydart`** — Flutter/mobile consumers wire Reown or equivalent wallet approval in app code. `LocalEoaSigner` is an explicit advanced signer for CLI tests, alpha/test apps, headless users, server automation, and generated paper-mode wallets.
 
 Acceptance: shared parity fixtures for EIP-712 hash, POLY_1271 signature roundtrip, CREATE2 address all pass against polygolem-generated vectors.
 
@@ -158,7 +158,7 @@ Acceptance: full paper-mode loop runs offline; live-mode loop runs against stagi
 
 - `dataapi/` — positions, volume, leaderboards.
 - `bridge/` — supported assets, deposit addresses (mirrors `pkg/bridge`).
-- Consumer app-local adapters for Reown `WalletSigner`, secure credential storage, and any persistent `KeyValueStore` wiring needed by live flows.
+- Consumer app-local adapters for EOA Signer with ReownWallet, secure credential storage, and any persistent `KeyValueStore` wiring needed by live flows. Keep generated no-sign-in keys paper-only.
 - `example/flutter_demo/` — minimal Flutter app demonstrating read-only + paper + live (mock) flows.
 - Docs site (mkdocs or docusaurus, parity with polygolem `docs-site/`).
 - pub.dev publish dry-run, then real publish for `polydart` when the API is stable.
@@ -204,7 +204,8 @@ No secrets in repo. Builder creds checked by a CI grep step against the source t
 
 ## 10. Security Checklist (Phase 2+)
 
-- [ ] No private keys ever stored, logged, or transmitted by the SDK.
+- [ ] Normal app flows use EOA Signer with ReownWallet or equivalent wallet-provider approval.
+- [ ] Explicit private-key EOA signing (`LocalEoaSigner`) is opt-in, redacted, and reserved for CLI tests, alpha/test apps, headless users, server automation, or generated paper-mode wallets.
 - [ ] `WalletSigner` interface returns signatures only — never raw key material.
 - [ ] HTTPS-only by config default; certificate pinning hook for Flutter consumers.
 - [ ] Redaction in `Logger` for fields tagged `@redacted`.
@@ -217,7 +218,7 @@ No secrets in repo. Builder creds checked by a CI grep step against the source t
 
 | # | PRD Question | Proposed Answer | Confidence |
 |---|--------------|-----------------|------------|
-| 1 | Reown vs WalletConnect v3 | Reown (it _is_ WalletConnect v3 rebranded), while keeping the SDK boundary at `WalletSigner`. | High |
+| 1 | ReownWallet vs raw WalletConnect naming | Use the user-facing term EOA Signer with ReownWallet; Reown is WalletConnect v3-era branding, while the SDK boundary remains `WalletSigner`. | High |
 | 2 | Optional server proxy | Defer until public SDK hardening. Initial live-readiness work uses app-local relayer credentials injected into `polydart` or minted by `LiveCredentialService.ensure()` in cookie-capable runtimes. | High |
 | 3 | Paper-state storage | Inject `KeyValueStore`. Default in-memory; Flutter consumers wire `hive`; CLI consumers wire file-backed. | High |
 | 4 | Flutter min version | `polydart` is pure Dart (no Flutter pin). Consumer apps own their own Flutter/Reown version pins. | High |

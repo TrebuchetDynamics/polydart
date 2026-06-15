@@ -302,6 +302,22 @@ export 'src/marketresolver/market_resolver.dart'
         normalizeCryptoAsset,
         parseClobTokenIds;
 export 'src/modes/modes.dart';
+export 'src/mcp/mcp.dart'
+    show
+        McpContent,
+        McpHandlerConfig,
+        McpReadOnlyAdapters,
+        McpRequest,
+        McpResponse,
+        McpResponseError,
+        McpServer,
+        McpTool,
+        McpToolHandler,
+        McpToolResult,
+        defaultMcpHandlerTimeout,
+        mcpProtocolVersion,
+        newReadOnlyMcpHandlers,
+        safeMcpTools;
 export 'src/openapi/openapi.dart' show openApiSpec;
 export 'src/orders/amounts.dart'
     show
@@ -359,6 +375,23 @@ export 'src/orderfills/orderfills.dart'
         orderFillSourceOnchainOrderFilled,
         validateOrderFill,
         validateOrderFillsQuery;
+export 'src/opportunities/opportunities.dart'
+    show
+        Opportunity,
+        OpportunityConfig,
+        OpportunityEventFetcher,
+        OpportunityMarketLister,
+        OpportunityPricer,
+        OpportunityRequest,
+        OpportunityResponse,
+        OpportunityRunner,
+        opportunityTypeClosingSoon,
+        opportunityTypeCrypto5m,
+        opportunityTypeLowLiquidityHighVolume,
+        opportunityTypeNegativeRisk,
+        opportunityTypeNewMarkets,
+        opportunityTypeWideSpread,
+        supportedCrypto5mAssets;
 export 'src/orderresults/orderresults.dart'
     show
         ClobOrderResultsReader,
@@ -405,6 +438,16 @@ export 'src/preflight/preflight.dart'
         PreflightResult,
         Probe,
         runPreflight;
+export 'src/rfq/rfq.dart'
+    show
+        RfqClient,
+        RfqMetadata,
+        RfqQuote,
+        RfqRequest,
+        RfqResponse,
+        rfqSideBuy,
+        rfqSideSell,
+        validateRfqRequest;
 export 'src/risk/breaker.dart'
     show
         Breaker,
@@ -415,6 +458,21 @@ export 'src/risk/breaker.dart'
         tripReasonFromString;
 export 'src/rpc/rpc.dart'
     show erc20Allowance, hasCode, isApprovedForAll, polygonRpc;
+export 'src/signers/signers.dart'
+    show
+        HttpSigner,
+        HttpSignerConfig,
+        KmsSigner,
+        KmsSignerBackend,
+        KmsSignerConfig,
+        LocalEoaSigner,
+        PolydartSigner,
+        TurnkeySigner,
+        TurnkeySignerBackend,
+        TurnkeySignerConfig,
+        WalletMediatedSigner,
+        defaultRemoteSignerTimeout,
+        redactSignerSecret;
 export 'src/settlement/settlement.dart'
     show
         DataApiSettlementReader,
@@ -473,6 +531,7 @@ export 'src/stream/market_client.dart'
     show MarketClient, WebSocketChannelFactory;
 export 'src/stream/user_client.dart'
     show UserClient, UserWebSocketChannelFactory, defaultUserStreamUrl;
+export 'src/stream/stats.dart' show StreamStats, StreamStatsSnapshot;
 export 'src/stream/stream_config.dart' show StreamConfig, defaultStreamUrl;
 export 'src/stream/stream_messages.dart'
     show

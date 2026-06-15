@@ -250,6 +250,10 @@ void main() {
       expect(book.bids, hasLength(1));
       expect(book.bids.first.price, '0.5');
       expect(book.asks.first.size, '5');
+      expect(client.stats.stream, 'market');
+      expect(client.stats.state, 'connected');
+      expect(client.stats.messagesReceived, 1);
+      expect(client.stats.lastMessageAt, isNotNull);
     });
 
     test('inbound price_change event lands on priceChanges stream', () async {

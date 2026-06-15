@@ -3,15 +3,15 @@
 Dart-native Polymarket SDK — peer implementation to [polygolem](https://github.com/TrebuchetDynamics/polygolem).
 
 > **Status:** alpha. APIs unstable; live trading paths are explicit,
-> wallet-mediated, and gated.
+> signer-mediated, and gated.
 
 ## What it is
 
 A spec-for-spec mirror of polygolem in Dart. Polydart currently provides
 tested public market reads, Data API reads, wallet intelligence research
-helpers, paper-mode primitives, wallet-mediated signing helpers, guarded CLOB
-write helpers, stream clients, and relayer/readiness building blocks for Dart
-and Flutter applications.
+helpers, paper-mode primitives, EOA signer helpers, guarded CLOB write helpers,
+stream clients, and relayer/readiness building blocks for Dart and Flutter
+applications.
 
 ## Install
 
@@ -67,7 +67,7 @@ Polydart is a Dart package that can be consumed by Flutter apps without adding
 Flutter as a dependency to Polydart itself. See
 [`docs/FLUTTER-APP-READINESS.md`](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/FLUTTER-APP-READINESS.md)
 for install snippets, platform notes, lifecycle guidance, read-only usage, and
-the `WalletSigner` adapter pattern.
+the normal-app **EOA Signer with ReownWallet** adapter pattern.
 
 ## Modes
 
@@ -75,7 +75,7 @@ the `WalletSigner` adapter pattern.
 |---------|------|--------|-------------|
 | `Polydart.readOnly()` | `readOnly` | none | blocked |
 | `Polydart.paper(eoaAddress: ...)` | `paper` | EOA only | simulated |
-| lower-level live clients | `live` | app-owned `WalletSigner` | explicitly gated |
+| lower-level live clients | `live` | EOA Signer with ReownWallet (or explicit advanced signer) | explicitly gated |
 
 Risk gates (`requireLive`, `requirePaperOrLive`) refuse calls that don't
 match the active mode and require `liveTradingEnabled=true` for any real
@@ -83,8 +83,11 @@ order submission.
 
 The package root currently exposes `Polydart.readOnly()` and
 `Polydart.paper(...)`. Live paths are available through lower-level clients and
-must be wired by the application with wallet-mediated user approval, explicit
-live configuration, confirmation, and preflight checks.
+must be wired by the application with an EOA Signer with ReownWallet or an
+equivalent wallet-provider signer, explicit live configuration, confirmation,
+and preflight checks. `LocalEoaSigner` is available for special CLI/test,
+headless, alpha-app, and server automation cases; generated no-sign-in keys
+belong to paper-mode trials, not live custody.
 
 ## Documents
 
