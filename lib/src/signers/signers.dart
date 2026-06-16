@@ -266,6 +266,9 @@ final class HttpSigner implements PolydartSigner {
     );
   }
 
+  /// Closes the underlying HTTP client used by this signer.
+  void close() => _client.close();
+
   Future<Map<String, Object?>> _post(Map<String, Object?> payload) async {
     final uri = Uri.parse(_config.url);
     final future = _client.post(

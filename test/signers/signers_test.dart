@@ -76,6 +76,52 @@ void main() {
     },
   );
 
+  test('HttpSigner redacts bearer token from HTTP errors', () async {
+    const token = 'secret-token';
+    final signer = HttpSigner(
+      HttpSignerConfig(
+        url: 'https://signer.example/sign',
+        bearerToken: token,
+        address: '0xabc',
+        chainId: 137,
+        client: MockClient(
+          (_) async => http.Response('token should stay remote', 503),
+        ),
+      ),
+    );
+
+    await expectLater(
+      signer.signHash(Uint8List(32)),
+      throwsA(
+        isA<StateError>()
+            .having((e) => e.message, 'message', contains('HTTP 503'))
+            .having((e) => e.message, 'message', isNot(contains(token)))
+            .having(
+              (e) => e.message,
+              'message',
+              isNot(contains('token should stay remote')),
+            ),
+      ),
+    );
+  });
+
+  test('HttpSigner closes its HTTP client', () {
+    final client = _CloseTrackingClient();
+    final signer = HttpSigner(
+      HttpSignerConfig(
+        url: 'https://signer.example/sign',
+        bearerToken: 'token',
+        address: '0xabc',
+        chainId: 137,
+        client: client,
+      ),
+    );
+
+    signer.close();
+
+    expect(client.closed, isTrue);
+  });
+
   test('HttpSigner decodes typed-data result and rejects bad length', () async {
     final ok = HttpSigner(
       HttpSignerConfig(
@@ -176,6 +222,21 @@ void main() {
 
 String _hex(int length, int value) =>
     '0x${List<String>.filled(length, value.toRadixString(16).padLeft(2, '0')).join()}';
+
+final class _CloseTrackingClient extends http.BaseClient {
+  bool closed = false;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    return http.StreamedResponse(const Stream<List<int>>.empty(), 200);
+  }
+
+  @override
+  void close() {
+    closed = true;
+    super.close();
+  }
+}
 
 final class _FakeWalletSigner implements WalletSigner {
   Map<String, dynamic>? lastTypedData;
