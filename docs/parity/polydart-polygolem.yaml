@@ -1,0 +1,821 @@
+# Source data for docs/POLYDART-POLYGOLEM-PARITY.md
+# Generated markdown via: dart run tool/generate_parity_docs.dart
+tracking_commit: '12f5cecd'
+last_sync_commit: 'fb092d8b'
+generated: '2026-06-13'
+rows:
+  - id: 'clob.order_book'
+    domain: 'clob'
+    feature: 'Order book reads'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/clob.Client.OrderBook'
+        - 'pkg/orderbook.ClobOrderBookReader'
+      internal:
+        - 'internal/clob.Client.OrderBook'
+      tests:
+        - 'pkg/clob/client_test.go'
+        - 'internal/polytypes/clob_orderbook_test.go'
+    polydart:
+      apis:
+        - 'ClobClient.orderBook'
+        - 'ClobOrderBookReader.orderBook'
+      tests:
+        - 'test/clob/clob_client_test.dart'
+        - 'test/types/clob_test.dart'
+    evidence:
+      - 'numeric/string price-size tolerance'
+      - 'snake/camel market metadata aliases'
+    notes: 'Read-only CLOB order book surfaces mirror provider drift handling.'
+  - id: 'clob.market_metadata'
+    domain: 'clob'
+    feature: 'CLOB market and market-by-token metadata'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/clob.Client.Market'
+        - 'pkg/clob.Client.MarketByToken'
+      internal:
+        - 'internal/clob.Client.Market'
+        - 'internal/clob.Client.MarketByToken'
+      tests:
+        - 'pkg/clob/client_test.go'
+        - 'pkg/types/clob_test.go'
+    polydart:
+      apis:
+        - 'ClobClient.market'
+        - 'ClobClient.marketByToken'
+      tests:
+        - 'test/clob/clob_client_test.dart'
+        - 'test/types/clob_test.dart'
+    evidence:
+      - 'condition/question aliases'
+      - 'negative-risk metadata'
+      - 'fee details'
+      - 'notifications'
+    notes: 'Includes abbreviated provider shape and fee-details casing drift.'
+  - id: 'clob.price_tick_fee'
+    domain: 'clob'
+    feature: 'Price, midpoint, spread, tick size, fee rate'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/clob.Client.Price'
+        - 'pkg/clob.Client.Midpoint'
+        - 'pkg/clob.Client.Spread'
+        - 'pkg/clob.Client.TickSize'
+        - 'pkg/clob.Client.FeeRateBps'
+      internal:
+        - 'internal/clob.Client.Price'
+        - 'internal/clob.Client.FeeRateBps'
+      tests:
+        - 'pkg/clob/client_test.go'
+        - 'internal/polytypes/clob_ticksize_test.go'
+    polydart:
+      apis:
+        - 'ClobClient.price'
+        - 'ClobClient.midpoint'
+        - 'ClobClient.spread'
+        - 'ClobClient.tickSize'
+        - 'ClobClient.feeRateBps'
+      tests:
+        - 'test/clob/clob_client_test.dart'
+        - 'test/clob/clob_analytics_test.dart'
+    evidence:
+      - 'numeric-string tolerance'
+      - 'tickSize/minimumTickSize aliases'
+      - 'feeRateBps/baseFee aliases'
+    notes: 'Read-only pricing metadata mirrors Go/Dart request and response shapes.'
+  - id: 'clob.price_history'
+    domain: 'clob'
+    feature: 'Price history'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/clob.Client.PricesHistory'
+      internal:
+        - 'internal/clob.Client.PricesHistory'
+      tests:
+        - 'pkg/clob/client_test.go'
+        - 'internal/polytypes/clob_pricepoint_test.go'
+    polydart:
+      apis:
+        - 'ClobClient.pricesHistory'
+      tests:
+        - 'test/clob/clob_client_test.dart'
+        - 'test/types/clob_test.dart'
+    evidence:
+      - 't/p and timestamp/price aliases'
+      - 'numeric-string volume'
+    notes: 'No live API dependency; fixture-only DTO parity.'
+  - id: 'clob.public_trades'
+    domain: 'clob'
+    feature: 'Public CLOB trades'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/clob.Client.PublicTrades'
+      internal:
+        - 'internal/clob.Client.PublicTrades'
+      tests:
+        - 'pkg/clob/client_test.go'
+        - 'internal/clob/client_test.go'
+    polydart:
+      apis:
+        - 'ClobClient.publicTrades'
+      tests:
+        - 'test/clob/clob_client_test.dart'
+    evidence:
+      - 'market filter routing'
+      - 'authenticated trade DTO alias parity reused'
+    notes: 'Read-only public trades by market/token.'
+  - id: 'clob.builder_trades'
+    domain: 'clob'
+    feature: 'Builder-attributed CLOB trades'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/clob.Client.BuilderTrades'
+        - 'pkg/universal.Client.BuilderTrades'
+      internal:
+        - 'internal/clob.Client.BuilderTrades'
+      tests:
+        - 'internal/clob/client_test.go'
+        - 'pkg/universal/client_test.go'
+    polydart:
+      apis:
+        - 'ClobClient.builderTrades'
+        - 'UniversalClient.builderTrades'
+      tests:
+        - 'test/clob/clob_client_test.dart'
+        - 'test/universal/universal_client_test.dart'
+    evidence:
+      - 'tradeId/orderId/assetId aliases'
+      - 'numeric-string size/price/timestamp'
+    notes: 'Read-only builder analytics surface.'
+  - id: 'clob.rewards'
+    domain: 'clob'
+    feature: 'Rewards, earnings, percentages, rebates'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/universal.Client.RewardsConfig'
+        - 'pkg/universal.Client.RawRewards'
+        - 'pkg/universal.Client.UserEarnings'
+        - 'pkg/universal.Client.RewardPercentages'
+        - 'pkg/universal.Client.RebatedFees'
+      internal:
+        - 'internal/clob.Client.RewardsConfig'
+        - 'internal/clob.Client.RawRewards'
+        - 'internal/clob.Client.UserEarnings'
+        - 'internal/clob.Client.RewardPercentages'
+        - 'internal/clob.Client.RebatedFees'
+      tests:
+        - 'internal/polytypes/rewards_test.go'
+        - 'pkg/universal/client_test.go'
+    polydart:
+      apis:
+        - 'ClobClient.rewardsConfig'
+        - 'ClobClient.rawRewards'
+        - 'ClobClient.userEarnings'
+        - 'ClobClient.rewardPercentages'
+        - 'ClobClient.rebatedFees'
+      tests:
+        - 'test/clob/clob_analytics_test.dart'
+    evidence:
+      - 'camel aliases'
+      - 'string numerics'
+      - 'string bool active'
+    notes: 'Analytics-only; no custody/trading mutation.'
+  - id: 'clob.scoring'
+    domain: 'clob'
+    feature: 'Single and batch order scoring'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/clob.Client.OrderScoring'
+        - 'pkg/clob.Client.OrdersScoring'
+      internal:
+        - 'internal/clob.Client.OrderScoring'
+        - 'internal/clob.Client.OrdersScoring'
+      tests:
+        - 'internal/clob/client_test.go'
+    polydart:
+      apis:
+        - 'ClobClient.orderScoring'
+        - 'ClobClient.ordersScoring'
+      tests:
+        - 'test/clob/clob_analytics_test.dart'
+    evidence:
+      - 'bool/string/numeric bool drift'
+    notes: 'Read-only maker reward scoring helpers.'
+  - id: 'clob.balance_allowance'
+    domain: 'clob'
+    feature: 'Balance and allowance reads'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/clob.Client.BalanceAllowance'
+      internal:
+        - 'internal/clob.Client.BalanceAllowance'
+      tests:
+        - 'pkg/clob/client_test.go'
+        - 'internal/clob/client_test.go'
+    polydart:
+      apis:
+        - 'ClobClient.balanceAllowance'
+      tests:
+        - 'test/clob/clob_auth_reads_test.dart'
+    evidence:
+      - 'asset_type normalization'
+      - 'signature_type=3'
+      - 'numeric-string response values'
+    notes: 'Read-only wallet readiness input.'
+  - id: 'clob.auth_reads'
+    domain: 'clob'
+    feature: 'Authenticated order and trade reads'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/clob.APIKeyClient.GetOpenOrders'
+        - 'pkg/clob.APIKeyClient.GetTrades'
+      internal:
+        - 'internal/clob.APIKeyClient.GetOpenOrders'
+        - 'internal/clob.APIKeyClient.GetTrades'
+      tests:
+        - 'pkg/clob/client_test.go'
+        - 'internal/clob/client_test.go'
+    polydart:
+      apis:
+        - 'ClobAuthClient.openOrders'
+        - 'ClobAuthClient.trades'
+      tests:
+        - 'test/clob/clob_auth_reads_test.dart'
+    evidence:
+      - 'numeric-string amount/timestamp fields'
+      - 'snake/camel aliases'
+      - 'associate_trades tolerance'
+    notes: 'Requires local/mock auth fixtures only; no live credentials.'
+  - id: 'clob.write_responses'
+    domain: 'clob'
+    feature: 'Order create/batch/cancel response DTOs'
+    status: 'implemented'
+    gated: true
+    polygolem:
+      apis:
+        - 'pkg/clob.APIKeyClient.CreateOrder'
+        - 'pkg/clob.APIKeyClient.CreateOrders'
+        - 'pkg/clob.APIKeyClient.CancelOrders'
+      internal:
+        - 'internal/clob.Client.CreateLimitOrder'
+        - 'internal/clob.Client.CancelOrders'
+      tests:
+        - 'pkg/clob/client_test.go'
+        - 'internal/clob/orders_test.go'
+    polydart:
+      apis:
+        - 'ClobWrites.createOrder'
+        - 'ClobWrites.createOrders'
+        - 'ClobWrites.cancelOrders'
+      tests:
+        - 'test/clob/clob_writes_test.dart'
+        - 'test/orders/order_placement_test.dart'
+    evidence:
+      - 'orderID/order_id'
+      - 'transactionHash variants'
+      - 'tradeIDs variants'
+      - 'numeric-string canceled lists'
+    notes: 'Wire-shape parity is local/mock-only; live submission remains safety-gated.'
+  - id: 'orders.amounts_signing'
+    domain: 'orders'
+    feature: 'Order amount math, tick rounding, EIP-712 signing'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/experimental/orders'
+        - 'internal/clob build/sign helpers'
+      internal:
+        - 'internal/clob.buildOrderTypedData'
+        - 'internal/orders'
+      tests:
+        - 'internal/clob/orders_golden_test.go'
+        - 'internal/orders/orders_test.go'
+    polydart:
+      apis:
+        - 'OrderIntent'
+        - 'OrderBuilder'
+        - 'signOrderV2'
+        - 'computeAmounts'
+      tests:
+        - 'test/orders/order_signing_test.dart'
+        - 'test/orders/amounts_test.dart'
+        - 'test/orders/order_placement_test.dart'
+    evidence:
+      - 'buy/sell market semantics'
+      - 'tick-floor rounding'
+      - 'regular and neg-risk vectors'
+    notes: 'Deterministic math and signing vectors only.'
+  - id: 'auth.erc7739_poly1271'
+    domain: 'auth'
+    feature: 'ERC-7739 / POLY_1271 deposit-wallet signatures'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'internal/auth'
+        - 'internal/clob deposit wallet signing'
+      internal:
+        - 'internal/auth/signer.go'
+        - 'internal/clob/orders.go'
+      tests:
+        - 'cmd/parity_erc7739'
+        - 'internal/clob/orders_golden_test.go'
+    polydart:
+      apis:
+        - 'erc7739.dart'
+        - 'deposit_wallet_order_signing.dart'
+      tests:
+        - 'test/auth/erc7739_test.dart'
+        - 'test/orders/order_placement_test.dart'
+        - 'test/conformance/golden_conformance_test.dart'
+    evidence:
+      - 'byte-level parity vectors'
+      - 'signatureType 3'
+      - 'deposit wallet maker/signer fields'
+      - 'mirrored conformance fixtures'
+    notes: 'Dart supports both wallet-provider EOA signers and explicit opt-in private-key EOA signers. Polygolem `12f5cecd` `fixtures/conformance` golden vectors are mirrored under `test/fixtures/conformance`; Dart verifies builder/L2 headers, local-private-key L1 EOA signatures, Order V2 struct hashes, and CTF calldata byte-for-byte.'
+  - id: 'wallet.create2_readiness'
+    domain: 'wallet'
+    feature: 'CREATE2 wallet derivation and deposit-wallet readiness'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/wallet'
+        - 'internal/workflows/depositwalletreads'
+      internal:
+        - 'internal/wallet'
+        - 'internal/preflight'
+      tests:
+        - 'pkg/wallet/derive_test.go'
+        - 'internal/workflows/depositwalletreads'
+    polydart:
+      apis:
+        - 'DepositWalletReadinessService'
+        - 'deriveDepositWallet'
+      tests:
+        - 'test/wallet/deposit_wallet_readiness_test.dart'
+        - 'test/auth/create2_test.dart'
+    evidence:
+      - 'Proxy/Safe/Deposit CREATE2 vectors'
+      - 'code/balance/allowance readiness checks'
+    notes: 'Readiness checks are read-only; deploy/fund actions remain app-owned/gated.'
+  - id: 'relayer.v2_auth_submit_poll'
+    domain: 'relayer'
+    feature: 'Relayer V2 auth, submit, transaction polling'
+    status: 'implemented'
+    gated: true
+    polygolem:
+      apis:
+        - 'pkg/relayer.Client'
+        - 'internal/relayer.Client'
+      internal:
+        - 'internal/relayer'
+      tests:
+        - 'pkg/relayer/relayer_test.go'
+        - 'internal/relayer/client_test.go'
+        - 'internal/relayer/auth_mint_test.go'
+    polydart:
+      apis:
+        - 'RelayerClient'
+        - 'mintV2APIKey'
+        - 'submitWalletBatch'
+      tests:
+        - 'test/relayer/relayer_client_test.dart'
+        - 'test/relayer/v2_auth_test.dart'
+    evidence:
+      - 'transactionID/transactionId/snake aliases'
+      - 'numeric nonce/value'
+      - 'typed relayer errors'
+      - 'allowlist classifier'
+    notes: 'Live relayer submission remains safety-gated; request/DTO parity is local-test covered.'
+  - id: 'relayer.approvals'
+    domain: 'relayer'
+    feature: 'Approval-call planning'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/relayer.BuildAdapterApprovalCalls'
+        - 'pkg/enabletrading'
+      internal:
+        - 'internal/relayer/approvals.go'
+        - 'internal/enabletrading'
+      tests:
+        - 'pkg/relayer/relayer_test.go'
+        - 'internal/relayer/client_test.go'
+    polydart:
+      apis:
+        - 'buildAdapterApprovalCalls'
+        - 'EnableTrading'
+      tests:
+        - 'test/relayer/approvals_test.dart'
+        - 'test/enabletrading/enable_trading_test.dart'
+    evidence:
+      - 'spender ordering'
+      - 'pUSD/CTF/neg-risk approval labels'
+      - 'wallet-mediated builders'
+    notes: 'Builds calls only; no approval transaction submission.'
+  - id: 'bridge.reads'
+    domain: 'bridge'
+    feature: 'Bridge quote, status, supported assets'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/bridge.Client'
+      internal:
+        - 'internal/cli bridge commands'
+      tests:
+        - 'pkg/bridge/bridge_test.go'
+        - 'internal/cli/cmd_bridge_test.go'
+    polydart:
+      apis:
+        - 'BridgeClient'
+      tests:
+        - 'test/bridge/bridge_client_test.dart'
+    evidence:
+      - 'quote/status/assets endpoints'
+      - 'numeric-string amount/fee tolerance'
+      - 'CLI parity in Go'
+    notes: 'Bridge deposit creation remains explicit user action; reads are safe.'
+  - id: 'dataapi.v2_reads'
+    domain: 'dataapi'
+    feature: 'Data API V2 reads and aggregate DTOs'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/data.Client'
+      internal:
+        - 'internal/dataapi.Client'
+      tests:
+        - 'pkg/data/client_test.go'
+        - 'internal/dataapi/client_test.go'
+    polydart:
+      apis:
+        - 'DataApiClient'
+      tests:
+        - 'test/dataapi/dataapi_client_test.dart'
+        - 'test/dataapi/dataapi_types_test.dart'
+    evidence:
+      - 'positions/trades/activity/holders'
+      - 'aggregate object/list wrappers'
+      - 'numeric-string fields'
+      - 'snake/camel aliases'
+    notes: 'Read-only analytics; monitor upstream for drift.'
+  - id: 'intel.wallet_intelligence_v1'
+    domain: 'intel'
+    feature: 'Wallet Intelligence V1 dossiers, scoring, alerts, leaderboard, market flow'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/intel.ScoreWallet'
+        - 'pkg/intel.ShrinkageWinRate'
+        - 'pkg/intel.ROI'
+      internal:
+        - 'internal/intel.Service'
+      tests:
+        - 'pkg/intel/score_test.go'
+        - 'internal/intel/service_test.go'
+        - 'tests/e2e_wallet_intelligence_test.go'
+    polydart:
+      apis:
+        - 'WalletIntelService'
+        - 'DataApiWalletIntelReader'
+        - 'scoreWallet'
+        - 'shrinkageWinRate'
+        - 'walletRoi'
+        - 'Polydart.intel'
+        - 'UniversalClient.walletDossier'
+      tests:
+        - 'test/intel/intel_test.dart'
+        - 'test/polydart_test.dart'
+        - 'test/e2e/wallet_intel_e2e_test.dart'
+    evidence:
+      - 'closed-position PnL authority'
+      - 'default shrinkage priors'
+      - 'partial/conflicted statuses'
+      - 'threshold alerts'
+      - 'market-flow provenance'
+      - 'local/mock E2E coverage'
+    notes: 'Read-only research surface; language remains candidate-only and not a finding of misconduct.'
+  - id: 'gamma.public_reads'
+    domain: 'gamma'
+    feature: 'Gamma markets, events, tags, profiles, teams, comments'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/gamma.Client'
+      internal:
+        - 'internal/gamma'
+      tests:
+        - 'pkg/gamma'
+        - 'internal/gamma'
+    polydart:
+      apis:
+        - 'GammaClient'
+      tests:
+        - 'test/gamma/gamma_client_test.dart'
+        - 'test/gamma/gamma_client_extra_test.dart'
+    evidence:
+      - 'routing'
+      - 'params'
+      - 'profile creation helper'
+      - 'DTO decode coverage'
+    notes: 'Public read API parity; profile creation helper is request-shape/local-test only.'
+  - id: 'marketresolver.discovery'
+    domain: 'marketresolver'
+    feature: 'Market resolver and discovery enrichment'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/marketresolver'
+        - 'internal/marketdiscovery'
+      internal:
+        - 'internal/workflows/discoverreads'
+      tests:
+        - 'pkg/marketresolver/resolver_test.go'
+        - 'internal/marketdiscovery'
+    polydart:
+      apis:
+        - 'MarketResolver'
+        - 'MarketDiscovery'
+      tests:
+        - 'test/marketresolver/market_resolver_test.dart'
+        - 'test/marketdiscovery/market_discovery_test.dart'
+    evidence:
+      - 'slug resolution'
+      - 'crypto 5m/15m inference'
+      - 'CLOB enrichment'
+      - 'failure tolerance'
+    notes: 'Read-only aggregation over Gamma/CLOB.'
+  - id: 'streams.market_user'
+    domain: 'stream'
+    feature: 'Market and authenticated user WebSocket clients'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/stream.Client'
+        - 'pkg/stream.UserClient'
+        - 'internal/stream.StreamStats'
+      internal:
+        - 'internal/stream'
+        - 'internal/stream/stats.go'
+      tests:
+        - 'pkg/stream/client_test.go'
+        - 'pkg/stream/user_test.go'
+        - 'internal/stream/stats_test.go'
+    polydart:
+      apis:
+        - 'MarketClient'
+        - 'UserClient'
+        - 'StreamStats'
+        - 'StreamStatsSnapshot'
+      tests:
+        - 'test/stream/market_client_test.dart'
+        - 'test/stream/user_client_test.dart'
+        - 'test/stream/stream_stats_test.dart'
+    evidence:
+      - 'subscribe envelopes'
+      - 'typed market/user messages'
+      - 'local fake socket tests'
+      - 'connection/throughput stats snapshots'
+    notes: 'Market/user clients expose JSON-friendly `stats` snapshots and `StreamStats` mirrors Polygolem subscription, lifecycle, message, duplicate, invalid, and reconnect counters.'
+  - id: 'universal.facade'
+    domain: 'universal'
+    feature: 'Universal facade over read surfaces'
+    status: 'intentional'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/universal.Client'
+      tests:
+        - 'pkg/universal/client_test.go'
+    polydart:
+      apis:
+        - 'UniversalClient'
+      tests:
+        - 'test/universal/universal_client_test.dart'
+    evidence:
+      - 'read-only delegation parity'
+      - 'health checks'
+      - 'builder-trades'
+    notes: 'Dart may expose explicit opt-in private-key authenticated helpers, but the default universal facade should remain read-oriented; wallet-provider, private-key, and authenticated write surfaces can live in dedicated modules instead of the universal read facade.'
+  - id: 'safety.live_mutations'
+    domain: 'safety'
+    feature: 'Live mutation/deploy/trade/approval submission'
+    status: 'safety_gated'
+    gated: true
+    polygolem:
+      apis:
+        - 'CLI workflows'
+        - 'pkg/clob write surfaces'
+        - 'pkg/relayer submit surfaces'
+      internal:
+        - 'internal/workflows'
+      tests:
+        - 'local/mock tests only'
+    polydart:
+      apis:
+        - 'ClobWrites'
+        - 'RelayerClient'
+        - 'DepositWalletReadinessService'
+      tests:
+        - 'local/mock tests only'
+    evidence:
+      - 'request-shape parity'
+      - 'typed error DTOs'
+      - 'readiness checks'
+    notes: 'No live trading, custody mutation, approval, deployment, or publishing should occur without explicit operator confirmation.'
+  - id: 'clob.market_outcome'
+    domain: 'clob'
+    feature: 'CLOB market outcome resolution and smart-wallet trades'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/clob.Client.MarketOutcome'
+        - 'pkg/data.Client.SmartWalletTrades'
+      internal:
+        - 'internal/clob.Client.MarketOutcome'
+      tests:
+        - 'pkg/clob/client_test.go'
+        - 'internal/clob/client_test.go'
+    polydart:
+      apis:
+        - 'ClobClient.marketOutcome'
+        - 'DataApiClient.smartWalletTrades'
+      tests:
+        - 'test/clob/reads/clob_market_outcome_test.dart'
+        - 'test/dataapi/dataapi_smart_wallet_test.dart'
+    evidence:
+      - 'condition-ID resolution'
+      - 'Gamma fallback (loopback server)'
+      - 'single-winner rule'
+      - 'watched-wallet annotation'
+      - 'dedupe by trade id'
+    notes: 'Upstream `3dfca41c`. Read-only. `marketOutcome` lives on `ClobClient`; `smartWalletTrades` lives on `DataApiClient` (matching the Go `pkg/data` home).'
+  - id: 'agent.mcp'
+    domain: 'agent'
+    feature: 'Read-only Model Context Protocol server'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/mcp.Server'
+        - 'pkg/mcp.NewServer'
+        - 'pkg/mcp.NewSDKReadOnlyHandlers'
+        - 'pkg/mcp.NewMarketDataSnapshotHandler'
+      tests:
+        - 'pkg/mcp/mcp_test.go'
+        - 'pkg/mcp/handlers_test.go'
+        - 'pkg/mcp/sdk_handlers_test.go'
+    polydart:
+      apis:
+        - 'McpServer'
+        - 'safeMcpTools'
+        - 'newReadOnlyMcpHandlers'
+        - 'newSdkReadOnlyMcpHandlers'
+        - 'newMarketDataSnapshotMcpHandler'
+      tests:
+        - 'test/mcp/mcp_test.dart'
+        - 'test/mcp/mcp_sdk_handlers_test.dart'
+    evidence:
+      - 'no-credential `tools/list`/`tools/call`'
+      - 'read-only manifest'
+      - 'unsafe tool rejection'
+      - 'unconfigured handler safety'
+      - 'SDK-client wiring (nil-skip + base-wins merge)'
+      - 'marketdata tracker snapshot'
+    notes: 'Upstream `766b58be`. Excludes live trading/signing/approvals/withdrawals; Dart tools use the `polydart.*` namespace while preserving the same read-only manifest shape. SDK handlers wire concrete read-only Gamma/Data/CLOB clients and an in-memory market-data tracker.'
+  - id: 'agent.openapi'
+    domain: 'agent'
+    feature: 'Read-only OpenAPI spec emitter'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/openapi.Spec'
+      tests:
+        - 'pkg/openapi/openapi_test.go'
+    polydart:
+      apis:
+        - 'openApiSpec'
+      tests:
+        - 'test/openapi/openapi_test.dart'
+    evidence:
+      - 'OpenAPI 3.1 doc'
+      - 'six read-only paths'
+      - 'sorted query params'
+      - 'path-vs-query distinction'
+      - 'no mutating wording'
+    notes: 'Upstream `766b58be`. Pure static map builder; no schema-framework dependency, matching Go.'
+  - id: 'rfq.read_validation'
+    domain: 'rfq'
+    feature: 'RFQ request/quote DTOs and validation'
+    status: 'implemented'
+    gated: true
+    polygolem:
+      apis:
+        - 'pkg/rfq.Client'
+        - 'pkg/rfq.ValidateRequest'
+      tests:
+        - 'pkg/rfq/rfq_test.go'
+    polydart:
+      apis:
+        - 'RfqRequest'
+        - 'RfqQuote'
+        - 'RfqResponse'
+        - 'validateRfqRequest'
+        - 'RfqClient.submit'
+      tests:
+        - 'test/rfq/rfq_test.dart'
+    evidence:
+      - 'request/quote DTOs'
+      - 'positive-decimal validation'
+      - 'strictly-future expiration'
+      - 'submit refuses via SafetyException'
+    notes: 'Upstream `766b58be`. DTOs/validation are local-test covered; `RfqClient.submit` validates then throws `SafetyException` (`liveDisabled`) — no live submission path, matching Go''s `ErrSubmitUnsupported` and ADR 0001.'
+  - id: 'signers.remote'
+    domain: 'signers'
+    feature: 'HTTP/KMS/Turnkey remote-signer abstraction'
+    status: 'implemented'
+    gated: true
+    polygolem:
+      apis:
+        - 'pkg/signers'
+        - 'pkg/signers/http'
+        - 'pkg/signers/kms'
+        - 'pkg/signers/turnkey'
+      tests:
+        - 'pkg/signers/signers_test.go'
+        - 'pkg/signers/http/http_test.go'
+        - 'pkg/signers/kms/kms_test.go'
+        - 'pkg/signers/turnkey/turnkey_test.go'
+    polydart:
+      apis:
+        - 'PolydartSigner'
+        - 'WalletMediatedSigner'
+        - 'LocalEoaSigner'
+        - 'HttpSigner'
+        - 'KmsSigner'
+        - 'TurnkeySigner'
+      tests:
+        - 'test/signers/signers_test.dart'
+    evidence:
+      - 'wallet-provider seam'
+      - 'local private-key EOA signer'
+      - 'HTTP signer payloads'
+      - 'KMS/Turnkey backend boundaries'
+      - 'timeout/validation/redaction'
+    notes: 'Upstream `766b58be`. Ported signer seams cover MetaMask/Reown-style wallet providers, explicit local/private-key EOA signing for tests/headless users, and remote/backend adapters.'
+  - id: 'workflows.opportunities'
+    domain: 'workflows'
+    feature: 'Read-only opportunity-scan runner'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'internal/workflows/opportunities.Runner'
+      tests:
+        - 'internal/workflows/opportunities/opportunities_test.go'
+    polydart:
+      apis:
+        - 'OpportunityRunner'
+        - 'OpportunityRequest'
+        - 'OpportunityResponse'
+        - 'Opportunity'
+      tests:
+        - 'test/opportunities/opportunities_test.dart'
+    evidence:
+      - 'market-lister scan'
+      - 'typed opportunities'
+      - 'crypto-5m event/pricer enrichment'
+    notes: 'Upstream `12f5cecd`. Ported as a public read-only Dart `opportunities` surface with wide-spread, low-liquidity/high-volume, new-market, closing-soon, negative-risk, and crypto-5m scans.'

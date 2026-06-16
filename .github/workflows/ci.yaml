@@ -32,5 +32,8 @@ jobs:
       - name: Static analysis
         run: dart analyze --fatal-warnings
 
+      - name: Parity matrix freshness
+        run: dart run tool/generate_parity_docs.dart --check
+
       - name: Unit tests (network-tagged tests skipped)
         run: dart test --reporter=expanded
