@@ -96,15 +96,7 @@ belong to paper-mode trials, not live custody.
 - [Deposit-wallet readiness checklist](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md)
 - [Flutter integration notes](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/FLUTTER-APP-READINESS.md)
 - [Polygolem parity coverage](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/POLYDART-POLYGOLEM-COVERAGE.md)
-- `src/content/docs/` — Astro Starlight documentation source
 - `CHANGELOG.md` — release log
-
-Build the Starlight docs with:
-
-```sh
-npm ci
-npm run build
-```
 
 ## Mirror commitment
 

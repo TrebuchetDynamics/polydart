@@ -4,15 +4,8 @@
 /polygolem/opensource-projects/
 /skills/
 
-# Astro Starlight documentation site source/build output.
-/src/
+# Repository planning/reference docs, not part of the hosted SDK package.
 /docs/
-/astro.config.mjs
-/package.json
-/package-lock.json
-/node_modules/
-/.astro/
-/dist/
 
 # Local tooling that is not part of the hosted SDK package.
 /.github/

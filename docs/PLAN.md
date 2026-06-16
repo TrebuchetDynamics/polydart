@@ -160,7 +160,6 @@ Acceptance: full paper-mode loop runs offline; live-mode loop runs against stagi
 - `bridge/` — supported assets, deposit addresses (mirrors `pkg/bridge`).
 - Consumer app-local adapters for EOA Signer with ReownWallet, secure credential storage, and any persistent `KeyValueStore` wiring needed by live flows. Keep generated no-sign-in keys paper-only.
 - `example/flutter_demo/` — minimal Flutter app demonstrating read-only + paper + live (mock) flows.
-- Docs site (mkdocs or docusaurus, parity with polygolem `docs-site/`).
 - pub.dev publish dry-run, then real publish for `polydart` when the API is stable.
 
 ---
