@@ -318,6 +318,8 @@ export 'src/mcp/mcp.dart'
         mcpProtocolVersion,
         newReadOnlyMcpHandlers,
         safeMcpTools;
+export 'src/mcp/mcp_sdk_handlers.dart'
+    show newMarketDataSnapshotMcpHandler, newSdkReadOnlyMcpHandlers;
 export 'src/openapi/openapi.dart' show openApiSpec;
 export 'src/orders/amounts.dart'
     show

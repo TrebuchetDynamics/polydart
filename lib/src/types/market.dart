@@ -23,6 +23,11 @@ final class Pagination {
 
   final bool hasMore;
   final int totalResults;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'hasMore': hasMore,
+    'totalResults': totalResults,
+  };
 }
 
 @immutable
@@ -253,6 +258,13 @@ final class SearchTag {
   final String label;
   final String slug;
   final int eventCount;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'id': id,
+    'label': label,
+    'slug': slug,
+    'event_count': eventCount,
+  };
 }
 
 @immutable
@@ -332,6 +344,33 @@ final class Profile {
   final bool isCloseOnly;
   final bool isCertReq;
   final DateTime? certReqDate;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'id': id,
+    'name': name,
+    'proxyWallet': proxyWallet,
+    'profileImage': profileImage,
+    'user': user,
+    'referral': referral,
+    'createdBy': createdBy,
+    'updatedBy': updatedBy,
+    'createdAt': encodeNormalizedDateTime(createdAt),
+    'updatedAt': encodeNormalizedDateTime(updatedAt),
+    'utmSource': utmSource,
+    'utmMedium': utmMedium,
+    'utmCampaign': utmCampaign,
+    'utmContent': utmContent,
+    'utmTerm': utmTerm,
+    'walletActivated': walletActivated,
+    'pseudonym': pseudonym,
+    'displayUsernamePublic': displayUsernamePublic,
+    'bio': bio,
+    if (profileImageOptimized != null)
+      'profileImageOptimized': profileImageOptimized!.toJson(),
+    'isCloseOnly': isCloseOnly,
+    'isCertReq': isCertReq,
+    'certReqDate': encodeNormalizedDateTime(certReqDate),
+  };
 }
 
 @immutable
@@ -374,6 +413,21 @@ final class OptimizedImage {
   final int relId;
   final String field;
   final String relName;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'id': id,
+    'imageUrlSource': imageUrlSource,
+    'imageUrlOptimized': imageUrlOptimized,
+    'imageSizeKbSource': imageSizeKbSource,
+    'imageSizeKbOptimized': imageSizeKbOptimized,
+    'imageOptimizedComplete': imageOptimizedComplete,
+    'imageOptimizedLastUpdated': encodeNormalizedDateTime(
+      imageOptimizedLastUpdated,
+    ),
+    'relID': relId,
+    'field': field,
+    'relname': relName,
+  };
 }
 
 /// A market (Gamma view). Stores the full raw payload so callers can read
@@ -1141,6 +1195,11 @@ final class Event {
   final List<String> subEvents;
   final List<Tag> tags;
   final Map<String, dynamic> raw;
+
+  /// Re-emits the original decoded payload. The Event DTO retains every Gamma
+  /// field in [raw], so this is a faithful round-trip and lets search results
+  /// marshal cleanly for read-only MCP/agent output.
+  Map<String, dynamic> toJson() => raw;
 }
 
 @immutable
@@ -1167,6 +1226,13 @@ final class SearchResponse {
   final List<SearchTag> tags;
   final List<Profile> profiles;
   final Pagination pagination;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'events': events.map((e) => e.toJson()).toList(growable: false),
+    'tags': tags.map((t) => t.toJson()).toList(growable: false),
+    'profiles': profiles.map((p) => p.toJson()).toList(growable: false),
+    'pagination': pagination.toJson(),
+  };
 }
 
 @immutable

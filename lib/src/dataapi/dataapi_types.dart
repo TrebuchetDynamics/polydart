@@ -104,6 +104,41 @@ final class Position {
   final String slug;
   final String eventSlug;
   final String icon;
+
+  /// Serializes back to the canonical Polymarket V2 keys (matching the Go
+  /// `types.Position` JSON tags), so the value round-trips through
+  /// [Position.fromJson] and marshals cleanly for read-only MCP/agent output.
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'asset': tokenId,
+    'conditionId': conditionId,
+    if (marketId.isNotEmpty) 'market': marketId,
+    if (side.isNotEmpty) 'side': side,
+    'eventId': eventId,
+    'proxyWallet': proxyWallet,
+    'size': size,
+    'avgPrice': avgPrice,
+    'initialValue': initialValue,
+    'currentValue': currentValue,
+    'curPrice': currentPrice,
+    if (unrealizedPnl != 0) 'unrealizedPnl': unrealizedPnl,
+    'cashPnl': cashPnl,
+    'percentPnl': percentPnl,
+    'totalBought': totalBought,
+    'realizedPnl': realizedPnl,
+    'percentRealizedPnl': percentRealized,
+    'redeemable': redeemable,
+    'mergeable': mergeable,
+    'negativeRisk': negativeRisk,
+    'outcome': outcome,
+    'outcomeIndex': outcomeIndex,
+    'oppositeOutcome': oppositeOutcome,
+    'oppositeAsset': oppositeAsset,
+    'endDate': endDate,
+    'title': title,
+    'slug': slug,
+    'eventSlug': eventSlug,
+    'icon': icon,
+  };
 }
 
 @immutable
