@@ -52,6 +52,30 @@ void main() {
       expect(captured!.queryParameters['q'], 'btc 5m');
     });
 
+    test('appends repeated query params for iterable values', () async {
+      Uri? captured;
+      final transport = HttpTransport(
+        config: config,
+        inner: MockClient((req) async {
+          captured = req.url;
+          return http.Response('{}', 200);
+        }),
+      );
+
+      await transport.getJson(
+        '/markets',
+        query: {
+          'slug': ['btc', 'eth'],
+          'empty': <String>[],
+          'with_empty': ['yes', ''],
+        },
+      );
+
+      expect(captured!.queryParametersAll['slug'], ['btc', 'eth']);
+      expect(captured!.queryParametersAll.containsKey('empty'), isFalse);
+      expect(captured!.queryParametersAll['with_empty'], ['yes']);
+    });
+
     test('decodes a JSON list', () async {
       final transport = HttpTransport(
         config: config,
