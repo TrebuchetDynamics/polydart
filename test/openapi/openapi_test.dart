@@ -51,7 +51,11 @@ void main() {
         '/orderbook/{token_id}',
         '/marketdata/snapshot',
       ]) {
-        expect(paths.containsKey(required), isTrue, reason: 'missing $required');
+        expect(
+          paths.containsKey(required),
+          isTrue,
+          reason: 'missing $required',
+        );
       }
     });
 
@@ -75,8 +79,9 @@ void main() {
     test('sorts query parameters by key', () {
       final spec = openApiSpec();
       final paths = spec['paths'] as Map<String, dynamic>;
-      final search = (paths['/discover/search'] as Map<String, dynamic>)['get']
-          as Map<String, dynamic>;
+      final search =
+          (paths['/discover/search'] as Map<String, dynamic>)['get']
+              as Map<String, dynamic>;
       final params = (search['parameters'] as List<dynamic>)
           .cast<Map<String, dynamic>>();
       // `limit` sorts before `q`.

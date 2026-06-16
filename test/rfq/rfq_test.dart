@@ -10,7 +10,11 @@ void main() {
   group('validateRfqRequest', () {
     test('accepts a request with either a market or a token id', () {
       for (final req in <RfqRequest>[
-        const RfqRequest(marketId: 'market-1', side: rfqSideBuy, amount: '10.5'),
+        const RfqRequest(
+          marketId: 'market-1',
+          side: rfqSideBuy,
+          amount: '10.5',
+        ),
         const RfqRequest(tokenId: 'token-1', side: rfqSideSell, amount: '2'),
       ]) {
         expect(() => validateRfqRequest(req, now: now), returnsNormally);
@@ -41,7 +45,11 @@ void main() {
         const RfqRequest(marketId: 'market-1', side: rfqSideBuy, amount: '0.0'),
         const RfqRequest(marketId: 'market-1', side: rfqSideBuy, amount: '-1'),
         const RfqRequest(marketId: 'market-1', side: rfqSideBuy, amount: '1e3'),
-        const RfqRequest(marketId: 'market-1', side: rfqSideBuy, amount: '1.2.3'),
+        const RfqRequest(
+          marketId: 'market-1',
+          side: rfqSideBuy,
+          amount: '1.2.3',
+        ),
         const RfqRequest(marketId: 'market-1', side: 'HOLD', amount: '1'),
         RfqRequest(
           marketId: 'market-1',
@@ -76,7 +84,11 @@ void main() {
   group('RfqClient.submit', () {
     test('refuses a valid request with a SafetyException', () {
       const client = RfqClient();
-      const req = RfqRequest(marketId: 'market-1', side: rfqSideBuy, amount: '1');
+      const req = RfqRequest(
+        marketId: 'market-1',
+        side: rfqSideBuy,
+        amount: '1',
+      );
       expect(
         () => client.submit(req, now: now),
         throwsA(

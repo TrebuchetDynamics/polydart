@@ -198,10 +198,7 @@ void main() {
         return gammaJsonList(<Map<String, dynamic>>[]);
       });
 
-      expect(
-        () => client.activeMarketsAll(maxPages: 0),
-        throwsArgumentError,
-      );
+      expect(() => client.activeMarketsAll(maxPages: 0), throwsArgumentError);
       expect(calls, 0);
     });
   });

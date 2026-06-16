@@ -252,8 +252,9 @@ bool _isPositiveDecimalString(String value) {
   return seenDigit && seenNonZero;
 }
 
-RfqMetadata _metadata(Object? raw) =>
-    raw is Map ? RfqMetadata.fromJson(raw.cast<String, dynamic>()) : const RfqMetadata();
+RfqMetadata _metadata(Object? raw) => raw is Map
+    ? RfqMetadata.fromJson(raw.cast<String, dynamic>())
+    : const RfqMetadata();
 
 DateTime? _dateTime(Object? raw) {
   if (raw is String && raw.isNotEmpty) return DateTime.tryParse(raw)?.toUtc();

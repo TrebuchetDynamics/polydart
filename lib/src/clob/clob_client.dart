@@ -168,9 +168,7 @@ final class ClobClient {
     String conditionId,
   ) async {
     final gamma = GammaClient(
-      transport: HttpTransport(
-        config: TransportConfig(baseUrl: gammaBaseUrl),
-      ),
+      transport: HttpTransport(config: TransportConfig(baseUrl: gammaBaseUrl)),
     );
     try {
       final markets = await gamma.markets(

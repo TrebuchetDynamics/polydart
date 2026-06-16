@@ -39,6 +39,8 @@ JsonObjectFrameDecodeResult decodeJsonObjectFrame(List<int> bytes) {
     return const JsonObjectFrameDecodeResult.nonObjectJson();
   }
   return JsonObjectFrameDecodeResult.ok(
-    decoded.map<String, dynamic>((key, value) => MapEntry(key.toString(), value)),
+    decoded.map<String, dynamic>(
+      (key, value) => MapEntry(key.toString(), value),
+    ),
   );
 }

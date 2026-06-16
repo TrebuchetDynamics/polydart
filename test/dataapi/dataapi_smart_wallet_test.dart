@@ -111,18 +111,13 @@ void main() {
       // survive deduplication.
       final client = _client((req) async {
         return http.Response(
-          jsonEncode([
-            _trade('', side: 'BUY'),
-            _trade('', side: 'SELL'),
-          ]),
+          jsonEncode([_trade('', side: 'BUY'), _trade('', side: 'SELL')]),
           200,
         );
       });
 
       final out = await client.smartWalletTrades(
-        const SmartWalletTradesQuery(
-          wallets: [SmartWallet(address: '0xAAA')],
-        ),
+        const SmartWalletTradesQuery(wallets: [SmartWallet(address: '0xAAA')]),
       );
 
       expect(out, hasLength(2));

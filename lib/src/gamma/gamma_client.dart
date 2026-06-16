@@ -28,10 +28,7 @@ const int _defaultTagPageSize = 100;
 const int _defaultMaxTagPages = 50;
 
 final class _OffsetCollectionPlan {
-  _OffsetCollectionPlan({
-    required this.pageSize,
-    required this.maxPages,
-  }) {
+  _OffsetCollectionPlan({required this.pageSize, required this.maxPages}) {
     _checkPositive(pageSize, 'pageSize');
     _checkPositive(maxPages, 'maxPages');
   }
@@ -126,10 +123,7 @@ final class GammaClient {
     int pageSize = _defaultMarketPageSize,
     int maxPages = _defaultMaxMarketPages,
   }) async {
-    final plan = _OffsetCollectionPlan(
-      pageSize: pageSize,
-      maxPages: maxPages,
-    );
+    final plan = _OffsetCollectionPlan(pageSize: pageSize, maxPages: maxPages);
     final raw = await collectOffset<Market>((offset, limit) async {
       if (plan.shouldStopBeforeFetch(offset)) {
         return const OffsetPageResult<Market>(items: [], count: 0);
@@ -153,10 +147,7 @@ final class GammaClient {
     int pageSize = _defaultEventPageSize,
     int maxPages = _defaultMaxEventPages,
   }) async {
-    final plan = _OffsetCollectionPlan(
-      pageSize: pageSize,
-      maxPages: maxPages,
-    );
+    final plan = _OffsetCollectionPlan(pageSize: pageSize, maxPages: maxPages);
     final raw = await collectOffset<Event>((offset, limit) async {
       if (plan.shouldStopBeforeFetch(offset)) {
         return const OffsetPageResult<Event>(items: [], count: 0);
@@ -204,10 +195,7 @@ final class GammaClient {
     int pageSize = _defaultSeriesPageSize,
     int maxPages = _defaultMaxSeriesPages,
   }) async {
-    final plan = _OffsetCollectionPlan(
-      pageSize: pageSize,
-      maxPages: maxPages,
-    );
+    final plan = _OffsetCollectionPlan(pageSize: pageSize, maxPages: maxPages);
     final raw = await collectOffset<Series>((offset, limit) async {
       if (plan.shouldStopBeforeFetch(offset)) {
         return const OffsetPageResult<Series>(items: [], count: 0);
@@ -244,10 +232,7 @@ final class GammaClient {
     int pageSize = _defaultTagPageSize,
     int maxPages = _defaultMaxTagPages,
   }) async {
-    final plan = _OffsetCollectionPlan(
-      pageSize: pageSize,
-      maxPages: maxPages,
-    );
+    final plan = _OffsetCollectionPlan(pageSize: pageSize, maxPages: maxPages);
     final raw = await collectOffset<Tag>((offset, limit) async {
       if (plan.shouldStopBeforeFetch(offset)) {
         return const OffsetPageResult<Tag>(items: [], count: 0);

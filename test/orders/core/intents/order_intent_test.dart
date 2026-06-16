@@ -141,10 +141,7 @@ void main() {
     });
 
     test('rejects unknown', () {
-      expect(
-        () => LifecycleState.parse('zombie'),
-        throwsValidationException,
-      );
+      expect(() => LifecycleState.parse('zombie'), throwsValidationException);
     });
   });
 

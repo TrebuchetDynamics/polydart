@@ -501,10 +501,10 @@ final class ClobMarketOutcome {
       ClobMarketOutcome(
         status: ClobMarketOutcomeStatus.fromWire(json['status']),
         conditionId: _stringOf(json, const ['condition_id', 'conditionId']),
-        winningTokenId: _stringOf(
-          json,
-          const ['winning_token_id', 'winningTokenId'],
-        ),
+        winningTokenId: _stringOf(json, const [
+          'winning_token_id',
+          'winningTokenId',
+        ]),
         closed: json['closed'] == true,
         source: _stringOf(json, const ['source']),
       );

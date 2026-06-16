@@ -19,6 +19,5 @@ OrderV2Draft canonicalPoly1271OrderDraft() => const OrderV2Draft(
   timestamp: '1700000000000',
 );
 
-Uint8List deterministicInnerSignature65() => Uint8List.fromList(
-  List<int>.generate(65, (i) => 0xa0 + (i % 16)),
-);
+Uint8List deterministicInnerSignature65() =>
+    Uint8List.fromList(List<int>.generate(65, (i) => 0xa0 + (i % 16)));

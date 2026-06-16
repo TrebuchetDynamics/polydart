@@ -80,9 +80,7 @@ Map<String, dynamic> _operation(
     'summary': summary,
     'description': description,
     'responses': <String, dynamic>{
-      '200': <String, dynamic>{
-        'description': 'Successful read-only response.',
-      },
+      '200': <String, dynamic>{'description': 'Successful read-only response.'},
     },
   };
   if (params != null && params.isNotEmpty) {

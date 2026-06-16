@@ -133,12 +133,9 @@ void main() {
 
     test('falls back to Gamma when CLOB 404s', () async {
       Uri? gammaUri;
-      final gamma = await _startGamma(
-        [
-          <String, dynamic>{'conditionId': 'cond-1', 'closed': true},
-        ],
-        onRequest: (req) => gammaUri = req.uri,
-      );
+      final gamma = await _startGamma([
+        <String, dynamic>{'conditionId': 'cond-1', 'closed': true},
+      ], onRequest: (req) => gammaUri = req.uri);
       addTearDown(() => gamma.close(force: true));
 
       final client = clobTestClient((req) async {
