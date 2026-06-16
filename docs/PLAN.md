@@ -13,8 +13,8 @@ The PRD lists `reown_appkit`, `shared_preferences`, and `hive` as dependencies. 
 
 **Decision:** `polydart` is a pure-Dart package. EOA signing, ReownWallet / WalletConnect transport, and persistent storage are abstracted as interfaces (`WalletSigner`, `KeyValueStore`, …). Flutter/mobile consumers provide ReownWallet, secure-storage, and app-session adapters in app code. Adapter extraction is deferred until the live flow works. Until then no consumer is blocked: read-only, paper, and pre-built-order flows do not need a wallet.
 
-### AD-2 — Mirror layout, not slavish copy
-`polygolem/internal/<module>/` maps to `lib/src/<module>/`. Module **names** match exactly so the parity check is mechanical. File-level layout can diverge — Dart idioms (sealed classes, extension methods, async streams) differ from Go.
+### AD-2 — Twin architecture, not slavish copy
+Polygolem is the older-brother protocol reference. Polydart mirrors Polygolem's public protocol surfaces, request/response DTOs, fixtures, signer seams, safety gates, and major module responsibilities so parity checks stay mechanical. File-level layout can diverge — Dart idioms, Flutter/web signer constraints, sealed classes, extension methods, and async streams differ from Go — but every Polygolem feature must either have a Dart twin, a documented Dart-specific divergence, or a safety-gated omission in the parity matrix.
 
 ### AD-3 — Shared test vectors, separate test runners
 A `tests/parity/` directory holds JSON fixtures (typed-data hashes, CREATE2 addresses, sample orderbooks). Both repos read the same fixtures. Polygolem owns the generator; polydart owns its own assertions.
@@ -40,6 +40,8 @@ Use the pulled `polygolem/` commit as the source of truth for CLOB, Gamma, Data 
 ---
 
 ## 2. Module Mapping (polygolem → polydart)
+
+The mapping is architectural, not byte-for-byte: preserve the same layer responsibilities (clients, DTOs, signers, transport, safety gates, tests, and docs), then choose Dart-native files and adapters where needed.
 
 | polygolem | polydart | Phase | Notes |
 |-----------|----------|-------|-------|
@@ -159,7 +161,7 @@ Acceptance: full paper-mode loop runs offline; live-mode loop runs against stagi
 - `dataapi/` — positions, volume, leaderboards.
 - `bridge/` — supported assets, deposit addresses (mirrors `pkg/bridge`).
 - Consumer app-local adapters for EOA Signer with ReownWallet, secure credential storage, and any persistent `KeyValueStore` wiring needed by live flows. Keep generated no-sign-in keys paper-only.
-- `example/flutter_demo/` — minimal Flutter app demonstrating read-only + paper + live (mock) flows.
+- `example/` — keep plain-Dart Flutter integration patterns current for read-only, wallet signing, and mock live/deposit-wallet smoke flows.
 - pub.dev publish dry-run, then real publish for `polydart` when the API is stable.
 
 ---

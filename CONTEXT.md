@@ -5,7 +5,7 @@ Polydart is a Dart SDK for Polymarket protocol access that treats Polygolem as t
 ## Language
 
 **Twin Parity**:
-Polydart mirrors Polygolem's public protocol architecture and feature surfaces, with documented Dart-specific divergences where platform or signer constraints differ. Polygolem is the older-brother reference for protocol bytes, request shapes, fixtures, and safety posture; Polydart does not need byte-identical internal package layout.
+Polydart mirrors Polygolem's public protocol architecture and feature surfaces, with documented Dart-specific divergences where platform or signer constraints differ. Polygolem is the older-brother reference for protocol bytes, request shapes, fixtures, feature checklist, and safety posture; Polydart keeps a similar layered architecture (clients, DTOs, signers, transport, safety gates, tests, and docs) without requiring byte-identical internal package layout.
 _Avoid_: Identical implementation, blind port, feature-ish parity
 
 **EOA Signer Compatibility**:

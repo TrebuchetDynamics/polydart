@@ -15,14 +15,14 @@ applications.
 
 ## Install
 
-Use the hosted alpha release once it is published:
+If you are consuming a published release from pub.dev, use the package version for that release:
 
 ```yaml
 dependencies:
   polydart: ^0.1.0-alpha.2
 ```
 
-For source-pinned consumers, use the public repository tag:
+For the current repository state, use the public repository tag or a pinned commit:
 
 ```yaml
 dependencies:
@@ -91,16 +91,23 @@ belong to paper-mode trials, not live custody.
 
 ## Documents
 
+Start with the [end-user guide](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/END-USER-GUIDE.md) for install choices, safe read-only usage, Flutter patterns, signer rules, and example paths.
+
+User-facing references:
+
+- [Flutter integration notes](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/FLUTTER-APP-READINESS.md)
+- [Deposit-wallet readiness checklist](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md)
+- `CHANGELOG.md` — release log
+
+Project/reference docs:
+
 - [Product requirements](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/PRD.md)
 - [Implementation plan](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/PLAN.md)
-- [Deposit-wallet readiness checklist](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md)
-- [Flutter integration notes](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/FLUTTER-APP-READINESS.md)
 - [Polygolem parity coverage](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/POLYDART-POLYGOLEM-COVERAGE.md)
-- `CHANGELOG.md` — release log
 
 ## Mirror commitment
 
-Polygolem is the reference. Every protocol module, signing scheme, and API client in polygolem has a Dart twin here. Versions track in lockstep.
+Polygolem is the older-brother reference. Every protocol module, signing scheme, API client, safety gate, fixture family, and user-facing feature in polygolem has a Dart twin here. Polydart keeps a similar layered architecture—clients, DTOs, signers, transport, safety gates, tests, and docs—while using Dart/Flutter-native package boundaries where platform or signer constraints differ. Versions track in lockstep.
 
 Before any protocol-package work, refresh the upstream reference:
 

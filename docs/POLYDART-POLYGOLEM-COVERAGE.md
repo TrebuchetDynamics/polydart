@@ -1,8 +1,12 @@
 # Polydart-Polygolem Coverage Matrix
 
 This matrix tracks Polydart completion against upstream Polygolem. Polygolem is
-the protocol source of truth; Polydart may intentionally diverge on public SDK
-custody architecture as described in `docs/adr/0001-wallet-mediated-eoa-signing.md`.
+the older-brother protocol source of truth; Polydart keeps twin parity for
+public protocol surfaces, request/response shapes, fixtures, feature checklist,
+safety gates, and user-facing capabilities. Polydart may intentionally diverge
+on Dart/Flutter SDK custody architecture as described in
+`docs/adr/0001-wallet-mediated-eoa-signing.md`, but each divergence must be
+explicit in this matrix.
 
 - Canonical upstream source: `polygolem/`
 - Last scaffolded Polygolem commit: `2b7cde7`

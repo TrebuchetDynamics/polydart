@@ -12,14 +12,13 @@ Status for this repository snapshot:
 - `lib/` has no direct `dart:io`, `dart:html`, `dart:ui`, `dart:ffi`, or
   `dart:mirrors` imports. It uses cross-platform Dart libraries such as
   `dart:async`, `dart:convert`, `dart:math`, and `dart:typed_data`.
-- WebSockets use a conditional export:
-  `lib/src/stream/_socket_dispatch.dart` selects the IO
-  `web_socket_channel` adapter on VM/mobile/desktop and the HTML adapter on
-  Flutter Web.
+- WebSockets use conditional platform adapters under
+  `lib/src/stream/transport/`: the IO `web_socket_channel` adapter is selected
+  on VM/mobile/desktop and the HTML adapter is selected on Flutter Web.
 
 ## Install in a Flutter App
 
-Use the hosted alpha release once it is published:
+If you are consuming a published release from pub.dev, use the package version for that release:
 
 ```yaml
 dependencies:
@@ -28,7 +27,7 @@ dependencies:
   polydart: ^0.1.0-alpha.2
 ```
 
-For source-pinned consumers, use the public repository tag:
+For the current repository state, use the public repository tag or a pinned commit:
 
 ```yaml
 dependencies:
@@ -112,8 +111,9 @@ After the wallet provider returns a transaction hash, call
 `eth_getTransactionReceipt`, then refreshes deposit-wallet readiness until CLOB
 collateral moves to `ready` or the returned
 `DepositWalletFundingConfirmationStatus` says the transaction is still pending,
-failed, or another readiness action remains. In the normal Flutter wallet-provider path, Polydart still performs no wallet
-submission and stores no private key material.
+failed, or another readiness action remains. In the normal Flutter
+wallet-provider path, Polydart still performs no wallet submission and stores no
+private key material.
 
 Signature flows assume Polygon mainnet unless a lower-level helper documents a
 different chain. Wallet-backed signing should verify `chainId == 137` before

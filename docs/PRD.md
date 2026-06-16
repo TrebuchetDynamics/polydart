@@ -59,7 +59,10 @@ polydart/
 │   ├── integration/
 │   └── fixtures/               # Shared test vectors with polygolem
 ├── example/
-│   └── flutter_demo/           # Demo Flutter app
+│   ├── read_only.dart                      # Dart read-only smoke
+│   ├── flutter_read_only.dart              # Flutter-owned read repository pattern
+│   ├── flutter_wallet_signer.dart          # WalletSigner adapter skeleton
+│   └── flutter_deposit_wallet_order.dart   # Mock-only deposit-wallet order smoke
 └── pubspec.yaml
 ```
 
