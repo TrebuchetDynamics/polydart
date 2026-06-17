@@ -71,6 +71,22 @@ final class BatchOrderResponse {
     );
   }
 
+  factory BatchOrderResponse.fromJsonValue(Object? json) {
+    if (json is List) return BatchOrderResponse.fromJsonList(json);
+    if (json is Map) {
+      final typed = json.cast<String, dynamic>();
+      final orders =
+          typed['orders'] ??
+          typed['data'] ??
+          typed['results'] ??
+          typed['result'];
+      if (orders is List) return BatchOrderResponse.fromJsonList(orders);
+    }
+    throw const FormatException(
+      'orders response must be a JSON list or an object containing orders',
+    );
+  }
+
   final List<OrderResponse> orders;
 }
 
@@ -81,20 +97,31 @@ final class CancelResponse {
   const CancelResponse({required this.canceled, required this.notCanceled});
 
   factory CancelResponse.fromJson(Map<String, dynamic> json) {
-    final canceledRaw = json['canceled'];
-    final canceled = canceledRaw is List
-        ? canceledRaw.map((e) => e.toString()).toList(growable: false)
-        : const <String>[];
+    final canceled = _stringList(json['canceled']);
     final notRaw = json['not_canceled'] ?? json['notCanceled'];
     final notCanceled = <String, String>{};
     if (notRaw is Map) {
       notRaw.forEach((k, v) => notCanceled[k.toString()] = v.toString());
+    } else {
+      for (final id in _stringList(notRaw)) {
+        notCanceled[id] = '';
+      }
     }
     return CancelResponse(canceled: canceled, notCanceled: notCanceled);
   }
 
   final List<String> canceled;
   final Map<String, String> notCanceled;
+}
+
+List<String> _stringList(Object? raw) {
+  if (raw == null) return const <String>[];
+  if (raw is List) {
+    return raw.map((e) => e.toString()).toList(growable: false);
+  }
+  final value = raw.toString();
+  if (value.isEmpty) return const <String>[];
+  return <String>[value];
 }
 
 /// Live-mode CLOB writes. Held by [ClobClient] and exposed via its
@@ -182,9 +209,9 @@ final class ClobWrites {
       polyAddress: polyAddress,
     );
     final resp = await _clobRequest(
-      () => _transport.postJsonList('/orders', body, headers: headers),
+      () => _transport.postJsonValue('/orders', body, headers: headers),
     );
-    return BatchOrderResponse.fromJsonList(resp);
+    return BatchOrderResponse.fromJsonValue(resp);
   }
 
   /// Cancels a single open order by id. Returns the cancel report.

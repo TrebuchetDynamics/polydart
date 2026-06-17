@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/relayer/relayer_client.dart';
 import 'package:polydart/src/relayer/relayer_errors.dart';
 import 'package:polydart/src/relayer/relayer_types.dart';
@@ -30,6 +31,36 @@ void main() {
 
       expect(err.error, 'transaction not found');
       expect(err.code, isNull);
+    });
+  });
+
+  group('classifyRelayerError', () {
+    test('wraps structured transport error bodies', () {
+      final err = classifyRelayerError(
+        const TransportException(
+          code: ErrorCode.connectionFailed,
+          message: 'HTTP 400',
+          responseBody: '{"error":"invalid authorization","code":"401"}',
+        ),
+      );
+
+      expect(err, isA<RelayerApiException>());
+      final apiErr = err as RelayerApiException;
+      expect(apiErr.error.error, 'invalid authorization');
+      expect(apiErr.error.code, 401);
+    });
+
+    test('prefers allowlist classification for structured allowlist errors', () {
+      final err = classifyRelayerError(
+        const TransportException(
+          code: ErrorCode.connectionFailed,
+          message: 'HTTP 400',
+          responseBody:
+              '{"error":"call blocked: target not in the allowed list","code":400}',
+        ),
+      );
+
+      expect(err, isA<RelayerAllowlistBlockedException>());
     });
   });
 

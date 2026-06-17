@@ -60,7 +60,7 @@ Future<String> signEnableTradingClobAuthTypedData({
   );
   final signature = await signer.signTypedData(typedData);
   _requireSignatureLength(signature.length);
-  return bytesToHex0x(signature);
+  return bytesToHex0x(normalizeWalletSignature(signature));
 }
 
 /// Builds the two observed wallet UI ERC-20 approvals for Enable Trading.
@@ -170,7 +170,7 @@ Future<String> signEnableTradingApprovalBatchTypedData({
   );
   final signature = await signer.signTypedData(typedData);
   _requireSignatureLength(signature.length);
-  return bytesToHex0x(signature);
+  return bytesToHex0x(normalizeWalletSignature(signature));
 }
 
 void _requirePolygon(int chainId) {

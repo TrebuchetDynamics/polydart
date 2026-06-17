@@ -24,6 +24,8 @@ import '../auth/eth_hex.dart'
     show bytesToHex0x, hexToBytes, keccak256Bytes, leftPadBytes;
 import '../auth/siwe.dart' show toEIP55Checksum;
 import '../auth/wallet_signer.dart' show WalletSigner;
+import '../wallet/deposit_wallet_signing.dart'
+    show WalletBatchCall, hashWalletBatchTypedData;
 
 const Duration defaultRemoteSignerTimeout = Duration(seconds: 10);
 
@@ -547,6 +549,9 @@ BigInt _privateScalar(String privateKeyHex) {
 Uint8List _hashTypedDataMap(Map<String, dynamic> typedData) {
   final domainJson = (typedData['domain'] as Map).cast<String, dynamic>();
   final primaryType = typedData['primaryType'].toString();
+  if (primaryType == 'Batch' && domainJson['name'] == 'DepositWallet') {
+    return _hashDepositWalletBatchTypedData(typedData, domainJson);
+  }
   final allTypes = (typedData['types'] as Map).cast<String, dynamic>();
   final rawFields = (allTypes[primaryType] as List<dynamic>);
   final fields = rawFields
@@ -569,6 +574,30 @@ Uint8List _hashTypedDataMap(Map<String, dynamic> typedData) {
       for (final field in fields)
         field.name: _coerceTypedDataValue(field.type, message[field.name]),
     },
+  );
+}
+
+Uint8List _hashDepositWalletBatchTypedData(
+  Map<String, dynamic> typedData,
+  Map<String, dynamic> domainJson,
+) {
+  final message = (typedData['message'] as Map).cast<String, dynamic>();
+  final rawCalls = (message['calls'] as List<dynamic>);
+  return hashWalletBatchTypedData(
+    walletAddress: message['wallet'].toString(),
+    nonce: message['nonce'].toString(),
+    deadline: message['deadline'].toString(),
+    calls: rawCalls
+        .map((raw) {
+          final call = (raw as Map).cast<String, dynamic>();
+          return WalletBatchCall(
+            target: call['target'].toString(),
+            value: call['value'].toString(),
+            data: call['data'].toString(),
+          );
+        })
+        .toList(growable: false),
+    chainId: int.parse(domainJson['chainId'].toString()),
   );
 }
 

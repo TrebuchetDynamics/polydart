@@ -70,7 +70,8 @@ export 'src/auth/siwe.dart'
         siweVersion,
         toEIP55Checksum;
 export 'src/auth/siwe_login.dart' show SIWESession;
-export 'src/auth/wallet_signer.dart' show WalletSigner;
+export 'src/auth/wallet_signer.dart'
+    show WalletSigner, normalizeWalletSignature;
 export 'src/bookreader/bookreader.dart' show BookReader;
 export 'src/bridge/bridge_client.dart'
     show

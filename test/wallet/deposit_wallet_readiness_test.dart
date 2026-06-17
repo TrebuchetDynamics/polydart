@@ -103,6 +103,30 @@ void main() {
       },
     );
 
+    test(
+      'blocks when relayer deployed address disagrees with derivation',
+      () async {
+        final service = DepositWalletReadinessService(
+          relayer: _relayer((req) async {
+            return http.Response(
+              jsonEncode(<String, dynamic>{
+                'deployed': true,
+                'address': '0x0000000000000000000000000000000000000001',
+              }),
+              200,
+            );
+          }),
+        );
+
+        final readiness = await service.check(_eoa);
+
+        expect(readiness.status, DepositWalletReadinessStatus.blocked);
+        expect(readiness.deployed, isTrue);
+        expect(readiness.depositWallet, _depositWallet);
+        expect(readiness.reason, contains('expected $_depositWallet'));
+      },
+    );
+
     test('defensively copies requiredApprovals', () {
       final mutable = <String>['pusd:ctfExchangeV2'];
 

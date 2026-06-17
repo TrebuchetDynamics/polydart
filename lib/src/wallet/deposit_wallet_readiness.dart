@@ -28,6 +28,9 @@ const List<String> _requiredApprovalLabels = <String>[
   'ctf:negRiskAdapterV2',
 ];
 
+bool _isFullAddress(String value) =>
+    RegExp(r'^0x[0-9a-fA-F]{40}$').hasMatch(value.trim());
+
 enum DepositWalletReadinessStatus {
   needsDeploy,
   needsApprovalCheck,
@@ -205,6 +208,19 @@ final class DepositWalletReadinessService {
         ownerEoa: owner,
         depositWallet: depositWallet,
         deployed: false,
+      );
+    }
+
+    final reported = deployed.address.trim();
+    if (_isFullAddress(reported) &&
+        normalizeAddress(reported) != depositWallet) {
+      return DepositWalletReadiness(
+        status: DepositWalletReadinessStatus.blocked,
+        ownerEoa: owner,
+        depositWallet: depositWallet,
+        deployed: true,
+        reason:
+            'relayer reported deployed wallet $reported, expected $depositWallet',
       );
     }
 

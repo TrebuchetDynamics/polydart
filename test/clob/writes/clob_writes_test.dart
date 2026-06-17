@@ -278,6 +278,42 @@ void main() {
       expect(response.orders.map((o) => o.orderId), ['O-1', 'O-2']);
     });
 
+    test('accepts wrapped batch create response drift', () async {
+      final c = _liveClient((_) async {
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'orders': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'success': '1',
+                'order_id': 'O-1',
+                'status': 'live',
+              },
+              <String, dynamic>{
+                'success': 1,
+                'orderId': 'O-2',
+                'status': 'matched',
+              },
+            ],
+          }),
+          200,
+        );
+      });
+
+      final response = await c.writes.createOrders(
+        requests: <CreateOrderRequest>[
+          CreateOrderRequest(
+            order: _sampleSignedOrder(),
+            owner: 'owner-1',
+            orderType: OrderType.gtc,
+          ),
+        ],
+        apiKey: _apiKey,
+      );
+
+      expect(response.orders.map((o) => o.orderId), ['O-1', 'O-2']);
+      expect(response.orders.every((o) => o.success), isTrue);
+    });
+
     test('rejects malformed order response candidates', () async {
       final c = _liveClient((_) async {
         return http.Response(
@@ -559,6 +595,15 @@ void main() {
       });
       expect(r.canceled, ['O-1']);
       expect(r.notCanceled['O-2'], 'reason');
+    });
+
+    test('accepts scalar and numeric cancel response drift', () {
+      final r = CancelResponse.fromJson(<String, dynamic>{
+        'canceled': 123,
+        'not_canceled': <Object>['O-2', 456],
+      });
+      expect(r.canceled, ['123']);
+      expect(r.notCanceled, {'O-2': '', '456': ''});
     });
 
     test('handles missing fields safely', () {

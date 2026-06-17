@@ -6,6 +6,7 @@ import 'package:http/testing.dart';
 import 'package:polydart/src/auth/l2.dart';
 import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/relayer/relayer_client.dart';
+import 'package:polydart/src/relayer/relayer_errors.dart';
 import 'package:polydart/src/relayer/relayer_types.dart';
 import 'package:polydart/src/relayer/v2_auth.dart';
 import 'package:polydart/src/transport/http_transport.dart';
@@ -118,6 +119,27 @@ void main() {
       },
     );
 
+    test('accepts numeric scalar nonce response drift', () async {
+      final client = _client((req) async {
+        return http.Response('7', 200);
+      });
+
+      expect(await client.getNonce(ownerAddress: '0xabc'), '7');
+    });
+
+    test('accepts walletNonce aliases', () {
+      expect(
+        NonceResponse.fromJson(const <String, dynamic>{'walletNonce': 8}).nonce,
+        '8',
+      );
+      expect(
+        NonceResponse.fromJson(const <String, dynamic>{
+          'wallet_nonce': '9',
+        }).nonce,
+        '9',
+      );
+    });
+
     test('throws when relayer returns empty nonce', () async {
       final client = _client((req) async {
         return http.Response(jsonEncode(<String, dynamic>{'nonce': '  '}), 200);
@@ -125,6 +147,27 @@ void main() {
       expect(
         () => client.getNonce(ownerAddress: '0xabc'),
         throwsA(isA<TransportException>()),
+      );
+    });
+
+    test('wraps structured relayer error responses', () async {
+      final client = _client((req) async {
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'error': 'invalid authorization',
+            'code': '401',
+          }),
+          401,
+        );
+      });
+
+      await expectLater(
+        client.getNonce(ownerAddress: '0xabc'),
+        throwsA(
+          isA<RelayerApiException>()
+              .having((e) => e.error.error, 'error', 'invalid authorization')
+              .having((e) => e.error.code, 'code', 401),
+        ),
       );
     });
   });
@@ -138,6 +181,27 @@ void main() {
 
       expect(resp.deployed, isTrue);
       expect(resp.address, '123');
+    });
+
+    test('DeployedResponse accepts bool/address alias drift', () {
+      final lowerCamel = DeployedResponse.fromJson(const <String, dynamic>{
+        'isDeployed': '1',
+        'walletAddress': '0xwallet',
+      });
+      final snake = DeployedResponse.fromJson(const <String, dynamic>{
+        'deployed': 1,
+        'proxy_address': '0xproxy',
+      });
+      final depositWallet = DeployedResponse.fromJson(const <String, dynamic>{
+        'deposit_wallet': '0xdeposit',
+      });
+
+      expect(lowerCamel.deployed, isTrue);
+      expect(lowerCamel.address, '0xwallet');
+      expect(snake.deployed, isTrue);
+      expect(snake.address, '0xproxy');
+      expect(depositWallet.deployed, isFalse);
+      expect(depositWallet.address, '0xdeposit');
     });
 
     test('GETs /deployed and parses the boolean', () async {
@@ -336,9 +400,9 @@ void main() {
       final tx = await client.submitWalletBatch(
         ownerAddress: '0xowner',
         walletAddress: '0xwallet',
-        nonce: '3',
-        signature: '0xdeadbeef',
-        deadline: '1700000300',
+        nonce: ' 3 ',
+        signature: ' 0xdeadbeef ',
+        deadline: ' 1700000300 ',
         calls: <DepositWalletCall>[
           const DepositWalletCall(
             target: '0xtoken',
@@ -359,8 +423,61 @@ void main() {
       expect(tx.parsedState, RelayerTransactionState.executed);
     });
 
-    test('rejects empty calls list', () async {
+    test('rejects missing nonce signature deadline and calls', () async {
       final client = _client((_) async => http.Response('', 200));
+      final validCall = const DepositWalletCall(
+        target: '0xtarget',
+        value: '0',
+        data: '0xdata',
+      );
+
+      expect(
+        () => client.submitWalletBatch(
+          ownerAddress: '0xowner',
+          walletAddress: '0xwallet',
+          nonce: ' ',
+          signature: '0xsignature',
+          deadline: '1700000300',
+          calls: <DepositWalletCall>[validCall],
+        ),
+        throwsA(
+          isA<ValidationException>().having((e) => e.field, 'field', 'nonce'),
+        ),
+      );
+      expect(
+        () => client.submitWalletBatch(
+          ownerAddress: '0xowner',
+          walletAddress: '0xwallet',
+          nonce: '1',
+          signature: ' ',
+          deadline: '1700000300',
+          calls: <DepositWalletCall>[validCall],
+        ),
+        throwsA(
+          isA<ValidationException>().having(
+            (e) => e.field,
+            'field',
+            'signature',
+          ),
+        ),
+      );
+      expect(
+        () => client.submitWalletBatch(
+          ownerAddress: '0xowner',
+          walletAddress: '0xwallet',
+          nonce: '1',
+          signature: '0xsignature',
+          deadline: ' ',
+          calls: <DepositWalletCall>[validCall],
+        ),
+        throwsA(
+          isA<ValidationException>().having(
+            (e) => e.field,
+            'field',
+            'deadline',
+          ),
+        ),
+      );
       expect(
         () => client.submitWalletBatch(
           ownerAddress: '0xowner',

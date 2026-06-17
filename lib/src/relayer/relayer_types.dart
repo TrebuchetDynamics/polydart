@@ -169,7 +169,20 @@ final class NonceResponse {
   const NonceResponse({required this.nonce});
 
   factory NonceResponse.fromJson(Map<String, dynamic> json) {
-    return NonceResponse(nonce: (json['nonce'] ?? '').toString());
+    for (final key in const <String>['nonce', 'walletNonce', 'wallet_nonce']) {
+      final value = json[key];
+      if (value != null) return NonceResponse(nonce: value.toString());
+    }
+    return const NonceResponse(nonce: '');
+  }
+
+  factory NonceResponse.fromJsonValue(Object? json) {
+    if (json is Map<String, dynamic>) return NonceResponse.fromJson(json);
+    if (json is Map) {
+      return NonceResponse.fromJson(json.cast<String, dynamic>());
+    }
+    if (json == null) return const NonceResponse(nonce: '');
+    return NonceResponse(nonce: json.toString());
   }
 
   final String nonce;
@@ -181,9 +194,28 @@ final class DeployedResponse {
   const DeployedResponse({required this.deployed, this.address = ''});
 
   factory DeployedResponse.fromJson(Map<String, dynamic> json) {
+    Object? pick(List<String> keys) {
+      for (final key in keys) {
+        final value = json[key];
+        if (value != null) return value;
+      }
+      return null;
+    }
+
     return DeployedResponse(
-      deployed: _bool(json['deployed']),
-      address: (json['address'] ?? '').toString(),
+      deployed: _bool(pick(const ['deployed', 'isDeployed'])),
+      address:
+          (pick(const [
+                    'address',
+                    'walletAddress',
+                    'wallet_address',
+                    'depositWallet',
+                    'deposit_wallet',
+                    'proxyAddress',
+                    'proxy_address',
+                  ]) ??
+                  '')
+              .toString(),
     );
   }
 

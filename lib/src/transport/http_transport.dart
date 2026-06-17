@@ -93,6 +93,18 @@ final class HttpTransport {
     return _decodeList(resp);
   }
 
+  /// Performs a POST request and returns decoded JSON without constraining the
+  /// top-level shape.
+  Future<Object?> postJsonValue(
+    String path,
+    Object? body, {
+    Map<String, String>? headers,
+  }) async {
+    final resp = await _do('POST', path, body: body, headers: headers);
+    if (resp.body.isEmpty) return null;
+    return jsonDecode(resp.body);
+  }
+
   /// Performs a DELETE request. Returns the parsed JSON map if any.
   ///
   /// Optionally sends a JSON [body]. Polymarket's CLOB cancel-by-id

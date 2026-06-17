@@ -242,14 +242,15 @@ Future<SignedOrder> signOrderV2({
   );
 
   final typed = buildOrderV2TypedData(draft: draft, negRisk: intent.negRisk);
-  final sigBytes = await signer.signTypedData(typed);
-  if (sigBytes.length != 65) {
+  final walletSig = await signer.signTypedData(typed);
+  if (walletSig.length != 65) {
     throw ValidationException(
       code: ErrorCode.invalidSignature,
       message:
-          'wallet returned ${sigBytes.length}-byte signature (expected 65)',
+          'wallet returned ${walletSig.length}-byte signature (expected 65)',
     );
   }
+  final sigBytes = normalizeWalletSignature(walletSig);
 
   return SignedOrder(
     salt: draft.salt,

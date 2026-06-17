@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -20,8 +21,11 @@ const testOrderApiKey = ApiKey(
   passphrase: 'pp1',
 );
 
-FakeWalletSigner cannedOrderSigner({int chainId = 137}) =>
-    FakeWalletSigner(chainId: chainId, signature: deterministicSignature());
+FakeWalletSigner cannedOrderSigner({int chainId = 137, Uint8List? signature}) =>
+    FakeWalletSigner(
+      chainId: chainId,
+      signature: signature ?? deterministicSignature((i) => i == 64 ? 27 : i),
+    );
 
 OrderIntent limitBuyIntent({
   String tokenId = '12345',

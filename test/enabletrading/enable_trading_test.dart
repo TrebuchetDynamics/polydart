@@ -6,10 +6,13 @@ import 'package:polydart/src/auth/wallet_signer.dart';
 import 'package:polydart/src/enabletrading/enable_trading.dart';
 import 'package:polydart/src/errors/errors.dart';
 import 'package:polydart/src/relayer/relayer_types.dart';
+import 'package:polydart/src/signers/signers.dart';
 import 'package:test/test.dart';
 
 const _eoa = '0x2c7536E3605D9C16a7a3D7b1898e529396a65c23';
 const _depositWallet = '0x21999a074344610057c9b2B362332388a44502D4';
+const _privateKey =
+    '0x4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318';
 const _maxUint256 =
     'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 
@@ -55,7 +58,9 @@ void main() {
 
     test('optional signing helper uses WalletSigner only', () async {
       final signer = _StubSigner(
-        signature: Uint8List.fromList(List<int>.filled(65, 0xab)),
+        signature: Uint8List.fromList(
+          List<int>.generate(65, (i) => i == 64 ? 27 : 0xab),
+        ),
       );
 
       final signature = await signEnableTradingClobAuthTypedData(
@@ -63,10 +68,40 @@ void main() {
         timestamp: 1778372101,
       );
 
-      expect(signature, '0x${'ab' * 65}');
+      expect(signature, '0x${'ab' * 64}1b');
       expect(signer.lastTypedData!['primaryType'], 'ClobAuth');
       expect(signer.lastTypedData!['message']['address'], signer.address);
     });
+
+    test('normalizes compact wallet signature v for ClobAuth helper', () async {
+      final signer = _StubSigner(
+        signature: Uint8List.fromList(
+          List<int>.generate(65, (i) => i == 64 ? 0 : i),
+        ),
+      );
+
+      final signature = await signEnableTradingClobAuthTypedData(
+        signer: signer,
+        timestamp: 1778372101,
+      );
+
+      expect(signature.substring(signature.length - 2), '1b');
+    });
+
+    test(
+      'supports explicit private-key EOA signers for headless flows',
+      () async {
+        final signer = LocalEoaSigner(privateKeyHex: _privateKey, chainId: 137);
+
+        final signature = await signEnableTradingClobAuthTypedData(
+          signer: signer,
+          timestamp: 1778372101,
+        );
+
+        expect(signer.address, _eoa);
+        _expectEthereumSignature(signature);
+      },
+    );
   });
 
   group('Enable Trading approval calls', () {
@@ -213,7 +248,9 @@ void main() {
 
     test('optional signing helper uses WalletSigner only', () async {
       final signer = _StubSigner(
-        signature: Uint8List.fromList(List<int>.generate(65, (i) => i)),
+        signature: Uint8List.fromList(
+          List<int>.generate(65, (i) => i == 64 ? 27 : i),
+        ),
       );
 
       final signature = await signEnableTradingApprovalBatchTypedData(
@@ -226,11 +263,29 @@ void main() {
 
       expect(
         signature,
-        '0x${bytesToHex(Uint8List.fromList(List<int>.generate(65, (i) => i)))}',
+        '0x${bytesToHex(Uint8List.fromList(List<int>.generate(65, (i) => i == 64 ? 27 : i)))}',
       );
       expect(signer.lastTypedData!['primaryType'], 'Batch');
       expect(signer.lastTypedData!['domain']['chainId'], 137);
     });
+
+    test(
+      'supports explicit private-key EOA signers for approval batches',
+      () async {
+        final signer = LocalEoaSigner(privateKeyHex: _privateKey, chainId: 137);
+
+        final signature = await signEnableTradingApprovalBatchTypedData(
+          signer: signer,
+          depositWallet: _depositWallet,
+          nonce: '6',
+          deadline: '1778373936',
+          calls: buildEnableTradingApprovalCalls(),
+        );
+
+        expect(signer.address, _eoa);
+        _expectEthereumSignature(signature);
+      },
+    );
   });
 
   test('new public surface exposes no raw private-key parameter', () {
@@ -241,6 +296,12 @@ void main() {
     expect(source, isNot(contains('privateKey')));
     expect(source, isNot(contains('OwnerPrivateKey')));
   });
+}
+
+void _expectEthereumSignature(String signature) {
+  expect(signature, startsWith('0x'));
+  expect(signature.length, 2 + 65 * 2);
+  expect(signature.substring(signature.length - 2), isIn(<String>['1b', '1c']));
 }
 
 void _expectApproveCall(

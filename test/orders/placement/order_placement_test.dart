@@ -13,6 +13,7 @@ import 'package:polydart/src/types/clob.dart';
 import 'package:polydart/src/types/enums.dart';
 import 'package:test/test.dart';
 
+import '../../auth/support/auth_test_fixtures.dart';
 import '../support/order_test_support.dart';
 
 void main() {
@@ -52,6 +53,32 @@ void main() {
         ),
       );
       expect(signer.signTypedDataCalls, 0);
+    });
+
+    test(
+      'normalizes compact wallet signature v values before packaging',
+      () async {
+        final intent = limitBuyIntent();
+        final signer = cannedOrderSigner(
+          signature: deterministicSignature((i) => i == 64 ? 1 : i),
+        );
+
+        final signed = await signOrderV2(intent: intent, signer: signer);
+
+        expect(signed.signature.substring(signed.signature.length - 2), '1c');
+      },
+    );
+
+    test('rejects malformed wallet signature v values', () async {
+      final intent = limitBuyIntent();
+      final signer = cannedOrderSigner(
+        signature: deterministicSignature((i) => i == 64 ? 29 : i),
+      );
+
+      await expectLater(
+        signOrderV2(intent: intent, signer: signer),
+        throwsFormatException,
+      );
     });
 
     test('uses funder as maker for non-EOA signature types', () async {

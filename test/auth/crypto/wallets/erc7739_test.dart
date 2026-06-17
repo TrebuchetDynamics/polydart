@@ -184,7 +184,7 @@ void main() {
   group('wrapPoly1271Signature (WalletSigner integration)', () {
     test('passes the envelope to the signer and assembles the wrap', () async {
       final signer = FakeWalletSigner(
-        signature: deterministicInnerSignature65(),
+        signature: deterministicSignature((i) => i == 64 ? 27 : i),
       );
       final wrapped = await wrapPoly1271Signature(
         signer: signer,
@@ -196,6 +196,21 @@ void main() {
       expect(signer.lastTypedData, isNotNull);
       final domain = signer.lastTypedData!['domain'] as Map<String, dynamic>;
       expect(domain['chainId'], 137);
+    });
+
+    test('normalizes compact wallet signature v before wrapping', () async {
+      final signer = FakeWalletSigner(
+        signature: deterministicSignature((i) => i == 64 ? 0 : i),
+      );
+
+      final wrapped = await wrapPoly1271Signature(
+        signer: signer,
+        draft: canonicalPoly1271OrderDraft(),
+        depositWalletAddress: canonicalDepositWallet,
+      );
+
+      // First 65 bytes are the inner signature. v=0 should become 0x1b.
+      expect(wrapped.substring(2 + 64 * 2, 2 + 65 * 2), '1b');
     });
 
     test('rejects non-Polygon signer before wallet signing', () async {

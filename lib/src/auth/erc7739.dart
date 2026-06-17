@@ -237,7 +237,7 @@ Future<String> wrapPoly1271Signature({
     );
   }
   return assemblePoly1271WrappedSignature(
-    innerSignature: innerSig,
+    innerSignature: normalizeWalletSignature(innerSig),
     draft: draft,
     negRisk: negRisk,
   );

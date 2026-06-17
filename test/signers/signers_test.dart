@@ -8,6 +8,28 @@ import 'package:polydart/polydart.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test(
+    'normalizeWalletSignature maps compact recovery ids without mutating input',
+    () {
+      final input = Uint8List.fromList(
+        List<int>.generate(65, (i) => i == 64 ? 1 : i),
+      );
+
+      final normalized = normalizeWalletSignature(input);
+
+      expect(normalized[64], 28);
+      expect(input[64], 1);
+    },
+  );
+
+  test('normalizeWalletSignature rejects malformed recovery ids', () {
+    final input = Uint8List.fromList(
+      List<int>.generate(65, (i) => i == 64 ? 29 : i),
+    );
+
+    expect(() => normalizeWalletSignature(input), throwsFormatException);
+  });
+
   test('LocalEoaSigner implements WalletSigner and PolydartSigner', () async {
     final signer = LocalEoaSigner(
       privateKeyHex:

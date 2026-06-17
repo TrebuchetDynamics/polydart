@@ -135,7 +135,7 @@ final class RelayerClient {
     try {
       resp = await _transport.postJson('/submit', body, headers: headers);
     } catch (e) {
-      throw classifyRelayerAllowlistError(e) ?? e;
+      throw classifyRelayerError(e) ?? e;
     }
     return RelayerTransaction.fromJson(resp);
   }
@@ -151,10 +151,34 @@ final class RelayerClient {
   }) async {
     final owner = ownerAddress.trim();
     final wallet = walletAddress.trim();
+    final nonceValue = nonce.trim();
+    final signatureValue = signature.trim();
+    final deadlineValue = deadline.trim();
     if (owner.isEmpty || wallet.isEmpty) {
       throw const ValidationException(
         code: ErrorCode.missingField,
         message: 'relayer: owner and wallet addresses are required',
+      );
+    }
+    if (nonceValue.isEmpty) {
+      throw const ValidationException(
+        code: ErrorCode.missingField,
+        message: 'relayer: wallet nonce is required',
+        field: 'nonce',
+      );
+    }
+    if (signatureValue.isEmpty) {
+      throw const ValidationException(
+        code: ErrorCode.missingField,
+        message: 'relayer: wallet batch signature is required',
+        field: 'signature',
+      );
+    }
+    if (deadlineValue.isEmpty) {
+      throw const ValidationException(
+        code: ErrorCode.missingField,
+        message: 'relayer: wallet batch deadline is required',
+        field: 'deadline',
       );
     }
     if (calls.isEmpty) {
@@ -168,11 +192,11 @@ final class RelayerClient {
       'type': 'WALLET',
       'from': owner,
       'to': depositWalletFactoryAddr,
-      'nonce': nonce,
-      'signature': signature,
+      'nonce': nonceValue,
+      'signature': signatureValue,
       'depositWalletParams': <String, dynamic>{
         'depositWallet': wallet,
-        'deadline': deadline,
+        'deadline': deadlineValue,
         'calls': calls.map((c) => c.toJson()).toList(growable: false),
       },
     };
@@ -186,7 +210,7 @@ final class RelayerClient {
     try {
       resp = await _transport.postJson('/submit', body, headers: headers);
     } catch (e) {
-      throw classifyRelayerAllowlistError(e) ?? e;
+      throw classifyRelayerError(e) ?? e;
     }
     return RelayerTransaction.fromJson(resp);
   }
@@ -206,8 +230,13 @@ final class RelayerClient {
       'type': 'WALLET',
     });
     final headers = _authHeaders(method: 'GET', path: path);
-    final resp = await _transport.getJson(path, headers: headers);
-    final n = NonceResponse.fromJson(resp).nonce.trim();
+    final Object? resp;
+    try {
+      resp = await _transport.getJsonValue(path, headers: headers);
+    } catch (e) {
+      throw classifyRelayerError(e) ?? e;
+    }
+    final n = NonceResponse.fromJsonValue(resp).nonce.trim();
     if (n.isEmpty) {
       throw const TransportException(
         code: ErrorCode.invalidValue,
@@ -232,7 +261,12 @@ final class RelayerClient {
       'address': owner,
     });
     final headers = _authHeaders(method: 'GET', path: path);
-    final resp = await _transport.getJson(path, headers: headers);
+    final Map<String, dynamic> resp;
+    try {
+      resp = await _transport.getJson(path, headers: headers);
+    } catch (e) {
+      throw classifyRelayerError(e) ?? e;
+    }
     return DeployedResponse.fromJson(resp);
   }
 
@@ -248,7 +282,12 @@ final class RelayerClient {
     }
     final path = _pathWithQuery('/transaction', <String, String>{'id': id});
     final headers = _authHeaders(method: 'GET', path: path);
-    final body = await _transport.getJsonValue(path, headers: headers);
+    final Object? body;
+    try {
+      body = await _transport.getJsonValue(path, headers: headers);
+    } catch (e) {
+      throw classifyRelayerError(e) ?? e;
+    }
     if (body is Map<String, dynamic>) {
       return RelayerTransaction.fromJson(body);
     }

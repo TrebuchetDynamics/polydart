@@ -245,6 +245,25 @@ void main() {
       expect(client.methods, <String>['eth_getCode']);
     });
 
+    test(
+      'returns rpc_error without probing mutable settlement paths',
+      () async {
+        final readiness = await checkReadiness(
+          depositWallet: owner,
+          reader: _Reader(<Position>[_position(conditionId: conditionA)]),
+          relayerConfigured: true,
+          rpcUrl: 'http://rpc.test',
+          httpClient: _FailingRpcClient(),
+        );
+
+        expect(readiness.ready, isFalse);
+        expect(readiness.status, settlementStatusRpcError);
+        expect(readiness.depositWalletDeployed, isFalse);
+        expect(readiness.reason, contains('RPC code check failed'));
+        expect(readiness.nextAction, contains('Polygon RPC'));
+      },
+    );
+
     test('returns data API unavailable when optional reader fails', () async {
       final readiness = await checkReadiness(
         depositWallet: owner,
@@ -319,6 +338,20 @@ final class _FailingReader implements SettlementDataReader {
   @override
   Future<List<Position>> currentPositions(String owner) {
     throw StateError('positions unavailable');
+  }
+}
+
+final class _FailingRpcClient extends http.BaseClient {
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    final response = http.Response('rpc unavailable', 500);
+    return http.StreamedResponse(
+      Stream<List<int>>.value(response.bodyBytes),
+      response.statusCode,
+      headers: response.headers,
+      reasonPhrase: response.reasonPhrase,
+      request: request,
+    );
   }
 }
 
