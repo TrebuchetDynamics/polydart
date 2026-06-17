@@ -215,6 +215,22 @@ void main() {
     expect(resp.transactionHashes, ['0xtx']);
   });
 
+  test('OrderResponse.fromJson tolerates string and numeric success flags', () {
+    final stringSuccess = OrderResponse.fromJson(<String, dynamic>{
+      'success': 'true',
+      'orderID': 'O-5',
+      'status': 'matched',
+    });
+    final numericSuccess = OrderResponse.fromJson(<String, dynamic>{
+      'success': 1,
+      'orderID': 'O-6',
+      'status': 'matched',
+    });
+
+    expect(stringSuccess.success, isTrue);
+    expect(numericSuccess.success, isTrue);
+  });
+
   test('OrderResponse.fromJson stringifies numeric list aliases', () {
     final resp = OrderResponse.fromJson(<String, dynamic>{
       'success': true,

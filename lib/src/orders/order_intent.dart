@@ -212,7 +212,7 @@ final class OrderResponse {
     final singleTransactionHash =
         (json['transaction_hash'] ?? json['transactionHash'])?.toString();
     return OrderResponse(
-      success: json['success'] == true,
+      success: _boolValue(json['success']),
       orderId:
           (json['orderID'] ?? json['orderId'] ?? json['order_id'])
               ?.toString() ??
@@ -267,6 +267,13 @@ void _validatePositiveTickSize(String tick) {
       field: 'tick_size',
     );
   }
+}
+
+bool _boolValue(Object? raw) {
+  if (raw is bool) return raw;
+  if (raw is num) return raw != 0;
+  final value = raw?.toString().trim().toLowerCase();
+  return value == 'true' || value == '1';
 }
 
 List<String> _stringList(Object? raw) {
