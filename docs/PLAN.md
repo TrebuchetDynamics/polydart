@@ -2,7 +2,7 @@
 
 Companion to `PRD.md`. Translates the PRD into concrete modules, ordering, and acceptance criteria.
 
-> **Reference repo:** [`TrebuchetDynamics/polygolem`](https://github.com/TrebuchetDynamics/polygolem), mirrored locally as the read-only `polygolem/` submodule.
+> **Reference repo:** [`TrebuchetDynamics/polygolem`](https://github.com/TrebuchetDynamics/polygolem), mirrored locally as a read-only `polygolem/` checkout when protocol work needs upstream evidence.
 
 ---
 
@@ -28,14 +28,18 @@ Per PRD §5. The SDK exposes a `RelayerProxyClient` that targets a user-supplied
 ### AD-6 — Version lockstep with polygolem MAJOR.MINOR
 Polydart MAJOR.MINOR mirrors polygolem. Patch versions diverge for Dart-specific fixes. Each release notes the polygolem commit it parities against.
 
-### AD-7 — Pull polygolem before package work
-`polydart/polygolem` is the canonical upstream submodule. Before touching any protocol module, run:
+### AD-7 — Refresh polygolem before package work
+A local `polygolem/` checkout is the canonical upstream evidence source for protocol work. Before touching any protocol module, refresh or create it:
 
 ```sh
-git -C polygolem pull --ff-only origin main
+if [ -d polygolem/.git ]; then
+  git -C polygolem pull --ff-only origin main
+else
+  git clone https://github.com/TrebuchetDynamics/polygolem.git polygolem
+fi
 ```
 
-Use the pulled `polygolem/` commit as the source of truth for CLOB, Gamma, Data API, deposit-wallet, relayer, signing, and safety behavior. Record the commit in the implementation notes or parity fixture update. If the pull changes a relevant upstream contract, update the Dart code and parity tests together. Do not edit the upstream checkout directly.
+Use the refreshed `polygolem/` commit as the source of truth for CLOB, Gamma, Data API, deposit-wallet, relayer, signing, and safety behavior. Record the commit in the implementation notes or parity fixture update. If the refresh changes a relevant upstream contract, update the Dart code and parity tests together. Do not edit the upstream checkout directly.
 
 ---
 

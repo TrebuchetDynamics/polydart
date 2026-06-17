@@ -23,8 +23,8 @@ rows:
         - 'ClobClient.orderBook'
         - 'ClobOrderBookReader.orderBook'
       tests:
-        - 'test/clob/clob_client_test.dart'
-        - 'test/types/clob_test.dart'
+        - 'test/clob/reads/clob_client_test.dart'
+        - 'test/types/clob/clob_test.dart'
     evidence:
       - 'numeric/string price-size tolerance'
       - 'snake/camel market metadata aliases'
@@ -49,8 +49,8 @@ rows:
         - 'ClobClient.market'
         - 'ClobClient.marketByToken'
       tests:
-        - 'test/clob/clob_client_test.dart'
-        - 'test/types/clob_test.dart'
+        - 'test/clob/reads/clob_client_test.dart'
+        - 'test/types/clob/clob_test.dart'
     evidence:
       - 'condition/question aliases'
       - 'negative-risk metadata'
@@ -83,8 +83,8 @@ rows:
         - 'ClobClient.tickSize'
         - 'ClobClient.feeRateBps'
       tests:
-        - 'test/clob/clob_client_test.dart'
-        - 'test/clob/clob_analytics_test.dart'
+        - 'test/clob/reads/clob_client_test.dart'
+        - 'test/clob/reads/clob_analytics_test.dart'
     evidence:
       - 'numeric-string tolerance'
       - 'tickSize/minimumTickSize aliases'
@@ -107,8 +107,8 @@ rows:
       apis:
         - 'ClobClient.pricesHistory'
       tests:
-        - 'test/clob/clob_client_test.dart'
-        - 'test/types/clob_test.dart'
+        - 'test/clob/reads/clob_client_test.dart'
+        - 'test/types/clob/clob_test.dart'
     evidence:
       - 't/p and timestamp/price aliases'
       - 'numeric-string volume'
@@ -130,7 +130,7 @@ rows:
       apis:
         - 'ClobClient.publicTrades'
       tests:
-        - 'test/clob/clob_client_test.dart'
+        - 'test/clob/reads/clob_client_test.dart'
     evidence:
       - 'market filter routing'
       - 'authenticated trade DTO alias parity reused'
@@ -154,7 +154,7 @@ rows:
         - 'ClobClient.builderTrades'
         - 'UniversalClient.builderTrades'
       tests:
-        - 'test/clob/clob_client_test.dart'
+        - 'test/clob/reads/clob_client_test.dart'
         - 'test/universal/universal_client_test.dart'
     evidence:
       - 'tradeId/orderId/assetId aliases'
@@ -189,7 +189,7 @@ rows:
         - 'ClobClient.rewardPercentages'
         - 'ClobClient.rebatedFees'
       tests:
-        - 'test/clob/clob_analytics_test.dart'
+        - 'test/clob/reads/clob_analytics_test.dart'
     evidence:
       - 'camel aliases'
       - 'string numerics'
@@ -214,7 +214,7 @@ rows:
         - 'ClobClient.orderScoring'
         - 'ClobClient.ordersScoring'
       tests:
-        - 'test/clob/clob_analytics_test.dart'
+        - 'test/clob/reads/clob_analytics_test.dart'
     evidence:
       - 'bool/string/numeric bool drift'
     notes: 'Read-only maker reward scoring helpers.'
@@ -235,7 +235,7 @@ rows:
       apis:
         - 'ClobClient.balanceAllowance'
       tests:
-        - 'test/clob/clob_auth_reads_test.dart'
+        - 'test/clob/auth/clob_auth_reads_test.dart'
     evidence:
       - 'asset_type normalization'
       - 'signature_type=3'
@@ -261,7 +261,7 @@ rows:
         - 'ClobAuthClient.openOrders'
         - 'ClobAuthClient.trades'
       tests:
-        - 'test/clob/clob_auth_reads_test.dart'
+        - 'test/clob/auth/clob_auth_reads_test.dart'
     evidence:
       - 'numeric-string amount/timestamp fields'
       - 'snake/camel aliases'
@@ -289,10 +289,10 @@ rows:
         - 'ClobWrites.createOrders'
         - 'ClobWrites.cancelOrders'
       tests:
-        - 'test/clob/clob_writes_test.dart'
-        - 'test/orders/order_placement_test.dart'
+        - 'test/clob/writes/clob_writes_test.dart'
+        - 'test/orders/placement/order_placement_test.dart'
     evidence:
-      - 'orderID/order_id'
+      - 'orderID/orderId/order_id'
       - 'transactionHash variants'
       - 'tradeIDs variants'
       - 'numeric-string canceled lists'
@@ -319,9 +319,9 @@ rows:
         - 'signOrderV2'
         - 'computeAmounts'
       tests:
-        - 'test/orders/order_signing_test.dart'
-        - 'test/orders/amounts_test.dart'
-        - 'test/orders/order_placement_test.dart'
+        - 'test/orders/signing/order_signing_test.dart'
+        - 'test/orders/core/amounts/amounts_test.dart'
+        - 'test/orders/placement/order_placement_test.dart'
     evidence:
       - 'buy/sell market semantics'
       - 'tick-floor rounding'
@@ -347,8 +347,8 @@ rows:
         - 'erc7739.dart'
         - 'deposit_wallet_order_signing.dart'
       tests:
-        - 'test/auth/erc7739_test.dart'
-        - 'test/orders/order_placement_test.dart'
+        - 'test/auth/crypto/wallets/erc7739_test.dart'
+        - 'test/orders/placement/order_placement_test.dart'
         - 'test/conformance/golden_conformance_test.dart'
     evidence:
       - 'byte-level parity vectors'
@@ -377,7 +377,7 @@ rows:
         - 'deriveDepositWallet'
       tests:
         - 'test/wallet/deposit_wallet_readiness_test.dart'
-        - 'test/auth/create2_test.dart'
+        - 'test/auth/crypto/wallets/create2_test.dart'
     evidence:
       - 'Proxy/Safe/Deposit CREATE2 vectors'
       - 'code/balance/allowance readiness checks'
@@ -403,8 +403,8 @@ rows:
         - 'mintV2APIKey'
         - 'submitWalletBatch'
       tests:
-        - 'test/relayer/relayer_client_test.dart'
-        - 'test/relayer/v2_auth_test.dart'
+        - 'test/relayer/client/relayer_client_test.dart'
+        - 'test/relayer/auth/v2_auth_test.dart'
     evidence:
       - 'transactionID/transactionId/snake aliases'
       - 'numeric nonce/value'
@@ -431,7 +431,7 @@ rows:
         - 'buildAdapterApprovalCalls'
         - 'EnableTrading'
       tests:
-        - 'test/relayer/approvals_test.dart'
+        - 'test/relayer/approvals/approvals_test.dart'
         - 'test/enabletrading/enable_trading_test.dart'
     evidence:
       - 'spender ordering'
@@ -540,8 +540,8 @@ rows:
       apis:
         - 'GammaClient'
       tests:
-        - 'test/gamma/gamma_client_test.dart'
-        - 'test/gamma/gamma_client_extra_test.dart'
+        - 'test/gamma/client/gamma_client_test.dart'
+        - 'test/gamma/client/gamma_client_extra_test.dart'
     evidence:
       - 'routing'
       - 'params'

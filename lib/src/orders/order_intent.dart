@@ -213,7 +213,10 @@ final class OrderResponse {
         (json['transaction_hash'] ?? json['transactionHash'])?.toString();
     return OrderResponse(
       success: json['success'] == true,
-      orderId: (json['orderID'] ?? json['order_id'])?.toString() ?? '',
+      orderId:
+          (json['orderID'] ?? json['orderId'] ?? json['order_id'])
+              ?.toString() ??
+          '',
       status: json['status']?.toString() ?? '',
       errorMessage: (json['errorMsg'] ?? json['error_msg'])?.toString(),
       transactionHash: singleTransactionHash,

@@ -5,8 +5,9 @@
 //   dart run tool/generate_parity_docs.dart          # write the matrix
 //   dart run tool/generate_parity_docs.dart --check   # verify it is current
 //
-// `--check` regenerates in memory and compares against the committed file,
-// exiting non-zero when they differ. CI uses this to catch a stale matrix.
+// `--check` validates source evidence, regenerates in memory, and compares
+// against the committed file, exiting non-zero when either source evidence is
+// invalid or generated output differs. CI uses this to catch stale matrices.
 import 'dart:io';
 
 import 'package:yaml/yaml.dart';
@@ -42,6 +43,15 @@ void main(List<String> args) {
   }
 
   final data = loadYaml(source.readAsStringSync()) as YamlMap;
+  final validationErrors = _validateParitySource(data);
+  if (validationErrors.isNotEmpty) {
+    stderr.writeln('ERROR: $_sourcePath has invalid parity evidence:');
+    for (final error in validationErrors) {
+      stderr.writeln('- $error');
+    }
+    exit(1);
+  }
+
   final generated = _render(data);
 
   if (check) {
@@ -61,6 +71,23 @@ void main(List<String> args) {
 
   File(_outputPath).writeAsStringSync(generated);
   stdout.writeln('Wrote $_outputPath from $_sourcePath.');
+}
+
+List<String> _validateParitySource(YamlMap data) {
+  final errors = <String>[];
+  final rows = (data['rows'] as YamlList).cast<YamlMap>();
+  for (final row in rows) {
+    final id = row['id'] as String;
+    final polydart = row['polydart'] as YamlMap?;
+    final tests = (polydart?['tests'] as YamlList?)?.cast<String>();
+    if (tests == null) continue;
+    for (final testPath in tests) {
+      if (testPath.startsWith('test/') && !File(testPath).existsSync()) {
+        errors.add('$id references missing Polydart test path `$testPath`');
+      }
+    }
+  }
+  return errors;
 }
 
 String _render(YamlMap data) {
@@ -83,7 +110,7 @@ String _render(YamlMap data) {
     ..writeln('     Source: $_sourcePath')
     ..writeln('     Regenerate: dart run tool/generate_parity_docs.dart')
     ..writeln(
-      '     CI freshness check: dart run tool/generate_parity_docs.dart --check -->',
+      '     CI evidence/freshness check: dart run tool/generate_parity_docs.dart --check -->',
     )
     ..writeln()
     ..writeln('Source: `$_sourcePath`')
@@ -128,7 +155,7 @@ String _render(YamlMap data) {
     )
     ..writeln(
       '- CI runs `dart run tool/generate_parity_docs.dart --check` to ensure '
-      'this file matches its YAML source.',
+      'Polydart test evidence paths exist and this file matches its YAML source.',
     )
     ..writeln(
       '- `partial` and `missing` rows should include an explicit note '

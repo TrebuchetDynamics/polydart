@@ -93,6 +93,27 @@ void main() {
   });
 
   group('createOrder', () {
+    test('decodes camelCase orderId from live CLOB write responses', () async {
+      final c = _liveClient((_) async {
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'success': true,
+            'orderId': 'O-camel',
+            'status': 'live',
+          }),
+          200,
+        );
+      });
+
+      final resp = await c.writes.createOrder(
+        order: _sampleSignedOrder(),
+        owner: 'owner-1',
+        apiKey: _apiKey,
+      );
+
+      expect(resp.orderId, 'O-camel');
+    });
+
     test(
       'POSTs /order with signed payload, L2 headers, and Polygolem response casing',
       () async {

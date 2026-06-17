@@ -109,13 +109,17 @@ Project/reference docs:
 
 Polygolem is the older-brother reference. Every protocol module, signing scheme, API client, safety gate, fixture family, and user-facing feature in polygolem has a Dart twin here. Polydart keeps a similar layered architecture—clients, DTOs, signers, transport, safety gates, tests, and docs—while using Dart/Flutter-native package boundaries where platform or signer constraints differ. Versions track in lockstep.
 
-Before any protocol-package work, refresh the upstream reference:
+Before any protocol-package work, refresh a local upstream reference checkout:
 
 ```sh
-git -C polygolem pull --ff-only origin main
+if [ -d polygolem/.git ]; then
+  git -C polygolem pull --ff-only origin main
+else
+  git clone https://github.com/TrebuchetDynamics/polygolem.git polygolem
+fi
 ```
 
-Then port from that fresh `polygolem` commit into Dart and update parity tests/fixtures with the commit hash used. Do not develop live CLOB, deposit-wallet, relayer, or signing behavior from memory or stale docs. Treat `polygolem/` as a read-only upstream reference.
+Then port from that fresh `polygolem` commit into Dart and update parity tests/fixtures with the commit hash used. Do not develop live CLOB, deposit-wallet, relayer, or signing behavior from memory or stale docs. Treat any local `polygolem/` checkout as a read-only upstream reference.
 
 ## License
 

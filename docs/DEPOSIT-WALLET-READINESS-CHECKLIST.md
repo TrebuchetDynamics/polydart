@@ -6,13 +6,17 @@
 ## Locked Decisions
 
 - TDD always: one failing public-interface test, verify RED, minimal GREEN, then refactor.
-- Pull the local Go reference before protocol work:
+- Refresh or create the local Go reference before protocol work:
 
 ```sh
-git -C polygolem pull --ff-only origin main
+if [ -d polygolem/.git ]; then
+  git -C polygolem pull --ff-only origin main
+else
+  git clone https://github.com/TrebuchetDynamics/polygolem.git polygolem
+fi
 ```
 
-- Record the pulled `polygolem` commit in parity fixture or implementation notes.
+- Record the refreshed `polygolem` commit in parity fixture or implementation notes.
 - Implement the first slice in `polydart`, not in Flutter UI.
 - Keep `polydart` pure Dart: no Flutter, Reown, secure-storage, or app-session dependency.
 - Consumer Flutter apps store any local credentials safely, keyed by chain id and EOA.
