@@ -57,6 +57,7 @@ final class FlutterDepositWalletOrderSmokeSuccess
   const FlutterDepositWalletOrderSmokeSuccess({
     required this.response,
     required this.depositWallet,
+    required this.readiness,
     required this.readinessStatus,
     required this.orderRequestBody,
     required this.orderRequestHeaders,
@@ -64,9 +65,21 @@ final class FlutterDepositWalletOrderSmokeSuccess
 
   final OrderResponse response;
   final String depositWallet;
+  final DepositWalletReadiness readiness;
   final String readinessStatus;
   final Map<String, dynamic> orderRequestBody;
   final Map<String, String> orderRequestHeaders;
+}
+
+final class FlutterDepositWalletOrderSmokeNeedsAction
+    extends FlutterDepositWalletOrderSmokeOutcome {
+  const FlutterDepositWalletOrderSmokeNeedsAction({
+    required this.readiness,
+    required this.orderWasPosted,
+  });
+
+  final DepositWalletReadiness readiness;
+  final bool orderWasPosted;
 }
 
 final class FlutterDepositWalletOrderSmokeRejected
@@ -99,6 +112,14 @@ final class FlutterDepositWalletOrderSmoke {
     var orderWasPosted = false;
     final client = _mockLiveClobClient((req) async {
       switch (req.url.path) {
+        case '/balance-allowance':
+          return http.Response(
+            jsonEncode(<String, dynamic>{
+              'balance': '2500000',
+              'allowances': <String, String>{'0xCtfExchangeV2': '999999999'},
+            }),
+            200,
+          );
         case '/tick-size':
           return http.Response(
             jsonEncode(<String, dynamic>{
@@ -127,6 +148,22 @@ final class FlutterDepositWalletOrderSmoke {
     });
 
     try {
+      final readiness =
+          await DepositWalletReadinessService.checkWithCredentials(
+            eoaAddress: _signer.address,
+            credentials: _mockCredentialReadiness,
+            relayerTransport: _mockRelayerTransport(),
+            clob: client,
+            rpcClient: _mockRpcClient(),
+            rpcUrl: 'https://rpc.example.test',
+          );
+      if (readiness.status != DepositWalletReadinessStatus.ready) {
+        return FlutterDepositWalletOrderSmokeNeedsAction(
+          readiness: readiness,
+          orderWasPosted: orderWasPosted,
+        );
+      }
+
       final response = await createDepositWalletLimitOrder(
         client: client,
         signer: _signer,
@@ -135,8 +172,9 @@ final class FlutterDepositWalletOrderSmoke {
       );
       return FlutterDepositWalletOrderSmokeSuccess(
         response: response,
-        depositWallet: deriveDepositWallet(_signer.address),
-        readinessStatus: 'ready',
+        depositWallet: readiness.depositWallet,
+        readiness: readiness,
+        readinessStatus: readiness.status.name,
         orderRequestBody: capturedBody ?? const <String, dynamic>{},
         orderRequestHeaders: capturedHeaders ?? const <String, String>{},
       );
@@ -157,6 +195,27 @@ const ApiKey _mockApiKey = ApiKey(
   passphrase: 'mock-passphrase',
 );
 
+const V2APIKey _mockRelayerApiKey = V2APIKey(
+  key: 'mock-relayer-key',
+  address: '0x0000000000000000000000000000000000001234',
+);
+
+const LiveCredentialReadiness _mockCredentialReadiness =
+    LiveCredentialReadiness(
+      clobApiKey: CredentialReadiness<ApiKey>(
+        status: LiveCredentialStatus.cached,
+        value: _mockApiKey,
+      ),
+      builderFeeKey: CredentialReadiness<ApiKey>(
+        status: LiveCredentialStatus.cached,
+        value: _mockApiKey,
+      ),
+      relayerApiKey: CredentialReadiness<V2APIKey>(
+        status: LiveCredentialStatus.cached,
+        value: _mockRelayerApiKey,
+      ),
+    );
+
 const CreateDepositWalletLimitOrderParams _mockOrderParams =
     CreateDepositWalletLimitOrderParams(
       tokenId: '12345',
@@ -164,6 +223,40 @@ const CreateDepositWalletLimitOrderParams _mockOrderParams =
       price: '0.50',
       size: '10',
     );
+
+HttpTransport _mockRelayerTransport() {
+  return HttpTransport(
+    config: const TransportConfig(baseUrl: defaultRelayerBaseUrl, retryMax: 0),
+    inner: MockClient((req) async {
+      if (req.url.path == '/deployed') {
+        return http.Response(
+          jsonEncode(<String, dynamic>{'deployed': true}),
+          200,
+        );
+      }
+      return http.Response('not found', 404);
+    }),
+  );
+}
+
+http.Client _mockRpcClient() {
+  return MockClient((req) async {
+    final body = jsonDecode(req.body) as Map<String, dynamic>;
+    if (body['method'] == 'eth_call') {
+      return http.Response(
+        jsonEncode(<String, Object>{
+          'jsonrpc': '2.0',
+          'id': 1,
+          'result': _word(1),
+        }),
+        200,
+      );
+    }
+    return http.Response('not found', 404);
+  });
+}
+
+String _word(int value) => '0x${value.toRadixString(16).padLeft(64, '0')}';
 
 ClobClient _mockLiveClobClient(
   Future<http.Response> Function(http.BaseRequest) handler,

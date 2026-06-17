@@ -18,6 +18,9 @@ void main() {
     expect(success.response.orderId, 'mock-order-1');
     expect(success.depositWallet, depositWallet);
     expect(success.readinessStatus, 'ready');
+    expect(success.readiness.status, DepositWalletReadinessStatus.ready);
+    expect(success.readiness.depositWalletPusdBalance, '1');
+    expect(success.readiness.clobBalance, '2500000');
     expect(success.orderRequestHeaders['POLY_ADDRESS'], signer.address);
     expect(signer.lastTypedData?['primaryType'], 'TypedDataSign');
 

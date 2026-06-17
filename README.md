@@ -1,28 +1,30 @@
-# polydart
+# Polydart
 
-Dart-native Polymarket SDK — peer implementation to [polygolem](https://github.com/TrebuchetDynamics/polygolem).
+Dart-native Polymarket SDK for Dart, Flutter, web, CLI, and server apps.
+Polydart is the Dart peer of [polygolem](https://github.com/TrebuchetDynamics/polygolem): it mirrors Polymarket protocol surfaces while keeping Dart/Flutter ergonomics, explicit signer boundaries, and safety-gated mutation paths.
 
-> **Status:** alpha. APIs unstable; live trading paths are explicit,
-> signer-mediated, and gated.
+> **Status:** alpha-ready, not finished. Public reads, paper-mode, and guarded protocol-building blocks are available now; Polydart is not yet a stable production-live-trading SDK. APIs may change before a stable release. Live trading paths are explicit, signer-mediated, and gated.
 
-## What it is
+## What you can build today
 
-A spec-for-spec mirror of polygolem in Dart. Polydart currently provides
-tested public market reads, Data API reads, wallet intelligence research
-helpers, paper-mode primitives, EOA signer helpers, guarded CLOB write helpers,
-stream clients, and relayer/readiness building blocks for Dart and Flutter
-applications.
+- Read public Gamma markets, events, profiles, tags, and search results.
+- Read CLOB books, prices, spreads, trades, tick sizes, and market metadata.
+- Read Data API positions, trades, holders, open interest, leaderboards, and wallet intelligence.
+- Build Flutter read-only repositories without adding Flutter as a dependency to Polydart.
+- Use paper-mode primitives for local no-funds experiments.
+- Prepare deposit-wallet, relayer, funding, approval, settlement, and order-result flows with typed safety checks.
+- Integrate wallet-provider signing through `WalletSigner` adapters such as ReownWallet / WalletConnect.
 
 ## Install
 
-If you are consuming a published release from pub.dev, use the package version for that release:
+Published release:
 
 ```yaml
 dependencies:
   polydart: ^0.1.0-alpha.2
 ```
 
-For the current repository state, use the public repository tag or a pinned commit:
+Pinned Git release or commit:
 
 ```yaml
 dependencies:
@@ -32,84 +34,123 @@ dependencies:
       ref: v0.1.0-alpha.2
 ```
 
-## Quick start (read-only)
+Local checkout while developing an app:
+
+```yaml
+dependencies:
+  polydart:
+    path: ../polydart
+```
+
+Then run:
+
+```sh
+dart pub get
+# or: flutter pub get
+```
+
+## Quick start: read public markets
 
 ```dart
 import 'package:polydart/polydart.dart';
 
 Future<void> main() async {
   final client = Polydart.readOnly();
-  // Search Gamma.
-  final search = await client.gamma.search(
-    const SearchParams(query: 'btc 5m', limitPerType: 5),
-  );
-  // Resolve a market slug to token ids.
-  final resolved = await client.resolver.resolveBySlug('btc-100k-eoy');
-  // Enrich a market with CLOB data (tick size, midpoint, spread, book).
-  if (search.events.isNotEmpty) {
-    final m = search.events.first.markets.first;
-    final enriched = await client.discovery.enrichMarket(m);
-    print('midpoint=${enriched.midpoint}');
+  try {
+    final search = await client.gamma.search(
+      const SearchParams(query: 'btc', limitPerType: 3),
+    );
+
+    final firstEvent = search.events.isEmpty ? null : search.events.first;
+    final firstMarket = firstEvent?.markets.isNotEmpty ?? false
+        ? firstEvent!.markets.first
+        : null;
+    if (firstMarket == null) return;
+
+    final resolved = await client.resolver.resolveBySlug(firstMarket.slug);
+    final tokenId = resolved?.tokenIds.isEmpty ?? true
+        ? null
+        : resolved!.tokenIds.first;
+    if (tokenId == null) return;
+
+    final midpoint = await client.clob.midpoint(tokenId);
+    print('${firstMarket.question}: midpoint=$midpoint');
+  } finally {
+    client.close();
   }
-  client.close();
 }
 ```
 
-Run the bundled example:
+Run the bundled read-only example:
 
 ```sh
 dart run example/read_only.dart
 ```
 
-## Flutter app readiness
+## Choose your integration path
 
-Polydart is a Dart package that can be consumed by Flutter apps without adding
-Flutter as a dependency to Polydart itself. See
-[`docs/FLUTTER-APP-READINESS.md`](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/FLUTTER-APP-READINESS.md)
-for install snippets, platform notes, lifecycle guidance, read-only usage, and
-the normal-app **EOA Signer with ReownWallet** adapter pattern.
+| Goal | Start here | Safety profile |
+| --- | --- | --- |
+| Read public markets from Dart | `dart run example/read_only.dart` | No wallet or credentials. |
+| Use Polydart in Flutter | [`docs/FLUTTER-APP-READINESS.md`](docs/FLUTTER-APP-READINESS.md) | App owns lifecycle, state, and storage. |
+| Build a Flutter read-only repository | [`example/flutter_read_only.dart`](example/flutter_read_only.dart) | No wallet required. |
+| Adapt Reown/WalletConnect signing | [`example/flutter_wallet_signer.dart`](example/flutter_wallet_signer.dart) | Wallet-provider signer; no private keys in app code. |
+| Smoke-test deposit-wallet order signing | [`example/flutter_deposit_wallet_order.dart`](example/flutter_deposit_wallet_order.dart) | Mock-only; no live funds or submissions. |
+| Understand live deposit-wallet readiness | [`docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md`](docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md) | Explicit deploy/approval/funding states. |
 
-## Modes
+## Operating modes
 
-| Factory | Mode | Wallet | Live writes |
-|---------|------|--------|-------------|
+| Factory / path | Mode | Wallet | Live writes |
+| --- | --- | --- | --- |
 | `Polydart.readOnly()` | `readOnly` | none | blocked |
-| `Polydart.paper(eoaAddress: ...)` | `paper` | EOA only | simulated |
-| lower-level live clients | `live` | EOA Signer with ReownWallet (or explicit advanced signer) | explicitly gated |
+| `Polydart.paper(eoaAddress: ...)` | `paper` | EOA identity for simulation | simulated only |
+| Lower-level live clients | `live` | app-owned EOA signer | requires live mode, live flag, credentials, confirmation, and preflight |
 
-Risk gates (`requireLive`, `requirePaperOrLive`) refuse calls that don't
-match the active mode and require `liveTradingEnabled=true` for any real
-order submission.
+Risk gates such as `requireLive` and `requirePaperOrLive` reject calls that do not match the active mode. Real order submission also requires `liveTradingEnabled=true`.
 
-The package root currently exposes `Polydart.readOnly()` and
-`Polydart.paper(...)`. Live paths are available through lower-level clients and
-must be wired by the application with an EOA Signer with ReownWallet or an
-equivalent wallet-provider signer, explicit live configuration, confirmation,
-and preflight checks. `LocalEoaSigner` is available for special CLI/test,
-headless, alpha-app, and server automation cases; generated no-sign-in keys
-belong to paper-mode trials, not live custody.
+## Wallet and live-safety rules
 
-## Documents
+- Normal Flutter/mobile/web apps should use an EOA Signer with ReownWallet, WalletConnect, or an equivalent wallet-provider adapter.
+- Do **not** store raw private keys, seed phrases, or funded wallet secrets in app code, examples, assets, or logs.
+- `LocalEoaSigner` exists for CLI tests, headless/server automation, alpha/test apps, and paper-mode trials; it is not the normal Flutter live path.
+- Generated paper wallets must not be upgraded into live custody.
+- Live trading, approvals, transfers, and wallet deployment are safety-gated mutations. Keep them behind explicit app-level user intent and confirmation.
 
-Start with the [end-user guide](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/END-USER-GUIDE.md) for install choices, safe read-only usage, Flutter patterns, signer rules, and example paths.
+## Flutter notes
+
+Polydart is plain Dart and does not depend on Flutter. Flutter apps can use it from Provider, Riverpod, bloc, `State`, or any other state model. Your app owns:
+
+- wallet connection and session UX;
+- secure storage choices for non-secret credentials;
+- lifecycle (`client.close()` when no longer needed);
+- user-facing confirmations for live actions;
+- platform-specific browser/mobile constraints.
+
+Start with [`docs/FLUTTER-APP-READINESS.md`](docs/FLUTTER-APP-READINESS.md).
+
+## End-user docs
+
+Start with the [end-user guide](docs/END-USER-GUIDE.md) for install choices, safe read-only usage, Flutter patterns, signer rules, and example paths.
 
 User-facing references:
 
-- [Flutter integration notes](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/FLUTTER-APP-READINESS.md)
-- [Deposit-wallet readiness checklist](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md)
-- `CHANGELOG.md` — release log
+- [Flutter integration notes](docs/FLUTTER-APP-READINESS.md)
+- [Deposit-wallet readiness checklist](docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md)
+- [End-user guide](docs/END-USER-GUIDE.md)
+- [Changelog](CHANGELOG.md)
 
 Project/reference docs:
 
-- [Product requirements](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/PRD.md)
-- [Implementation plan](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/PLAN.md)
-- [Polygolem parity coverage](https://github.com/TrebuchetDynamics/polydart/blob/main/docs/POLYDART-POLYGOLEM-COVERAGE.md)
+- [Product requirements](docs/PRD.md)
+- [Implementation plan](docs/PLAN.md)
+- [Polygolem parity coverage](docs/POLYDART-POLYGOLEM-COVERAGE.md)
+- [Polydart ↔ Polygolem parity matrix](docs/POLYDART-POLYGOLEM-PARITY.md)
 
-## Mirror commitment
+## For contributors: mirror commitment
 
-Polygolem is the older-brother reference. Every protocol module, signing scheme, API client, safety gate, fixture family, and user-facing feature in polygolem has a Dart twin here. Polydart keeps a similar layered architecture—clients, DTOs, signers, transport, safety gates, tests, and docs—while using Dart/Flutter-native package boundaries where platform or signer constraints differ. Versions track in lockstep.
+Polygolem is the older-brother reference. Every protocol module, signing scheme, API client, safety gate, fixture family, and user-facing feature in polygolem has a Dart twin here. Polydart keeps a similar layered architecture—clients, DTOs, signers, transport, safety gates, tests, and docs—while using Dart/Flutter-native package boundaries where platform or signer constraints differ.
 
-Before any protocol-package work, refresh a local upstream reference checkout:
+Before protocol-package work, refresh a local upstream reference checkout:
 
 ```sh
 if [ -d polygolem/.git ]; then
@@ -123,4 +164,4 @@ Then port from that fresh `polygolem` commit into Dart and update parity tests/f
 
 ## License
 
-MIT. See `LICENSE`.
+MIT. See [`LICENSE`](LICENSE).

@@ -28,6 +28,14 @@ _Avoid_: Temporary live account, upgradeable test key, disposable funded wallet
 A Polydart operation that could trade, approve, transfer, withdraw, deploy, or otherwise mutate protocol state must remain explicit, test-covered, and gated by caller intent. Read-only parity does not imply permission for live mutation.
 _Avoid_: Live-by-default action, implicit approval, read method with side effects
 
+**Alpha-Ready, Not Finished**:
+Polydart can be described as alpha-ready for end-user read-only, paper-mode, and protocol-building-block use when docs/tests cover those flows. It must not be described as finished, stable, or production-complete while parity rows remain partial for live mutation, relayer, wallet, signing, or DTO edge cases.
+_Avoid_: Finished SDK, stable parity complete, production live trading ready
+
+**Stable SDK Parity**:
+The finish line for Polydart as an SDK: every coverage-matrix row is implemented, an intentional Dart divergence, or not applicable; generated parity docs are fresh; tests and CI are green; and live mutations remain explicit safety-gated SDK surfaces rather than app-owned production trading guarantees.
+_Avoid_: Production live trading ready, app custody complete, exchange operations complete
+
 ## Example dialogue — Twin parity and signers
 
 Developer: "Should Polydart copy Polygolem's local private-key signer?"

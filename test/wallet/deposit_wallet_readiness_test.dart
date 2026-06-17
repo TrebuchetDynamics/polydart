@@ -260,6 +260,26 @@ void main() {
     );
 
     test(
+      'checkWithCredentials includes deposit-wallet pUSD balance from RPC',
+      () async {
+        final readiness =
+            await DepositWalletReadinessService.checkWithCredentials(
+              eoaAddress: _eoa,
+              credentials: _readyCredentials,
+              relayerTransport: _relayerTransport(deployed: true),
+              clob: _clobWithBalance('0'),
+              rpcClient: _approvalRpc(pusdBalance: BigInt.from(2500000)),
+              rpcUrl: 'http://rpc.test',
+            );
+
+        expect(readiness.status, DepositWalletReadinessStatus.needsFunding);
+        expect(readiness.fundingChecked, isTrue);
+        expect(readiness.clobBalance, '0');
+        expect(readiness.depositWalletPusdBalance, '2500000');
+      },
+    );
+
+    test(
       'checkWithCredentials returns ready when deployed, approved, and funded',
       () async {
         final readiness =
@@ -278,6 +298,7 @@ void main() {
         expect(readiness.fundingChecked, isTrue);
         expect(readiness.missingApprovals, isEmpty);
         expect(readiness.clobBalance, '2500000');
+        expect(readiness.depositWalletPusdBalance, '1');
       },
     );
 
@@ -323,6 +344,80 @@ void main() {
     );
 
     test(
+      'checkWithCredentials blocked reason names every incomplete credential',
+      () async {
+        final readiness =
+            await DepositWalletReadinessService.checkWithCredentials(
+              eoaAddress: _eoa,
+              credentials: const LiveCredentialReadiness(
+                clobApiKey: CredentialReadiness<ApiKey>(
+                  status: LiveCredentialStatus.userRejected,
+                ),
+                builderFeeKey: CredentialReadiness<ApiKey>(
+                  status: LiveCredentialStatus.blocked,
+                  reason: 'builder fee unavailable',
+                ),
+                relayerApiKey: CredentialReadiness<V2APIKey>(
+                  status: LiveCredentialStatus.cached,
+                ),
+              ),
+              relayerTransport: HttpTransport(
+                config: const TransportConfig(
+                  baseUrl: defaultRelayerBaseUrl,
+                  retryMax: 0,
+                ),
+                inner: MockClient((_) async => fail('HTTP should not run')),
+              ),
+            );
+
+        expect(readiness.status, DepositWalletReadinessStatus.blocked);
+        expect(readiness.credentialsReady, isFalse);
+        expect(readiness.reason, contains('CLOB API key userRejected'));
+        expect(
+          readiness.reason,
+          contains('CLOB builder-fee key builder fee unavailable'),
+        );
+        expect(readiness.reason, contains('Relayer API key has no value'));
+      },
+    );
+
+    test(
+      'waitForFundingReadiness reports a still-pending wallet transaction after max attempts',
+      () async {
+        final delays = <Duration>[];
+
+        final confirmation = await waitForDepositWalletFundingReadiness(
+          eoaAddress: _eoa,
+          credentials: _readyCredentials,
+          transactionHash: _fundingTxHash,
+          relayerTransport: _relayerTransport(deployed: true),
+          clob: _clobWithBalance('0'),
+          rpcClient: _receiptThenApprovalRpc(
+            receiptResults: <Map<String, dynamic>?>[null, null],
+          ),
+          rpcUrl: 'http://rpc.test',
+          pollInterval: const Duration(milliseconds: 5),
+          maxAttempts: 2,
+          delay: (duration) async => delays.add(duration),
+        );
+
+        expect(
+          confirmation.status,
+          DepositWalletFundingConfirmationStatus.transactionPending,
+        );
+        expect(confirmation.transactionConfirmed, isFalse);
+        expect(confirmation.transactionFailed, isFalse);
+        expect(confirmation.transactionAttempts, 2);
+        expect(confirmation.readinessAttempts, 1);
+        expect(
+          confirmation.readiness.status,
+          DepositWalletReadinessStatus.needsFunding,
+        );
+        expect(delays, <Duration>[const Duration(milliseconds: 5)]);
+      },
+    );
+
+    test(
       'waitForFundingReadiness reports a reverted wallet transaction separately from pending',
       () async {
         final confirmation = await waitForDepositWalletFundingReadiness(
@@ -356,6 +451,83 @@ void main() {
           confirmation.readiness.status,
           DepositWalletReadinessStatus.needsFunding,
         );
+      },
+    );
+
+    test(
+      'waitForFundingReadiness maps refreshed readiness states to confirmation states',
+      () async {
+        final cases =
+            <
+              ({
+                String name,
+                HttpTransport relayerTransport,
+                ClobClient clob,
+                http.Client? rpcClient,
+                DepositWalletFundingConfirmationStatus want,
+                DepositWalletReadinessStatus readiness,
+              })
+            >[
+              (
+                name: 'needs deploy',
+                relayerTransport: _relayerTransport(deployed: false),
+                clob: _clobWithBalance('0'),
+                rpcClient: _approvalRpc(),
+                want: DepositWalletFundingConfirmationStatus.needsDeploy,
+                readiness: DepositWalletReadinessStatus.needsDeploy,
+              ),
+              (
+                name: 'needs approval',
+                relayerTransport: _relayerTransport(deployed: true),
+                clob: _clobWithBalance('1000000'),
+                rpcClient: _approvalRpc(missingApprovalIndexes: <int>{0}),
+                want: DepositWalletFundingConfirmationStatus.needsApproval,
+                readiness: DepositWalletReadinessStatus.needsApproval,
+              ),
+              (
+                name: 'blocked credentials',
+                relayerTransport: _relayerTransport(deployed: true),
+                clob: _clobWithBalance('1000000'),
+                rpcClient: _approvalRpc(),
+                want: DepositWalletFundingConfirmationStatus.blocked,
+                readiness: DepositWalletReadinessStatus.blocked,
+              ),
+            ];
+
+        for (final tc in cases) {
+          final credentials = tc.name == 'blocked credentials'
+              ? const LiveCredentialReadiness(
+                  clobApiKey: CredentialReadiness<ApiKey>(
+                    status: LiveCredentialStatus.blocked,
+                    reason: 'clob unavailable',
+                  ),
+                  builderFeeKey: CredentialReadiness<ApiKey>(
+                    status: LiveCredentialStatus.cached,
+                    value: _clobKey,
+                  ),
+                  relayerApiKey: CredentialReadiness<V2APIKey>(
+                    status: LiveCredentialStatus.cached,
+                    value: _relayerKey,
+                  ),
+                )
+              : _readyCredentials;
+          final confirmation = await waitForDepositWalletFundingReadiness(
+            eoaAddress: _eoa,
+            credentials: credentials,
+            relayerTransport: tc.relayerTransport,
+            clob: tc.clob,
+            rpcClient: tc.rpcClient,
+            rpcUrl: 'http://rpc.test',
+            pollInterval: Duration.zero,
+            maxAttempts: 1,
+            delay: (_) async {},
+          );
+
+          expect(confirmation.status, tc.want, reason: tc.name);
+          expect(confirmation.readiness.status, tc.readiness, reason: tc.name);
+          expect(confirmation.transactionHash, isNull, reason: tc.name);
+          expect(confirmation.transactionConfirmed, isTrue, reason: tc.name);
+        }
       },
     );
   });
@@ -447,12 +619,16 @@ http.Client _receiptThenApprovalRpc({
     final input = (call['input'] as String).toLowerCase();
     final isAllowance = input.startsWith('0xdd62ed3e');
     final isApprovalForAll = input.startsWith('0xe985e9c5');
-    expect(isAllowance || isApprovalForAll, isTrue);
+    final isBalanceOf = input.startsWith('0x70a08231');
+    expect(isAllowance || isApprovalForAll || isBalanceOf, isTrue);
     return _rpcResult(_word(1));
   });
 }
 
-http.Client _approvalRpc({Set<int> missingApprovalIndexes = const <int>{}}) {
+http.Client _approvalRpc({
+  Set<int> missingApprovalIndexes = const <int>{},
+  BigInt? pusdBalance,
+}) {
   var callIndex = 0;
   return MockClient((req) async {
     final body = jsonDecode(req.body) as Map<String, dynamic>;
@@ -462,8 +638,12 @@ http.Client _approvalRpc({Set<int> missingApprovalIndexes = const <int>{}}) {
     final input = (call['input'] as String).toLowerCase();
     final isAllowance = input.startsWith('0xdd62ed3e');
     final isApprovalForAll = input.startsWith('0xe985e9c5');
-    expect(isAllowance || isApprovalForAll, isTrue);
+    final isBalanceOf = input.startsWith('0x70a08231');
+    expect(isAllowance || isApprovalForAll || isBalanceOf, isTrue);
 
+    if (isBalanceOf) {
+      return _rpcResult(_wordBigInt(pusdBalance ?? BigInt.one));
+    }
     final ready = !missingApprovalIndexes.contains(callIndex);
     callIndex++;
     return _rpcResult(_word(ready ? 1 : 0));
@@ -477,6 +657,8 @@ http.Response _rpcResult(String result) {
   );
 }
 
-String _word(int value) {
+String _word(int value) => _wordBigInt(BigInt.from(value));
+
+String _wordBigInt(BigInt value) {
   return '0x${value.toRadixString(16).padLeft(64, '0')}';
 }

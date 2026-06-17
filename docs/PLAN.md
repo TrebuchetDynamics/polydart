@@ -219,7 +219,23 @@ No secrets in repo. Builder creds checked by a CI grep step against the source t
 
 ---
 
-## 11. Open Questions (proposed resolutions)
+## 11. Stable SDK Parity Finish Track
+
+**Finish line:** Polydart reaches Stable SDK Parity when every coverage-matrix row is `implemented`, an explicit intentional Dart divergence, or `not applicable`; generated parity docs are fresh; tests and CI are green; and live mutations remain explicit safety-gated SDK surfaces rather than app-owned production trading guarantees.
+
+**First finish track: Safety-Required Live Mutation Parity.** Close the `Safety Review: required` partial rows before lower-risk DTO polish:
+
+1. Deposit-wallet live semantics — first implementation slice. Finish Flutter/demo wiring, readiness UX examples, and any remaining wallet deployment/approval/funding parity tests without making live mutation implicit. Start from the existing mock live journey and readiness checklist; keep all tests fake-transport/mock-RPC unless explicitly tagged opt-in network.
+2. Signing and order construction — close EIP-712, ERC-7739, POLY_1271, wallet-provider, explicit-private-key, and authenticated order edge-case parity.
+3. Relayer and enable-trading — finish endpoint parity, V2 auth/readiness coverage, adapter approval planning, and live-submission boundaries.
+4. CLOB authenticated reads/writes — finish authenticated read/write edge cases, response-shape drift, cancellation/batch behavior, and structured live-error coverage.
+5. Wallet/RPC/settlement live boundaries — close deploy/status/batch semantics and read-only RPC gaps, or document intentional app-owned/gated divergences.
+
+**Second finish track: Broad DTO and facade parity.** After safety-required rows are closed, finish `pkg/types`/`internal/polytypes`, `pkg/universal`, and workflow mapping rows with upstream fixtures and generated parity-doc freshness checks.
+
+**Validation gate for each closure:** update code/tests/docs together, refresh `docs/parity/polydart-polygolem.yaml`, run `dart run tool/generate_parity_docs.dart --check`, `dart analyze --fatal-warnings`, and `dart test`.
+
+## 12. Open Questions (proposed resolutions)
 
 | # | PRD Question | Proposed Answer | Confidence |
 |---|--------------|-----------------|------------|
@@ -233,7 +249,7 @@ Pinned for review; happy to flip any of these on user input.
 
 ---
 
-## 12. Out of Scope (for now)
+## 13. Out of Scope (for now)
 
 - Polymarket-style UI components (consumer app concern, not SDK).
 - Automated market-maker strategies (consumer concern, not SDK).
@@ -242,7 +258,7 @@ Pinned for review; happy to flip any of these on user input.
 
 ---
 
-## 13. Risks (delta from PRD §11)
+## 14. Risks (delta from PRD §11)
 
 | Risk | Mitigation in this plan |
 |------|-------------------------|
@@ -253,7 +269,7 @@ Pinned for review; happy to flip any of these on user input.
 
 ---
 
-## 14. Done When
+## 15. Done When
 
 The success criteria from PRD §12 hold **and**:
 - Polygolem and polydart parity suites are green for the same commit pair.

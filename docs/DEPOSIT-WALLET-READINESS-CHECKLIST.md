@@ -58,9 +58,12 @@ orchestration surface. It:
 - returns typed readiness states instead of UI copy
 - never stores credentials unless the app passes a store
 
-Next live-readiness slices:
+Current live-readiness demo wiring:
 
-- Flutter example/demo wiring
+- `example/flutter_deposit_wallet_order.dart` exercises a mock Flutter-style
+  readiness-to-order path with fake wallet signing, mock CLOB/relayer
+  transports, mock RPC approval and pUSD-balance reads, and a `signatureType=3`
+  order post. It remains plain Dart and performs no live network calls.
 
 ## First Public API Target
 
@@ -126,9 +129,12 @@ First funding route:
   reports `transactionPending`, `transactionFailed`, or the remaining readiness
   action.
 
-Future tests should add:
+Readiness-state coverage now includes:
 
-- deposit-wallet pUSD balance
+- `needsDeploy`, `needsApprovalCheck`, `needsApproval`, `needsFunding`, `ready`, and `blocked`
+- incomplete credential reason aggregation
+- funding transaction `transactionPending`, `transactionFailed`, and refreshed readiness mapping
+- deposit-wallet pUSD balance surfaced alongside CLOB collateral balance
 
 No UI copy in `polydart`; Flutter owns labels, localization, and warnings.
 

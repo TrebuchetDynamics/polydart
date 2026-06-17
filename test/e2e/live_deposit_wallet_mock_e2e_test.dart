@@ -194,7 +194,7 @@ void main() {
         'POST /relayer/api/auth',
       ]);
       expect(relayerRequests, <String>['GET /deployed']);
-      expect(rpcMethods, List<String>.filled(6, 'eth_call'));
+      expect(rpcMethods, List<String>.filled(7, 'eth_call'));
     },
   );
 }

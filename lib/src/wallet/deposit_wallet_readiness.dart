@@ -81,6 +81,7 @@ final class DepositWalletReadiness {
     this.credentialsReady = true,
     this.reason = '',
     this.clobBalance = '',
+    this.depositWalletPusdBalance = '',
     Map<String, String> clobAllowances = const <String, String>{},
     List<DepositWalletApprovalCheck> approvalChecks =
         const <DepositWalletApprovalCheck>[],
@@ -100,6 +101,7 @@ final class DepositWalletReadiness {
   final bool credentialsReady;
   final String reason;
   final String clobBalance;
+  final String depositWalletPusdBalance;
   final Map<String, String> clobAllowances;
   final List<DepositWalletApprovalCheck> approvalChecks;
   final List<String> missingApprovals;
@@ -361,6 +363,12 @@ Future<DepositWalletReadiness> _checkApprovalAndFunding({
       .where((check) => !check.ready)
       .map((check) => check.label)
       .toList(growable: false);
+  final pusdBalance = await rpc.erc20BalanceOf(
+    approvals.pusdAddress,
+    depositWallet,
+    rpcUrl: rpcUrl,
+    client: rpcClient,
+  );
   final balanceAllowance = await clob.balanceAllowance(
     apiKey: clobApiKey,
     params: const BalanceAllowanceParams(
@@ -390,6 +398,7 @@ Future<DepositWalletReadiness> _checkApprovalAndFunding({
     approvalChecks: approvalChecks,
     missingApprovals: missingApprovals,
     clobBalance: balanceAllowance.balance,
+    depositWalletPusdBalance: pusdBalance.toString(),
     clobAllowances: balanceAllowance.allowances,
   );
 }

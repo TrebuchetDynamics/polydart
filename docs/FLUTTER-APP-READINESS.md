@@ -164,13 +164,15 @@ for a compiling adapter skeleton. It deliberately has no Flutter imports and no
 wallet package dependency; wire the `walletRequest` callback to the wallet SDK
 used by the Flutter app.
 
-For a mock-only deposit-wallet limit-order smoke path, see
+For a mock-only deposit-wallet readiness plus limit-order smoke path, see
 [`example/flutter_deposit_wallet_order.dart`](../example/flutter_deposit_wallet_order.dart).
-It uses a fake wallet signer, a mock CLOB transport, and a local readiness
-state so Flutter Web consumers can validate the `signatureType=3` order path
-without live endpoints, funds, or product-specific code. If an alpha app wants
-a no-sign-in trial, generate a Paper Wallet for paper-mode only; do not upgrade
-that generated key into live custody.
+It uses a fake wallet signer, mock CLOB/relayer transports, and mock RPC reads
+so Flutter consumers can validate the readiness-to-`signatureType=3` order path
+without live endpoints, funds, or product-specific code. The example checks
+deploy state, approvals, CLOB collateral, and deposit-wallet pUSD balance before
+posting the mock order. If an alpha app wants a no-sign-in trial, generate a
+Paper Wallet for paper-mode only; do not upgrade that generated key into live
+custody.
 
 ## Safety Boundaries
 
