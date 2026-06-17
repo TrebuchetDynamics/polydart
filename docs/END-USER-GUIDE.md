@@ -93,6 +93,25 @@ Future<void> main() async {
 - Generated paper wallets must not be upgraded into live custody.
 - Live trading, approvals, transfers, and wallet deployment are safety-gated mutations. Keep them behind explicit app-level user intent and confirmation.
 
+## Relayer and Deposit-Wallet Live UX Checklist
+
+For live deposit-wallet flows, keep the user-facing sequence explicit:
+
+1. Connect an EOA signer and verify Polygon mainnet (`chainId == 137`).
+2. Ensure credentials with `LiveCredentialService.ensure(...)`: CLOB L2 key,
+   builder-fee key, and Relayer V2 API key are distinct credentials.
+3. Check readiness with `DepositWalletReadinessService.checkWithCredentials(...)`.
+4. If readiness reports deploy, approval, or funding work, show that action to
+   the user before any mutation. Polydart returns typed states; the app owns
+   labels, warnings, storage, and confirmations.
+5. Only after readiness is `ready`, build/sign/submit a live order through an
+   explicit live path with the app-owned wallet signer and live-trading flag.
+
+Flutter Web cannot directly mint Relayer V2 credentials through the current
+SIWE cookie flow because browsers do not expose `Set-Cookie` or allow arbitrary
+`Cookie` headers to app code. Use VM/mobile/desktop credential flows or an
+app-owned backend/proxy boundary for web.
+
 ## More Reference Docs
 
 - Flutter integration: [`docs/FLUTTER-APP-READINESS.md`](FLUTTER-APP-READINESS.md)
