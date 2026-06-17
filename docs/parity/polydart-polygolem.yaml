@@ -408,6 +408,7 @@ rows:
         - 'test/relayer/auth/v2_auth_test.dart'
     evidence:
       - 'transactionID/transactionId/snake aliases'
+      - 'encoded read query parameters'
       - 'numeric nonce/value'
       - 'typed relayer errors'
       - 'allowlist classifier'

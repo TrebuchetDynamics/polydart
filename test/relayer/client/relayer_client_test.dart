@@ -227,6 +227,26 @@ void main() {
       expect(tx.transactionHash, '0xabc');
     });
 
+    test('URL-encodes transaction id query value', () async {
+      Uri? capturedUrl;
+      final client = _client((req) async {
+        capturedUrl = req.url;
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'transactionID': 'tx-query',
+            'state': 'STATE_MINED',
+          }),
+          200,
+        );
+      });
+
+      await client.getTransaction(txId: 'tx-1&ignored=true');
+
+      expect(capturedUrl!.path, '/transaction');
+      expect(capturedUrl!.queryParameters['id'], 'tx-1&ignored=true');
+      expect(capturedUrl!.queryParameters.containsKey('ignored'), isFalse);
+    });
+
     test('parses first transaction from array response', () async {
       final client = _client((req) async {
         expect(req.url.path, '/transaction');

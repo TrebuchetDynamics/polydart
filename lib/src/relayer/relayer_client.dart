@@ -201,7 +201,10 @@ final class RelayerClient {
         field: 'ownerAddress',
       );
     }
-    final path = '/nonce?address=$owner&type=WALLET';
+    final path = _pathWithQuery('/nonce', <String, String>{
+      'address': owner,
+      'type': 'WALLET',
+    });
     final headers = _authHeaders(method: 'GET', path: path);
     final resp = await _transport.getJson(path, headers: headers);
     final n = NonceResponse.fromJson(resp).nonce.trim();
@@ -225,7 +228,9 @@ final class RelayerClient {
         field: 'ownerAddress',
       );
     }
-    final path = '/deployed?address=$owner';
+    final path = _pathWithQuery('/deployed', <String, String>{
+      'address': owner,
+    });
     final headers = _authHeaders(method: 'GET', path: path);
     final resp = await _transport.getJson(path, headers: headers);
     return DeployedResponse.fromJson(resp);
@@ -241,7 +246,7 @@ final class RelayerClient {
         field: 'txId',
       );
     }
-    final path = '/transaction?id=$id';
+    final path = _pathWithQuery('/transaction', <String, String>{'id': id});
     final headers = _authHeaders(method: 'GET', path: path);
     final body = await _transport.getJsonValue(path, headers: headers);
     if (body is Map<String, dynamic>) {
@@ -310,4 +315,8 @@ final class RelayerClient {
           'relayer: timed out waiting for transaction $txId after $attempts attempts',
     );
   }
+}
+
+String _pathWithQuery(String path, Map<String, String> query) {
+  return Uri(path: path, queryParameters: query).toString();
 }
