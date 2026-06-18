@@ -97,6 +97,7 @@ dart run example/read_only.dart
 | Adapt Reown/WalletConnect signing | [`example/flutter_wallet_signer.dart`](example/flutter_wallet_signer.dart) | Wallet-provider signer; no private keys in app code. |
 | Smoke-test deposit-wallet order signing | [`example/flutter_deposit_wallet_order.dart`](example/flutter_deposit_wallet_order.dart) | Mock-only; no live funds or submissions. |
 | Understand live deposit-wallet readiness | [`docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md`](docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md) | Explicit deploy/approval/funding states. |
+| Study random private-key smart-wallet E2E | [`docs/RANDOM-PRIVATE-KEY-SMART-WALLET-E2E.md`](docs/RANDOM-PRIVATE-KEY-SMART-WALLET-E2E.md) | Default mocked; live relayer proof is opt-in only. |
 
 ## Operating modes
 
@@ -136,6 +137,7 @@ User-facing references:
 
 - [Flutter integration notes](docs/FLUTTER-APP-READINESS.md)
 - [Deposit-wallet readiness checklist](docs/DEPOSIT-WALLET-READINESS-CHECKLIST.md)
+- [Random private-key smart-wallet E2E](docs/RANDOM-PRIVATE-KEY-SMART-WALLET-E2E.md)
 - [End-user guide](docs/END-USER-GUIDE.md)
 - [Changelog](CHANGELOG.md)
 

@@ -350,11 +350,13 @@ rows:
       tests:
         - 'test/auth/crypto/wallets/erc7739_test.dart'
         - 'test/orders/placement/order_placement_test.dart'
+        - 'test/signers/signers_test.dart'
         - 'test/conformance/golden_conformance_test.dart'
     evidence:
       - 'byte-level parity vectors'
       - 'signatureType 3'
       - 'deposit wallet maker/signer fields'
+      - 'TypedDataSign inline domain chainId hashing'
       - 'mirrored conformance fixtures'
     notes: 'Dart supports both wallet-provider EOA signers and explicit opt-in private-key EOA signers. Polygolem `12f5cecd` `fixtures/conformance` golden vectors are mirrored under `test/fixtures/conformance`; Dart verifies builder/L2 headers, local-private-key L1 EOA signatures, Order V2 struct hashes, and CTF calldata byte-for-byte.'
   - id: 'wallet.create2_readiness'

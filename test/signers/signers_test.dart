@@ -63,6 +63,48 @@ void main() {
   });
 
   test(
+    'LocalEoaSigner hashes TypedDataSign with inline message chainId',
+    () async {
+      final signer = LocalEoaSigner(
+        privateKeyHex:
+            '0x4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318',
+        chainId: 137,
+      );
+      const depositWallet = '0xfd5041047be8c192c725a66228f141196fa3cf9c';
+      const messageChainId = 138;
+      const draft = OrderV2Draft(
+        salt: '1',
+        maker: depositWallet,
+        signer: depositWallet,
+        tokenId: '12345',
+        makerAmount: '5500000',
+        takerAmount: '10000000',
+        side: Side.buy,
+        signatureType: SignatureType.poly1271,
+        timestamp: '1700000000000',
+        metadata: bytes32Zero,
+        builder: bytes32Zero,
+      );
+      final typedData = buildPoly1271TypedDataEnvelope(
+        draft: draft,
+        depositWalletAddress: depositWallet,
+      );
+      (typedData['message'] as Map<String, Object>)['chainId'] = messageChainId;
+
+      final typedDataSig = await signer.signTypedData(typedData);
+      final expectedSig = await signer.signHash(
+        computePoly1271FinalHash(
+          draft: draft,
+          depositWalletAddress: depositWallet,
+          chainId: messageChainId,
+        ),
+      );
+
+      expect(typedDataSig, expectedSig);
+    },
+  );
+
+  test(
     'HttpSigner posts sign_hash payload and redacts token from errors',
     () async {
       late Map<String, dynamic> body;

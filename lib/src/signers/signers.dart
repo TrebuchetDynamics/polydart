@@ -20,10 +20,20 @@ import 'package:pointycastle/macs/hmac.dart' show HMac;
 import 'package:pointycastle/signers/ecdsa_signer.dart' show ECDSASigner;
 
 import '../auth/eip712.dart' show Eip712Domain, Eip712Field, hashTypedData;
+import '../auth/erc7739.dart'
+    show computePoly1271FinalHash, polyDepositWalletDomainName;
 import '../auth/eth_hex.dart'
     show bytesToHex0x, hexToBytes, keccak256Bytes, leftPadBytes;
 import '../auth/siwe.dart' show toEIP55Checksum;
 import '../auth/wallet_signer.dart' show WalletSigner;
+import '../errors/errors.dart' show ErrorCode, ValidationException;
+import '../orders/order_signing.dart'
+    show
+        OrderV2Draft,
+        bytes32Zero,
+        clobExchangeAddressV2,
+        negRiskExchangeAddressV2;
+import '../types/enums.dart' show Side, SignatureType;
 import '../wallet/deposit_wallet_signing.dart'
     show WalletBatchCall, hashWalletBatchTypedData;
 
@@ -552,6 +562,9 @@ Uint8List _hashTypedDataMap(Map<String, dynamic> typedData) {
   if (primaryType == 'Batch' && domainJson['name'] == 'DepositWallet') {
     return _hashDepositWalletBatchTypedData(typedData, domainJson);
   }
+  if (primaryType == 'TypedDataSign') {
+    return _hashPoly1271TypedDataSign(typedData, domainJson);
+  }
   final allTypes = (typedData['types'] as Map).cast<String, dynamic>();
   final rawFields = (allTypes[primaryType] as List<dynamic>);
   final fields = rawFields
@@ -600,6 +613,54 @@ Uint8List _hashDepositWalletBatchTypedData(
     chainId: int.parse(domainJson['chainId'].toString()),
   );
 }
+
+Uint8List _hashPoly1271TypedDataSign(
+  Map<String, dynamic> typedData,
+  Map<String, dynamic> domainJson,
+) {
+  final message = (typedData['message'] as Map).cast<String, dynamic>();
+  if (message['name'] != polyDepositWalletDomainName) {
+    throw ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'unsupported TypedDataSign domain name: ${message['name']}',
+      field: 'name',
+    );
+  }
+  final contents = (message['contents'] as Map).cast<String, dynamic>();
+  final verifyingContract = domainJson['verifyingContract']?.toString() ?? '';
+  final messageChainId = int.parse(
+    (message['chainId'] ?? domainJson['chainId']).toString(),
+  );
+  final negRisk = _sameHex(verifyingContract, negRiskExchangeAddressV2);
+  if (!negRisk && !_sameHex(verifyingContract, clobExchangeAddressV2)) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: 'unsupported TypedDataSign verifyingContract',
+      field: 'verifyingContract',
+    );
+  }
+  return computePoly1271FinalHash(
+    draft: OrderV2Draft(
+      salt: contents['salt'].toString(),
+      maker: contents['maker'].toString(),
+      signer: contents['signer'].toString(),
+      tokenId: contents['tokenId'].toString(),
+      makerAmount: contents['makerAmount'].toString(),
+      takerAmount: contents['takerAmount'].toString(),
+      side: Side.parse(contents['side'] as Object),
+      signatureType: SignatureType.parse(contents['signatureType'] as Object),
+      timestamp: contents['timestamp'].toString(),
+      metadata: contents['metadata']?.toString() ?? bytes32Zero,
+      builder: contents['builder']?.toString() ?? bytes32Zero,
+    ),
+    depositWalletAddress: message['verifyingContract'].toString(),
+    negRisk: negRisk,
+    chainId: messageChainId,
+  );
+}
+
+bool _sameHex(String a, String b) =>
+    a.trim().toLowerCase() == b.trim().toLowerCase();
 
 Object? _coerceTypedDataValue(String type, Object? value) {
   if (value == null) return null;
