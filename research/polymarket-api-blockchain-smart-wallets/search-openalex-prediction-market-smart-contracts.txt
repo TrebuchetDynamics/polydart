@@ -1,0 +1,20 @@
+10.20955/r.103.153-74	Decentralized Finance: On Blockchain- and Smart Contract-Based Financial Markets
+10.2139/ssrn.3571335	Decentralized Finance: On Blockchain- and Smart Contract-based Financial Markets
+10.1257/jep.5.2.25	Organizations and Markets
+10.1257/jep.23.3.125	The Economics of Two-Sided Markets
+10.1257/jep.24.2.211	Markets: The Credit Rating Agencies
+10.1186/s40854-021-00314-5	Automated market makers and decentralized exchanges: a DeFi primer
+10.1108/scm-01-2018-0029	The impact of the blockchain on the supply chain: a theory-based research framework and a call for action
+10.3386/w22952	Some Simple Economics of the Blockchain
+10.1109/access.2020.2992341	A Comprehensive Review of the COVID-19 Pandemic and the Role of IoT, Drones, AI, Blockchain, and 5G in Managing its Impact
+10.1145/3359552	Some simple economics of the blockchain
+10.1109/access.2021.3060457	Peer-to-Peer Energy Trading Mechanism Based on Blockchain and Machine Learning for Sustainable Electrical Power Supply in Smart Grid
+10.1016/j.tre.2020.102025	Evaluating the factors that influence blockchain adoption in the freight logistics industry
+10.1016/j.autcon.2021.103816	Exploring smart construction objects as blockchain oracles in construction supply chain management
+10.3389/fbloc.2019.00022	Blockchain Technology as Economic Infrastructure: Revisiting the Electronic Markets Hypothesis
+10.3390/en10040421	A Review of Smart Cities Based on the Internet of Things Concept
+10.1109/access.2020.3014522	Blockchain Technology in Current Agricultural Systems: From Techniques to Applications
+10.1007/s11356-021-16223-0	Blockchain and artificial intelligence technology in e-Health
+10.1007/s11135-021-01251-2	Blockchain technology in the smart city: a bibliometric review
+10.3390/computers11020024	A Critical Review of Blockchain Acceptance Models—Blockchain Technology Adoption Frameworks and Applications
+10.1109/access.2021.3050241	A Comparative Study: Blockchain Technology Utilization Benefits, Challenges and Functionalities

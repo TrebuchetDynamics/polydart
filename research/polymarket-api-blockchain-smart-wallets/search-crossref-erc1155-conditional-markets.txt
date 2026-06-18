@@ -1,0 +1,20 @@
+10.2139/ssrn.4987158	Limited Edition Digital Books and Exchange Traded Funds: Semi Fungible Tokens and the ERC-1155 Token Standard
+10.35314/bezhpb82	Application of Non-Fungible Tokens and ERC-1155 Algorithm in Digital Certificate Verification Process
+10.3389/fphy.2021.631659	Co-Investment Network of ERC-20 Tokens: Network Structure Versus Market Performance
+10.1007/springerreference_1934	Market-Maker
+10.1007/978-3-663-08730-4_3	Modelltheoretische Analysen des Market-Maker-Systems
+10.1007/978-3-663-08730-4_4	Market-Maker-System vs. Auktionssystem - eine experimentelle Untersuchung
+10.1093/oed/9291450565	market-maker, n.
+10.22331/q-2023-01-19-901	Quantum Tokens for Digital Signatures
+10.2139/ssrn.6288338	Trading the Unique: Market Microstructure of Non-Fungible Tokens
+10.1007/0-387-26336-5_1296	Market-Maker
+10.1111/j.1475-4932.2011.00761.x	Liquidity Supply by a Risk-Averse Market Maker*
+10.2139/ssrn.5403165	Spillover Dynamics between Refi Tokens, Renewable Energy Tokens, Energy Markets, and Carbon Market: Determinants and Implications for Portfolio Diversification
+10.58260/j.iet.2202.0106	A New Era of Automated Market-Makers (AMM) powered by Non-Fungible Tokens- A Review
+10.2139/ssrn.5948654	Endogenous Market Maker Risk-Bearing Capacity
+10.2139/ssrn.5210267	Tariffs, Tokens, and Turmoil: The Market Fallout from Trump's Policy Uncertainty
+10.2139/ssrn.5286365	Spillover Dynamics between Refi Tokens, Renewable Energy Tokens, Energy Markets, and the Carbon Market: Determinants and Implications for Portfolio Diversification
+10.4135/9781412964289.n619	Market Maker
+10.1016/s1365-6937(12)70141-7	IDEX acquires Japanese degasser maker ERC
+10.5121/csit.2024.150101	Characterizing Transfer Graphs of Suspicious ERC-20 Tokens
+10.2139/ssrn.4947910	Market-Maker Hard Exit Thresholds Strategy

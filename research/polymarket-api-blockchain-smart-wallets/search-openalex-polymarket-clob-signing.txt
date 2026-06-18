@@ -1,0 +1,7 @@
+	The Anatomy of a Decentralized Prediction Market: Microstructure Evidence from the Polymarket Order Book
+10.48550/arxiv.2402.18563	Approaching Human-Level Forecasting with Language Models
+	Resolution-Aware Perpetual Futures on Binary Prediction Markets: An Empirical Risk-Design Framework Using Polymarket Data
+10.48550/arxiv.2510.15612	SoK: Market Microstructure for Decentralized Prediction Markets (DePMs)
+	PolySwarm: A Multi-Agent Large Language Model Framework for Prediction Market Trading and Latency Arbitrage
+	ForesightFlow: An Information Leakage Score Framework for Prediction Markets
+	What Happens When Institutional Liquidity Enters Prediction Markets: Identification, Measurement, and a Synthetic Proof of Concept

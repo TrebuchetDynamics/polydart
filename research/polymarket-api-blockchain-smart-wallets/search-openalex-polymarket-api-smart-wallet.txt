@@ -1,0 +1,10 @@
+10.3390/fi17120547	Permissionless Blockchain Recent Trends, Privacy Concerns, Potential Solutions and Secure Development Lifecycle
+10.20944/preprints202205.0223.v1	DeSci-Decentralized Science
+10.1080/1351847x.2025.2505757	Stablecoin devaluation risk
+10.3390/info16110980	From E-Democracy to C-Democracy: Analyzing Transnational Political Discourse During South Korea’s 2024 Presidential Impeachment on Polymarket
+	PolySwarm: A Multi-Agent Large Language Model Framework for Prediction Market Trading and Latency Arbitrage
+10.48550/arxiv.2510.15612	SoK: Market Microstructure for Decentralized Prediction Markets (DePMs)
+10.3390/fi17110487	Beyond the Polls: Quantifying Early Signals in Decentralized Prediction Markets with Cross-Correlation and Dynamic Time Warping
+	Foresight Arena: An On-Chain Benchmark for Evaluating AI Forecasting Agents
+10.20944/preprints202603.0706.v1	Solana-Based Agent Networks for Immutable Real-Time Journalism Ensuring Credibility in Evolving Media Landscapes
+10.7717/peerj-cs.3320	The rise and fall of DAOstack: lessons for decentralized autonomous organizations

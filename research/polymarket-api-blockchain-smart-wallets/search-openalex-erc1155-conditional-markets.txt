@@ -1,0 +1,5 @@
+10.48550/arxiv.2510.15612	SoK: Market Microstructure for Decentralized Prediction Markets (DePMs)
+	The Anatomy of a Decentralized Prediction Market: Microstructure Evidence from the Polymarket Order Book
+	Semantic Non-Fungibility and Violations of the Law of One Price in Prediction Markets
+	The Anatomy of Polymarket: Evidence from the 2024 Presidential Election
+10.1038/s41597-025-06092-4	Blockchain Technology for Big-data Sharing in Material Genome Engineering

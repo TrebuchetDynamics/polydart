@@ -1,0 +1,20 @@
+	The Homogenous Properties of Automated Market Makers
+	Slow decay of impact in equity markets
+	Empirical comparison of three models for determining market clearing prices in Turkish day-ahead electricity market
+10.1007/s00780-014-0232-0	An Optimal Execution Problem with Market Impact
+10.1109/eem.2018.8469926	An Adaptive Tabu Search Algorithm for Market Clearing Problem in Turkish Day-Ahead Market
+10.1142/s2382626620500045	Market Impact in a Latent Order Book
+10.1016/j.physa.2005.02.085	Uncertainty relations in models of market microstructure
+10.1007/978-3-030-31901-4_1	A Combined Deep Learning-Gradient Boosting Machine Framework for Fluid Intelligence Prediction
+	Optimal execution with nonlinear transient market impact
+10.1142/s2382626618500089	Market Impact: A Systematic Study of Limit Orders
+	The development of battery storage systems in Germany: A market review (status 2023)
+10.5281/zenodo.5654779	Market Microstructure of Non Fungible Tokens
+	Beating the market with a bad predictive model
+10.1007/978-3-031-27420-6_14	Radiomics-enhanced Deep Multi-task Learning for Outcome Prediction in Head and Neck Cancer
+10.1016/j.jet.2025.106095	Auctions with Tokens: Monetary Policy as a Mechanism Design Choice
+10.1002/cpa.21480	Probability Theory of Random Polygons from the Quaternionic Viewpoint
+	The Property Law of Crypto Tokens
+	Price as Focal Point: Prediction Markets,Conditional Reflexivity, and the Politics of Common Knowledge
+	Improving Capital Efficiency and Impermanent Loss: Multi-Token Proactive Market Maker
+	Steady coexistence of the subjects of the market representing the private and state capital

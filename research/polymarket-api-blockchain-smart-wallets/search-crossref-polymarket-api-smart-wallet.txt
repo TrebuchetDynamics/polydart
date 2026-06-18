@@ -1,0 +1,20 @@
+10.2139/ssrn.4487894	Blockchain Wallet for Secure Transactions
+10.55277/researchhub.3ze6rnhu	How to add money to trust wallet {{Blockchain!!Confirmed}}
+10.2139/ssrn.6336679	The Anatomy of a Blockchain Prediction Market: Polymarket in the 2024 U.S. Presidential Election
+10.1007/978-3-032-05877-5_29	Blockchain Security Through Upgradeable Role Based Smart Contracts and Hardware Wallet Integration
+10.5958/0976-2469.2022.00020.3	Defi integrated blockchain wallet with automated transactions
+10.17148/ijarcce.2017.61022	Blockchain Approach for Smart Health Wallet
+10.3390/math12193033	RideChain: A Blockchain-Based Decentralized Public Transportation Smart Wallet
+10.7717/peerj-cs.3615/fig-12	Figure 12: (A) Execution time comparison between API-only and API + blockchain workloads (100 requests each), (B) Energy consumption per request and total workload energy for API-only <i>vs</i> . API + blockchain configurations.
+10.56726/irjmets93238	A Hybrid Blockchain–Database Architecture for Secure Wallet-Based Identity Verification Using IPFS and Smart Contracts
+10.1109/icscan.2019.8878815	Wield Blockchain TechnologyTo Fortify Smart Wallet
+10.55277/researchhub.c5vks0bf.1	Can I withdraw from my Trust Wallet immediately?#^ Smart Wallet Rescue ^#
+10.1201/9781003670568-1	Blockchain and Smart Contracts for Secure Agricultural Transactions
+10.1201/9780429325533-14	Cryptocurrency Wallet
+10.47974/jdmsc-1779	Ensuring wallet application security by resolving reentrancy attacks in blockchain smart contracts
+10.1109/blockchain.2019.00004	Air Gapped Wallet Schemes and Private Key Leakage in Permissioned Blockchain Platforms
+10.1109/blockchain67634.2025.00013	TransparenKey: TPM-Backed Open-Source Auditable Custody Wallet
+10.1109/blockchain.2019.00064	Deterministic Sub-Wallet for Cryptocurrencies
+10.55041/ijsrem64599	AN INTEGRATED BLOCKCHAIN FRAMEWORK SUPPORTING MINING, WALLET MANAGEMENT, AND SMART CONTRACTS FOR SECURE FINANCIAL APPLICATIONS
+10.4108/eai.13-7-2018.163846	Blockchain Technology and Smart Cities - A Review
+10.24215/16666038.21.e2	Blockchain-Based Music Wallet for Copyright Protection in Audio Files

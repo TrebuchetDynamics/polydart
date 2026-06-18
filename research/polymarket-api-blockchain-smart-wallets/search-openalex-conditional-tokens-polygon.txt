@@ -1,0 +1,20 @@
+10.47738/jdmdc.v2i1.25	Volatility and Risk Assessment of Blockchain Cryptocurrencies Using GARCH Modeling: An Analytical Study on Dogecoin, Polygon, and Solana
+10.3390/su14020913	Blockchain Interoperability: Towards a Sustainable Payment System
+10.1109/access.2023.3257029	Blockchain Meets Metaverse and Digital Asset Management: A Comprehensive Survey
+10.3390/machines13090818	A Survey of Autonomous Driving Trajectory Prediction: Methodologies, Challenges, and Future Prospects
+10.3390/jrfm17050179	DAO Dynamics: Treasury and Market Cap Interaction
+10.20944/preprints202311.1404.v1	DAO Dynamics: Treasury and Market Cap Interaction
+10.3389/fbloc.2025.1649131	Regulatory dynamics and empirical evidence in medical device tokenization
+10.1109/ojcoms.2024.3349465	AI and 6G Into the Metaverse: Fundamentals, Challenges and Future Research Trends
+10.1016/j.resglo.2024.100229	Tail risk modelling of cryptocurrencies, gold, non-fungible token, and stocks
+10.1007/s10462-023-10641-x	Artificial intelligence powered Metaverse: analysis, challenges and future perspectives
+10.1108/cafr-05-2024-0054	Real-world asset tokens and commodities: static and dynamic linkages
+10.1109/access.2023.3325844	Metaverse Key Requirements and Platforms Survey
+10.1109/jproc.2024.3386257	Drawing the Boundaries Between Blockchain and Blockchain-Like Systems: A Comprehensive Survey on Distributed Ledger Technologies
+10.48550/arxiv.2408.09840	Machine Learning with Physics Knowledge for Prediction: A Survey
+10.1016/j.jisa.2021.103057	Deep multi-task learning for malware image classification
+10.3390/jimaging4070089	Digital Comics Image Indexing Based on Deep Learning
+10.1140/epjds/s13688-024-00497-8	DApps ecosystems: mapping the network structure of smart contract interactions
+10.62225/2583049x.2024.4.6.5649	Integrating Blockchain-Enabled Smart Contracts for Transparent and Verifiable Marketing Workflows
+10.48550/arxiv.2309.07438	Towards Artificial General Intelligence (AGI) in the Internet of Things (IoT): Opportunities and Challenges
+10.3390/app151910841	Near Real-Time Ethereum Fraud Detection Using Explainable AI in Blockchain Networks

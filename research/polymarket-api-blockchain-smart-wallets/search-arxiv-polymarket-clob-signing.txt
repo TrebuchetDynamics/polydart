@@ -1,0 +1,20 @@
+	The Homogenous Properties of Automated Market Makers
+	The Anatomy of a Decentralized Prediction Market: Microstructure Evidence from the Polymarket Order Book
+	Arbitrage Analysis in Polymarket NBA Markets
+	Fill-Side Non-Retail Trading on Polymarket: An Empirical Study of Behavioral Tiers and Microstructure Signatures Under Quote-Attribution Constraints
+	Polymarket-v1 Database
+	Looking into informal currency markets as Limit Order Books: impact of market makers
+10.1142/s2382626620500045	Market Impact in a Latent Order Book
+	A Utility Framework for Bounded-Loss Market Makers
+	Optimal make take fees in a multi market maker environment
+	Slow decay of impact in equity markets
+	Concentrated Superelliptical Market Maker
+	Phase Transitions in Kyle's Model with Market Maker Profit Incentives
+	Improving Capital Efficiency and Impermanent Loss: Multi-Token Proactive Market Maker
+	Strategic Insider Trading Equilibrium with a Non-fiduciary Market Maker
+10.1145/3570639	SoK: Decentralized Exchanges (DEX) with Automated Market Maker (AMM) Protocols
+10.1142/s2382626618500089	Market Impact: A Systematic Study of Limit Orders
+	Beating the market with a bad predictive model
+	Empirical comparison of three models for determining market clearing prices in Turkish day-ahead electricity market
+10.1145/3533271.3561685	Can maker-taker fees prevent algorithmic cooperation in market making?
+10.1007/s00780-014-0232-0	An Optimal Execution Problem with Market Impact

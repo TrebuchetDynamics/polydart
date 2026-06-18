@@ -1,0 +1,20 @@
+10.36227/techrxiv.19196960.v1	Impermanent Loss and Gain of Automated Market Maker Smart Contracts
+10.36227/techrxiv.19196960	Impermanent Loss and Gain of Automated Market Maker Smart Contracts
+10.2139/ssrn.3805095	The Adoption of Blockchain-based Decentralized Exchanges: A Market Microstructure Analysis of the Automated Market Maker
+10.2139/ssrn.4870339	Mixta: A Blockchain-Based Decentralized Finance and Cross-Chain Interoperable Automated Market Maker Solution
+10.1093/oxfordhb/9780199797912.013.0028	A Simple Automated Market Maker for Prediction Markets
+10.1109/icbc54727.2022.9805489	Optimal Trading on a Dynamic Curve Automated Market Maker
+10.1109/icbc59979.2024.10634393	The AMMazing Frontrunner: Practical Frontrunning on the XRP Ledger Automated Market Maker
+10.5750/jpm.v3i1.451	HANSON’S AUTOMATED MARKET MAKER
+10.2139/ssrn.3082450	Forget Paris: Building a Carbon Market in the U.S. Using Blockchain-Based Smart Contracts
+10.5220/0009417907620769	Towards an Automated DEMO Action Model Implementation using Blockchain Smart Contracts
+10.2139/ssrn.4644445	Automated Market Maker vs Continuous Double Auction: An Asset Market Experiment
+10.5220/0010147602830290	Automated DEMO Action Model Implementation using Blockchain Smart Contracts
+10.2139/ssrn.5200210	On Smart Derivative and Smart Bond Contracts: How Smart Financial Contracts can advance Digital Market Infrastructures
+10.2139/ssrn.5708882	The Price of Liquidity: Implied Volatility of Automated Market Maker Fees
+10.52843/cassyni.7d6bjl	Arbitrage in automated market makers
+10.62311/nesx/rrv425	Automated Smart Contracts: AI-powered Blockchain Technologies for Secure and Intelligent Decentralized Governance
+10.1109/isgteurope62998.2024.10863799	Automated Market Maker-based Batch Auction for Decentralized Customer-centric Local Energy Sharing
+10.1007/978-3-030-25275-5_21	Using Smart Contracts via Blockchain Technology for Effective Cost Management in Health Services
+10.3389/fbloc.2024.1455070	Arbitrage in automated market makers
+10.1016/b978-0-443-30192-6.00001-x	Unlocking automated trust: Smart contracts in healthcare

@@ -1,0 +1,20 @@
+	A Critical Look at Smart Wheelchairs
+10.1109/isc266238.2025.11293252	Digital Twin based Automatic Reconfiguration of Robotic Systems in Smart Environments
+10.1109/isc266238.2025.11293287	SUSTAINABLE Platform: Seamless Smart Farming Integration Towards Agronomy Automation
+10.1109/dapps65174.2025.00021	A Private Smart Wallet with Probabilistic Compliance
+10.1109/tsg.2022.3204796	Detection of False Data Injection Attacks in Smart Grid: A Secure Federated Deep Learning Approach
+	Smart Red Belly Blockchain: Enhanced Transaction Management for Decentralized Applications
+10.1109/tsg.2019.2899264	Smart Grid Monitoring Using Power Line Modems: Anomaly Detection and Localization
+10.62754/joe.v4i1.6214	Machine Learning-Based Detection and Analysis of Suspicious Activities in Bitcoin Wallet Transactions in the USA
+10.1109/tsg.2015.2445828.	A Big Data Architecture Design for Smart Grids Based on Random Matrix Theory
+	Incentive Mechanism Design for Privacy-Preserving Decentralized Blockchain Relayers
+	A blockchain framework for smart mobility
+10.1109/isc257844.2023.10293689	Dimensionality Reduction on IoT Monitoring Data of Smart Building for Energy Consumption Forecasting
+10.1117/12.2296878	Nonlinear modeling and preliminary stabilization results for a class of piezoelectric smart composite beams
+	The role of open data in the transformation to Society 5.0: a resource or a tool for SDG-compliant Smart Living?
+	Transaction Monitoring of Smart Contracts
+	5G-Enabled Smart Manufacturing -- A booklet by 5G-SMART
+	Mutation Testing for Ethereum Smart Contract
+	Semantic Answer Type Prediction using BERT: IAI at the ISWC SMART Task 2020
+	Modeling Wallet-Level Behavioral Shifts Post-FTX Collapse: An XAI-Driven GLM Study on Ethereum Transactions
+10.2140/apde.2015.8.1497	Algebraic Error Estimates for the Stochastic Homogenization of Uniformly Parabolic Equations

@@ -1,0 +1,20 @@
+10.2139/ssrn.5170263	Cross-Market Posterior Prediction Using Nonparametric Regression Under Conditional Heteroscedasticity
+10.31223/x5cb4s	Hybrid Neural PDE and Conditional GAN Framework for Sparse Co₂ Plume Prediction.
+10.2139/ssrn.6288338	Trading the Unique: Market Microstructure of Non-Fungible Tokens
+10.32614/cran.package.foresterror	forestError: A Unified Framework for Random Forest Prediction Error Estimation
+10.2139/ssrn.5403165	Spillover Dynamics between Refi Tokens, Renewable Energy Tokens, Energy Markets, and Carbon Market: Determinants and Implications for Portfolio Diversification
+10.31219/osf.io/evz4p	"Centralized or Decentralized?": Concerns and Value Judgments of Stakeholders in the Non-Fungible Tokens (NFTs) Market
+10.1007/978-3-031-74889-9_7	Regulating Stablecoins in the European Union. Asset-Referenced Tokens and E-Money Tokens
+10.3390/jrfm19040245	Four-Layer Valuation Framework for Non-Fungible Tokens (NFTs): Asset, Market, Technology, and Ecosystem Perspectives
+10.58260/j.iet.2202.0106	A New Era of Automated Market-Makers (AMM) powered by Non-Fungible Tokens- A Review
+10.2139/ssrn.5210267	Tariffs, Tokens, and Turmoil: The Market Fallout from Trump's Policy Uncertainty
+10.1109/ojsp.2026.3653666	Objective Evaluation of Prosody and Intelligibility in Speech Synthesis via Conditional Prediction of Discrete Tokens
+10.1016/0304-405x(78)90011-9	Market proxies and the conditional prediction of returns
+10.2139/ssrn.5286365	Spillover Dynamics between Refi Tokens, Renewable Energy Tokens, Energy Markets, and the Carbon Market: Determinants and Implications for Portfolio Diversification
+10.2139/ssrn.6440700	A Geometric and Probabilistic Framework for Equity Market Microstructure Rigorous Core with Rough-path Dynamics and Conditional Thermodynamic Extensions
+10.5220/0012419200003654	Vision Transformer Interpretability via Prediction of Image Reflected Relevance Among Tokens
+10.1109/wcnc.2010.5506126	V-Tokens for Conditional Pseudonymity in VANETs
+10.2139/ssrn.6528937	Systemic Risk Radar: A Multi-Layer Graph Framework for Early Market Crash Prediction
+10.2139/ssrn.6109409	A Time-Series-Aware Hybrid AI–ML Framework for Stock Market Prediction: Evidence from an Emerging Market
+10.4324/9781003435518-5	Discoveries from the NFT Market
+10.2139/ssrn.3934676	Market Microstructure of Non Fungible Tokens

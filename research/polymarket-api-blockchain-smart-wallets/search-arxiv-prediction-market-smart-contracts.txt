@@ -1,0 +1,20 @@
+	The Homogenous Properties of Automated Market Makers
+10.5121/csit.2017.71011	Blockchain-based Smart Contracts: A Systematic Mapping Study
+	PDFS: Practical Data Feed Service for Smart Contracts
+	Slow decay of impact in equity markets
+	An Empirical Study into the Success of Listed Smart Contracts in Ethereum
+10.1049/blc2.12005	SmartOil: Blockchain and smart contract-based oil supply chain management
+	Empirical comparison of three models for determining market clearing prices in Turkish day-ahead electricity market
+10.1007/s00780-014-0232-0	An Optimal Execution Problem with Market Impact
+10.1145/3570639	SoK: Decentralized Exchanges (DEX) with Automated Market Maker (AMM) Protocols
+	Expiring Assets in Automated Market Makers
+10.1109/eem.2018.8469926	An Adaptive Tabu Search Algorithm for Market Clearing Problem in Turkish Day-Ahead Market
+	An Adaptive Decision-Making Approach for Better Selection of a Blockchain Platform for Health Insurance Frauds Detection with Smart Contracts: Development and Performance Evaluation
+10.1142/s2382626620500045	Market Impact in a Latent Order Book
+10.1016/j.physa.2005.02.085	Uncertainty relations in models of market microstructure
+	Beating the market with a bad predictive model
+	Optimal execution with nonlinear transient market impact
+	A General Framework for Impermanent Loss in Automated Market Makers
+	Automated Market Makers for Decentralized Finance (DeFi)
+	The development of battery storage systems in Germany: A market review (status 2023)
+10.1142/s2382626618500089	Market Impact: A Systematic Study of Limit Orders

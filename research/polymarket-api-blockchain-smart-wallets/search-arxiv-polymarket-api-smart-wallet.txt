@@ -1,0 +1,20 @@
+10.1049/blc2.12005	SmartOil: Blockchain and smart contract-based oil supply chain management
+10.5121/csit.2017.71011	Blockchain-based Smart Contracts: A Systematic Mapping Study
+10.1109/blockchain.2019.00030	ChainSplitter: Towards Blockchain-based Industrial IoT Architecture for Supporting Hierarchical Storage
+10.3389/fbloc.2020.00028	BlockSim: An Extensible Simulation Tool for Blockchain Systems
+	A blockchain framework for smart mobility
+	Smart Red Belly Blockchain: Enhanced Transaction Management for Decentralized Applications
+	A Microservice-enabled Architecture for Smart Surveillance using Blockchain Technology
+10.1049/blc2.70028	EthVault: A Secure and Resource-Conscious FPGA-Based Ethereum Cold Wallet
+10.1109/icbc48266.2020.9169421	Customer Data Sharing Platform: A Blockchain-Based Shopping Cart
+	An Adaptive Decision-Making Approach for Better Selection of a Blockchain Platform for Health Insurance Frauds Detection with Smart Contracts: Development and Performance Evaluation
+10.1007/978-3-031-45155-3_19	Blockchain-Based Federated Learning: Incentivizing Data Sharing and Penalizing Dishonest Behavior
+	Mutation Testing for Ethereum Smart Contract
+	Transaction Propagation on Permissionless Blockchains: Incentive and Routing Mechanisms
+10.1109/tifs.2023.3234895	TxT: Real-time Transaction Encapsulation for Ethereum Smart Contracts
+	Is my transaction done yet? An empirical study of transaction processing times in the Ethereum Blockchain Platform
+	A Critical Look at Smart Wheelchairs
+10.3390/math10183338	Advanced Drone Swarm Security by Using Blockchain Governance Game
+	BlendMAS: A BLockchain-ENabled Decentralized Microservices Architecture for Smart Public Safety
+10.1007/978-3-031-16168-1_1	Blockchain for Business Process Enactment: A Taxonomy and Systematic Literature Review
+	Probabilistic Smart Contracts: Secure Randomness on the Blockchain

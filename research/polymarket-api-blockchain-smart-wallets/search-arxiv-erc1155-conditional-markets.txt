@@ -1,0 +1,20 @@
+	The Homogenous Properties of Automated Market Makers
+	Improving Capital Efficiency and Impermanent Loss: Multi-Token Proactive Market Maker
+	Option Pricing on Automated Market Maker Tokens
+	A Utility Framework for Bounded-Loss Market Makers
+	Concentrated Superelliptical Market Maker
+	A Derivative Pricing Perspective on Liquidity Tokens in Constant Product Market Makers
+	Strategic Insider Trading Equilibrium with a Non-fiduciary Market Maker
+10.1145/3570639	SoK: Decentralized Exchanges (DEX) with Automated Market Maker (AMM) Protocols
+	Slow decay of impact in equity markets
+	Optimal make take fees in a multi market maker environment
+	Phase Transitions in Kyle's Model with Market Maker Profit Incentives
+	Looking into informal currency markets as Limit Order Books: impact of market makers
+	Empirical comparison of three models for determining market clearing prices in Turkish day-ahead electricity market
+10.1145/3533271.3561685	Can maker-taker fees prevent algorithmic cooperation in market making?
+	Price-Setting of Market Makers: A Filtering Problem with an Endogenous Filtration
+10.1007/s00780-014-0232-0	An Optimal Execution Problem with Market Impact
+	Beating the market with a bad predictive model
+	Bandit Market Makers
+	Optimal Automated Market Makers: Differentiable Economics and Strong Duality
+	G3Ms:Generalized Mean Market Makers

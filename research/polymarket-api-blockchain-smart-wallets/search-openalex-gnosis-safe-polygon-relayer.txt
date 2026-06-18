@@ -1,0 +1,10 @@
+10.69978/rebicte.v10i.208	Smart Contract Enabled Cryptocurrency Payment Gateways for SAP ERP Modules
+10.1109/jproc.2024.3386257	Drawing the Boundaries Between Blockchain and Blockchain-Like Systems: A Comprehensive Survey on Distributed Ledger Technologies
+10.1145/3714393.3726503	Protecting DeFi Platforms against Non-Price Flash Loan Attacks
+10.48550/arxiv.2403.00405	SoK: Cross-Chain Bridging Architectural Design Flaws and Mitigations
+10.48550/arxiv.2311.13731	A Survey of Blockchain, Artificial Intelligence, and Edge Computing for Web 3.0
+10.48550/arxiv.2306.09754	CroCoDai: A Stablecoin for Cross-Chain Commerce
+10.48550/arxiv.2507.14808	Decoding RWA Tokenized U.S. Treasuries: Functional Dissection and Address Role Inference
+10.48550/arxiv.2309.00448	Account Abstraction, Analysed
+10.48550/arxiv.2510.15612	SoK: Market Microstructure for Decentralized Prediction Markets (DePMs)
+10.48550/arxiv.2409.18799	Drawing the boundaries between Blockchain and Blockchain-like systems: A Comprehensive Survey on Distributed Ledger Technologies
