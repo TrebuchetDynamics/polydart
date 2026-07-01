@@ -17,6 +17,7 @@ final class PolydartConfig {
     this.gammaBaseUrl = defaultGammaBaseUrl,
     this.clobBaseUrl = defaultClobBaseUrl,
     this.dataBaseUrl = defaultDataBaseUrl,
+    this.webBaseUrl = defaultWebBaseUrl,
     this.requestTimeout = const Duration(seconds: 10),
     this.liveTradingEnabled = false,
     this.paperStatePath = '',
@@ -30,6 +31,9 @@ final class PolydartConfig {
 
   /// Public Polymarket Data API base.
   static const String defaultDataBaseUrl = 'https://data-api.polymarket.com';
+
+  /// Public Polymarket web app base.
+  static const String defaultWebBaseUrl = 'https://polymarket.com';
 
   /// Reads config from an environment map. Keys are looked up as
   /// `${prefix}_${UPPER_SNAKE}` (e.g. `POLYMARKET_MODE`).
@@ -62,6 +66,7 @@ final class PolydartConfig {
       gammaBaseUrl: get('GAMMA_BASE_URL') ?? defaultGammaBaseUrl,
       clobBaseUrl: get('CLOB_BASE_URL') ?? defaultClobBaseUrl,
       dataBaseUrl: get('DATA_BASE_URL') ?? defaultDataBaseUrl,
+      webBaseUrl: get('WEB_BASE_URL') ?? defaultWebBaseUrl,
       requestTimeout: timeout,
       liveTradingEnabled:
           (get('LIVE_TRADING_ENABLED') ?? 'false').toLowerCase() == 'true',
@@ -73,6 +78,7 @@ final class PolydartConfig {
   final String gammaBaseUrl;
   final String clobBaseUrl;
   final String dataBaseUrl;
+  final String webBaseUrl;
   final Duration requestTimeout;
   final bool liveTradingEnabled;
   final String paperStatePath;
@@ -82,6 +88,7 @@ final class PolydartConfig {
     String? gammaBaseUrl,
     String? clobBaseUrl,
     String? dataBaseUrl,
+    String? webBaseUrl,
     Duration? requestTimeout,
     bool? liveTradingEnabled,
     String? paperStatePath,
@@ -91,6 +98,7 @@ final class PolydartConfig {
       gammaBaseUrl: gammaBaseUrl ?? this.gammaBaseUrl,
       clobBaseUrl: clobBaseUrl ?? this.clobBaseUrl,
       dataBaseUrl: dataBaseUrl ?? this.dataBaseUrl,
+      webBaseUrl: webBaseUrl ?? this.webBaseUrl,
       requestTimeout: requestTimeout ?? this.requestTimeout,
       liveTradingEnabled: liveTradingEnabled ?? this.liveTradingEnabled,
       paperStatePath: paperStatePath ?? this.paperStatePath,
@@ -104,6 +112,7 @@ final class PolydartConfig {
       'gamma=$gammaBaseUrl, '
       'clob=$clobBaseUrl, '
       'data=$dataBaseUrl, '
+      'web=$webBaseUrl, '
       'timeout=$requestTimeout, '
       'live=$liveTradingEnabled, '
       'paperPath=${paperStatePath.isEmpty ? "<empty>" : "<set>"})';

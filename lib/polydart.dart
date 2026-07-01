@@ -504,6 +504,11 @@ export 'src/transport/rate_limit.dart' show RateLimiter;
 export 'src/transport/redact.dart';
 export 'src/transport/transport_config.dart' show TransportConfig;
 export 'src/types/types.dart';
+export 'src/web/web_client.dart'
+    show
+        PolymarketCryptoCounts,
+        PolymarketCryptoMarketsResponse,
+        PolymarketWebClient;
 export 'src/wallet/deposit_wallet_signing.dart'
     show
         WalletBatchCall,
@@ -599,6 +604,7 @@ import 'src/modes/modes.dart';
 import 'src/transport/http_transport.dart';
 import 'src/transport/transport_config.dart';
 import 'src/marketdetail/market_detail_bundle.dart';
+import 'src/web/web_client.dart';
 
 const String polydartVersion = '0.1.0-alpha.2';
 
@@ -624,6 +630,7 @@ final class Polydart {
     required this.gamma,
     required this.clob,
     required this.data,
+    required this.web,
     required this.intel,
     required this.resolver,
     required this.discovery,
@@ -641,6 +648,7 @@ final class Polydart {
     HttpTransport? gammaTransport,
     HttpTransport? clobTransport,
     HttpTransport? dataTransport,
+    HttpTransport? webTransport,
   }) {
     final cfg = (config ?? const PolydartConfig()).copyWith(
       mode: PolydartMode.readOnly,
@@ -650,6 +658,7 @@ final class Polydart {
       gammaTransport,
       clobTransport,
       dataTransport,
+      webTransport: webTransport,
       eoaAddress: '',
     );
   }
@@ -666,6 +675,7 @@ final class Polydart {
     HttpTransport? gammaTransport,
     HttpTransport? clobTransport,
     HttpTransport? dataTransport,
+    HttpTransport? webTransport,
   }) {
     if (eoaAddress.trim().isEmpty) {
       throw const ValidationException(
@@ -682,6 +692,7 @@ final class Polydart {
       gammaTransport,
       clobTransport,
       dataTransport,
+      webTransport: webTransport,
       eoaAddress: eoaAddress,
     );
   }
@@ -703,6 +714,9 @@ final class Polydart {
 
   /// Data API surface — positions, activity, holders, analytics, …
   final DataApiClient data;
+
+  /// Polymarket web app read surface — crypto feeds, web tags, …
+  final PolymarketWebClient web;
 
   /// Wallet intelligence surface — read-only dossiers, scoring, and flows.
   final WalletIntelService intel;
@@ -740,6 +754,7 @@ final class Polydart {
     gamma.close();
     clob.close();
     data.close();
+    web.close();
   }
 
   static Polydart _build(
@@ -747,6 +762,7 @@ final class Polydart {
     HttpTransport? gammaTransport,
     HttpTransport? clobTransport,
     HttpTransport? dataTransport, {
+    HttpTransport? webTransport,
     required String eoaAddress,
   }) {
     final gt =
@@ -773,6 +789,14 @@ final class Polydart {
             timeout: cfg.requestTimeout,
           ),
         );
+    final wt =
+        webTransport ??
+        HttpTransport(
+          config: TransportConfig(
+            baseUrl: cfg.webBaseUrl,
+            timeout: cfg.requestTimeout,
+          ),
+        );
     final gamma = GammaClient(transport: gt);
     final clob = ClobClient(
       transport: ct,
@@ -780,12 +804,14 @@ final class Polydart {
       liveTradingEnabled: cfg.liveTradingEnabled,
     );
     final data = DataApiClient(transport: dt);
+    final web = PolymarketWebClient(transport: wt);
     return Polydart._(
       config: cfg,
       eoaAddress: eoaAddress,
       gamma: gamma,
       clob: clob,
       data: data,
+      web: web,
       intel: WalletIntelService.fromDataApi(data),
       resolver: MarketResolver(gamma: gamma),
       discovery: MarketDiscovery(gamma: gamma, clob: clob),
