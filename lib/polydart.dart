@@ -100,6 +100,14 @@ export 'src/builder/builder.dart'
         polyBuilderPassphraseHeader,
         polyBuilderSignatureHeader,
         polyBuilderTimestampHeader;
+export 'src/chainlink/chainlink.dart'
+    show
+        ChainlinkFeedPrice,
+        ChainlinkFeedSnapshot,
+        ChainlinkPriceFeedClient,
+        chainlinkLatestRoundDataSelector,
+        decodeLatestRoundData,
+        polygonChainlinkUsdFeeds;
 export 'src/clob/clob_analytics_types.dart'
     show
         RawRewards,

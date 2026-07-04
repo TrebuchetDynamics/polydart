@@ -81,7 +81,7 @@ Future<void> main() async {
 
 | Mode | How to enter | Intended use | Live writes |
 | --- | --- | --- | --- |
-| Read-only | `Polydart.readOnly()` | Market discovery, CLOB reads, streams, analytics reads | Blocked |
+| Read-only | `Polydart.readOnly()` | Market discovery, CLOB/Data API reads, analytics reads, Chainlink USD feeds | Blocked |
 | Paper | `Polydart.paper(eoaAddress: ...)` | Local simulation and no-sign-in trials | Simulated only |
 | Live | Lower-level live clients plus explicit config | App-owned wallet/provider signing and guarded protocol mutation | Requires live mode, live flag, credentials, confirmation, and preflight |
 
