@@ -44,6 +44,92 @@ Market _market({
 }
 
 void main() {
+  group('polymarket categories', () {
+    test('curated navigation includes Polygolem category slugs', () {
+      expect(polymarketCategories, hasLength(18));
+      expect(polymarketCategoryBySlug('politics')!.label, 'Politics');
+      expect(polymarketCategoryBySlug('mentions')!.tagSlugs, [
+        'tweets-markets',
+      ]);
+      expect(polymarketCategoryBySlug('/pop-culture')!.slug, 'culture');
+      expect(
+        polymarketCategoryBySlug('breaking')!.feedMode,
+        categoryFeedRouteOnly,
+      );
+    });
+
+    test('categoryEvents uses /events/keyset with curated tag_slug', () async {
+      Uri? captured;
+      final client = gammaTestClient((req) async {
+        captured = req.url;
+        return gammaJsonObj(<String, dynamic>{
+          'events': <Map<String, dynamic>>[
+            <String, dynamic>{
+              'id': 'e1',
+              'slug': 'event-1',
+              'title': 'Event 1',
+            },
+          ],
+          'next_cursor': 'cursor-2',
+        });
+      });
+
+      final page = await client.categoryEvents(
+        'mentions',
+        const CategoryEventsParams(limit: 7, order: 'volume24hr'),
+      );
+
+      expect(captured!.path, '/events/keyset');
+      expect(captured!.queryParameters['tag_slug'], 'tweets-markets');
+      expect(captured!.queryParameters['limit'], '7');
+      expect(captured!.queryParameters['order'], 'volume24hr');
+      expect(captured!.queryParameters['ascending'], 'false');
+      expect(captured!.queryParameters['closed'], 'false');
+      expect(page.category.slug, 'mentions');
+      expect(page.events.single.slug, 'event-1');
+      expect(page.nextCursor, 'cursor-2');
+      expect(page.hasMore, isTrue);
+    });
+
+    test('all feed omits tag_slug', () async {
+      Uri? captured;
+      final client = gammaTestClient((req) async {
+        captured = req.url;
+        return gammaJsonObj(<String, dynamic>{
+          'events': <Map<String, dynamic>>[
+            <String, dynamic>{
+              'id': 'e1',
+              'slug': 'event-1',
+              'title': 'Event 1',
+            },
+          ],
+        });
+      });
+
+      final page = await client.categoryEvents(
+        'all',
+        const CategoryEventsParams(limit: 1),
+      );
+
+      expect(captured!.path, '/events/keyset');
+      expect(captured!.queryParameters.containsKey('tag_slug'), isFalse);
+      expect(page.category.slug, 'all');
+      expect(page.hasMore, isFalse);
+    });
+
+    test('route-only and unknown categories fail before network', () async {
+      var calls = 0;
+      final client = gammaTestClient((req) async {
+        calls += 1;
+        return gammaJsonObj(<String, dynamic>{});
+      });
+
+      expect(() => client.categoryEvents('breaking'), throwsUnsupportedError);
+      expect(() => client.categoryEvents('missing'), throwsArgumentError);
+      expect(calls, 0);
+    });
+  });
+
   group('activeMarkets', () {
     test(
       'activeMarketsAll collects pages and dedupes by condition id',

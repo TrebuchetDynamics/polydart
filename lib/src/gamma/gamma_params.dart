@@ -267,6 +267,34 @@ final class CommentQuery {
 
 /// Keyset pagination params. Mirrors `buildKeysetPath` in polygolem.
 @immutable
+final class CategoryEventsParams {
+  const CategoryEventsParams({
+    this.limit = 20,
+    this.cursor,
+    this.order = 'volume24hr',
+    this.ascending = false,
+    this.closed = false,
+  });
+
+  final int? limit;
+  final String? cursor;
+  final String? order;
+  final bool? ascending;
+  final bool? closed;
+
+  Map<String, dynamic> toQuery() {
+    final q = <String, dynamic>{};
+    q
+      ..addPositiveInt('limit', limit)
+      ..addNonEmptyString('after_cursor', cursor)
+      ..addNonEmptyString('order', order)
+      ..addBool('ascending', ascending)
+      ..addBool('closed', closed);
+    return q;
+  }
+}
+
+@immutable
 final class KeysetParams {
   const KeysetParams({
     this.limit,

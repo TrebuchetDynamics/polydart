@@ -257,17 +257,25 @@ export 'src/funding/funding.dart'
         pusdTransferSelector;
 export 'src/gamma/gamma_client.dart'
     show
+        CategoryEventsPage,
         GammaClient,
         KeysetPage,
+        PolymarketCategory,
+        categoryFeedAllEventsKeyset,
+        categoryFeedEventsKeyset,
+        categoryFeedRouteOnly,
         deduplicateEventsBySlugOrId,
         deduplicateMarketsByConditionId,
         deduplicateSeriesBySlugOrId,
         deduplicateTagsBySlugOrId,
         filterEventsByCategory,
         filterMarketsByCategory,
-        marketMatchesCategory;
+        marketMatchesCategory,
+        polymarketCategories,
+        polymarketCategoryBySlug;
 export 'src/gamma/gamma_params.dart'
     show
+        CategoryEventsParams,
         CommentQuery,
         GetEventsParams,
         GetMarketsParams,

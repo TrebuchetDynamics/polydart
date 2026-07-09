@@ -5,6 +5,8 @@
 /// market-by-token, and keyset pagination.
 library;
 
+import 'package:meta/meta.dart';
+
 import '../pagination/pagination.dart';
 import '../transport/http_transport.dart';
 import '../transport/transport_config.dart';
@@ -17,6 +19,214 @@ import 'gamma_params.dart';
 /// `(data, next_cursor, error)` triple polygolem returns from
 /// [GammaClient.eventsKeyset] / [GammaClient.marketsKeyset].
 typedef KeysetPage<T> = ({List<T> data, String nextCursor});
+
+/// A curated polymarket.com navigation category.
+///
+/// Polymarket does not expose one public endpoint for the website menu;
+/// feed-capable rows map to Gamma `/events/keyset` tag_slug queries.
+@immutable
+final class PolymarketCategory {
+  const PolymarketCategory({
+    required this.label,
+    required this.slug,
+    required this.route,
+    this.tagSlugs = const <String>[],
+    required this.feedMode,
+    this.note = '',
+  });
+
+  final String label;
+  final String slug;
+  final String route;
+  final List<String> tagSlugs;
+  final String feedMode;
+  final String note;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'label': label,
+    'slug': slug,
+    'route': route,
+    if (tagSlugs.isNotEmpty) 'tag_slugs': tagSlugs,
+    'feed_mode': feedMode,
+    if (note.isNotEmpty) 'note': note,
+  };
+}
+
+typedef CategoryEventsPage = ({
+  PolymarketCategory category,
+  List<Event> events,
+  String nextCursor,
+  bool hasMore,
+});
+
+const String categoryFeedEventsKeyset = 'events_keyset';
+const String categoryFeedAllEventsKeyset = 'events_keyset_all';
+const String categoryFeedRouteOnly = 'route_only';
+
+const List<PolymarketCategory> polymarketCategories = <PolymarketCategory>[
+  PolymarketCategory(
+    label: 'Trending',
+    slug: 'trending',
+    route: '/',
+    feedMode: categoryFeedAllEventsKeyset,
+    note: 'Homepage feed; no public category-list endpoint observed.',
+  ),
+  PolymarketCategory(
+    label: 'World Cup',
+    slug: 'world-cup',
+    route: '/sports/world-cup',
+    tagSlugs: <String>[
+      'fifa-world-cup',
+      '2026-fifa-world-cup',
+      'world-cup',
+      'wc-tournament-futures',
+    ],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Breaking',
+    slug: 'breaking',
+    route: '/breaking',
+    feedMode: categoryFeedRouteOnly,
+    note: 'Special polymarket.com route; no stable Gamma tag_slug found.',
+  ),
+  PolymarketCategory(
+    label: 'Politics',
+    slug: 'politics',
+    route: '/politics',
+    tagSlugs: <String>['politics'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Sports',
+    slug: 'sports',
+    route: '/sports/live',
+    tagSlugs: <String>['sports'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Crypto',
+    slug: 'crypto',
+    route: '/crypto',
+    tagSlugs: <String>['crypto'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Esports',
+    slug: 'esports',
+    route: '/esports',
+    tagSlugs: <String>['esports'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Iran',
+    slug: 'iran',
+    route: '/iran',
+    tagSlugs: <String>['iran'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Finance',
+    slug: 'finance',
+    route: '/finance',
+    tagSlugs: <String>['finance'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Geopolitics',
+    slug: 'geopolitics',
+    route: '/geopolitics',
+    tagSlugs: <String>['geopolitics'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Tech',
+    slug: 'tech',
+    route: '/tech',
+    tagSlugs: <String>['tech'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Culture',
+    slug: 'culture',
+    route: '/pop-culture',
+    tagSlugs: <String>['pop-culture'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Economy',
+    slug: 'economy',
+    route: '/economy',
+    tagSlugs: <String>['economy'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Weather',
+    slug: 'weather',
+    route: '/weather',
+    tagSlugs: <String>['weather'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Mentions',
+    slug: 'mentions',
+    route: '/mentions',
+    tagSlugs: <String>['tweets-markets'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Elections',
+    slug: 'elections',
+    route: '/elections',
+    tagSlugs: <String>['elections'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'Art',
+    slug: 'art',
+    route: '/pop-culture/art',
+    tagSlugs: <String>['art'],
+    feedMode: categoryFeedEventsKeyset,
+  ),
+  PolymarketCategory(
+    label: 'All',
+    slug: 'all',
+    route: '/predictions',
+    feedMode: categoryFeedAllEventsKeyset,
+    note:
+        'All active events feed; exact polymarket.com count is UI state, not a dedicated API field.',
+  ),
+];
+
+PolymarketCategory? polymarketCategoryBySlug(String slug) {
+  final needle = _normalizeCategorySlug(slug);
+  for (final category in polymarketCategories) {
+    if (category.slug == needle ||
+        _normalizeCategorySlug(category.label) == needle ||
+        _normalizeCategorySlug(category.route) == needle) {
+      return category;
+    }
+    for (final tagSlug in category.tagSlugs) {
+      if (_normalizeCategorySlug(tagSlug) == needle) return category;
+    }
+  }
+  return null;
+}
+
+String _normalizeCategorySlug(String value) {
+  var out = value.trim().toLowerCase();
+  while (out.startsWith('/')) {
+    out = out.substring(1);
+  }
+  while (out.endsWith('/')) {
+    out = out.substring(0, out.length - 1);
+  }
+  if (out.startsWith('predictions/')) out = out.substring(12);
+  if (out.startsWith('sports/')) out = out.substring(7);
+  out = out.replaceAll('_', '-').replaceAll(' ', '-');
+  if (out == 'pop-culture') return 'culture';
+  return out;
+}
 
 const int _defaultMarketPageSize = 100;
 const int _defaultMaxMarketPages = 50;
@@ -344,6 +554,36 @@ final class GammaClient {
     final body = await _transport.getJson('/profiles/$walletAddress');
     if (body.isEmpty) return null;
     return Profile.fromJson(body);
+  }
+
+  /// Returns a keyset-paginated event feed for a curated polymarket.com category.
+  Future<CategoryEventsPage> categoryEvents(
+    String slug, [
+    CategoryEventsParams params = const CategoryEventsParams(),
+  ]) async {
+    final category = polymarketCategoryBySlug(slug);
+    if (category == null) {
+      throw ArgumentError.value(slug, 'slug', 'unknown polymarket category');
+    }
+    if (category.feedMode == categoryFeedRouteOnly) {
+      throw UnsupportedError(
+        'category ${category.slug} is route-only and has no Gamma events/keyset feed',
+      );
+    }
+    final query = params.toQuery();
+    if (category.feedMode != categoryFeedAllEventsKeyset) {
+      query['tag_slug'] = category.tagSlugs.first;
+    }
+    final body = await _transport.getJson('/events/keyset', query: query);
+    final raw = body['events'] ?? body['data'];
+    final events = raw is List ? _events(raw) : const <Event>[];
+    final nextCursor = body['next_cursor']?.toString() ?? '';
+    return (
+      category: category,
+      events: events,
+      nextCursor: nextCursor,
+      hasMore: nextCursor.isNotEmpty,
+    );
   }
 
   /// Keyset-paginated events. Returns the data slice and the cursor for the
