@@ -6,6 +6,16 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 
 ### Added
 
+- Added current Polygolem read-only order simulation parity via
+  `simulateMarketOrderBook`, including fill levels, average price, slippage,
+  and unfilled amount without signing or submitting.
+- Added current Polygolem parity for curated polymarket.com category feeds:
+  `polymarketCategories`, `polymarketCategoryBySlug`, and
+  `GammaClient.categoryEvents` call Gamma `/events/keyset` with curated
+  `tag_slug` mappings.
+- Added `previewDepositWalletMarketOrder`, a non-posting POLY_1271 market-order
+  signing preview that hides the signature while exposing the expected
+  `DepositWallet` `TypedDataSign` / `signatureType=3` context.
 - Added Polygolem Wallet Intelligence V1 parity: read-only wallet dossier DTOs,
   shrinkage scoring helpers, Data API-backed dossier/leaderboard/alert/market
   flow service, `Polydart.intel`, `UniversalClient` convenience methods, and a

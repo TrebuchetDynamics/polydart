@@ -181,10 +181,11 @@ Polydart now mints this key through `LiveCredentialService.ensure()`.
    gains `createBuilderApiKey`, `getBuilderApiKeys`, `revokeBuilderApiKey`.
    Tests against a `MockClient` that asserts L2 headers and the empty body.
 2. **Mirror in polygolem** — `internal/clob/client.go` adds the same three
-   methods plus a `polygolem clob create-builder-api-key` CLI subcommand.
+   methods plus the current `polygolem exchange create-builder-fee-key` CLI
+   command.
 3. **Update `BUILDER-AUTO.md`** — split the "Builder API Keys" label into
-   the two distinct creds. Document that `builder auto` mints L2 creds and
-   that `clob create-builder-api-key` is an optional follow-up for fee
+   the two distinct creds. Document that `builder-keys auto` mints L2 creds and
+   that `exchange create-builder-fee-key` is an optional follow-up for fee
    attribution.
 4. **Persist** — extend the env-file format to support `POLY_BUILDER_*`
    and `POLY_RELAYER_*` separately. Polydart's `BuilderConfig` already

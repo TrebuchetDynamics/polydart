@@ -1,8 +1,8 @@
 # Source data for docs/POLYDART-POLYGOLEM-PARITY.md
 # Generated markdown via: dart run tool/generate_parity_docs.dart
-tracking_commit: '12f5cecd'
+tracking_commit: '5094bec4+local-parity-slices'
 last_sync_commit: 'fb092d8b'
-generated: '2026-06-13'
+generated: '2026-07-07'
 rows:
   - id: 'clob.order_book'
     domain: 'clob'
@@ -328,6 +328,60 @@ rows:
       - 'tick-floor rounding'
       - 'regular and neg-risk vectors'
     notes: 'Deterministic math and signing vectors only.'
+  - id: 'orders.read_only_simulation'
+    domain: 'orders'
+    feature: 'Read-only CLOB order simulation'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'internal/workflows/clobsimulation.Runner.SimulateOrder'
+        - 'polygolem exchange simulate'
+      internal:
+        - 'internal/workflows/clobsimulation'
+        - 'internal/cli/cmd_clob_simulate.go'
+      tests:
+        - 'internal/workflows/clobsimulation/clobsimulation_test.go'
+        - 'internal/cli/cmd_clob_test.go'
+    polydart:
+      apis:
+        - 'simulateMarketOrderBook'
+        - 'MarketOrderSimulationResult'
+      tests:
+        - 'test/orders/placement/order_placement_test.dart'
+    evidence:
+      - 'best-first book walk'
+      - 'limit-price stop'
+      - 'average price/slippage'
+      - 'unfilled amount'
+    notes: 'Dart exposes the pure SDK calculation rather than a CLI command. It is read-only: callers pass an OrderBook and no signer/API key is required.'
+  - id: 'orders.market_order_preview'
+    domain: 'orders'
+    feature: 'Deposit-wallet market-order signing preview'
+    status: 'implemented'
+    gated: true
+    polygolem:
+      apis:
+        - 'internal/clob.Client.PreviewMarketOrder'
+        - 'polygolem exchange market-order --dry-run'
+      internal:
+        - 'internal/clob.orders.go'
+        - 'internal/cli/cmd_clob.go'
+      tests:
+        - 'internal/clob/orders_test.go'
+        - 'internal/cli/cmd_clob_test.go'
+    polydart:
+      apis:
+        - 'previewDepositWalletMarketOrder'
+        - 'OrderSignaturePreview'
+      tests:
+        - 'test/orders/placement/order_placement_test.dart'
+    evidence:
+      - 'no order POST'
+      - 'signature hidden'
+      - 'signatureType=3'
+      - 'DepositWallet TypedDataSign context'
+    notes: 'Dart has no CLI, so the parity surface is the public SDK preview helper. It signs through the caller-provided WalletSigner to validate the exact wallet prompt shape, but returns only redacted metadata and never submits an order.'
   - id: 'auth.erc7739_poly1271'
     domain: 'auth'
     feature: 'ERC-7739 / POLY_1271 deposit-wallet signatures'
@@ -552,6 +606,34 @@ rows:
       - 'profile creation helper'
       - 'DTO decode coverage'
     notes: 'Public read API parity; profile creation helper is request-shape/local-test only.'
+  - id: 'gamma.website_categories'
+    domain: 'gamma'
+    feature: 'Curated polymarket.com categories and Gamma category feeds'
+    status: 'implemented'
+    gated: false
+    polygolem:
+      apis:
+        - 'pkg/gamma.PolymarketCategories'
+        - 'pkg/gamma.Client.CategoryEvents'
+      internal:
+        - 'internal/gamma.CategoryEvents'
+        - 'internal/workflows/discoverreads.CategoryEvents'
+      tests:
+        - 'pkg/gamma/categories_test.go'
+        - 'internal/workflows/discoverreads/discoverreads_test.go'
+    polydart:
+      apis:
+        - 'polymarketCategories'
+        - 'polymarketCategoryBySlug'
+        - 'GammaClient.categoryEvents'
+      tests:
+        - 'test/gamma/client/gamma_client_extra_test.dart'
+    evidence:
+      - '18 curated nav rows'
+      - 'mentions -> tweets-markets'
+      - 'all/trending omit tag_slug'
+      - 'breaking route-only'
+    notes: 'There is no observed single public category-list endpoint; both Go and Dart use a curated mapping plus Gamma `/events/keyset` feeds where a stable `tag_slug` exists.'
   - id: 'marketresolver.discovery'
     domain: 'marketresolver'
     feature: 'Market resolver and discovery enrichment'

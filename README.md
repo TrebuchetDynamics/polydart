@@ -7,13 +7,13 @@ Polydart is the Dart peer of [polygolem](https://github.com/TrebuchetDynamics/po
 
 ## What you can build today
 
-- Read public Gamma markets, events, profiles, tags, and search results.
+- Read public Gamma markets, events, profiles, tags, curated Polymarket category feeds, and search results.
 - Read CLOB books, prices, spreads, trades, tick sizes, and market metadata.
 - Read Data API positions, trades, holders, open interest, leaderboards, and wallet intelligence.
 - Read Polygon Chainlink USD price feeds for supported assets.
 - Build Flutter read-only repositories without adding Flutter as a dependency to Polydart.
-- Use paper-mode primitives for local no-funds experiments.
-- Prepare deposit-wallet, relayer, funding, approval, settlement, and order-result flows with typed safety checks.
+- Use paper-mode primitives and read-only order-book simulation for local no-funds experiments.
+- Prepare deposit-wallet, relayer, funding, approval, settlement, order-result, and POLY_1271 market-order preview flows with typed safety checks.
 - Integrate wallet-provider signing through `WalletSigner` adapters such as ReownWallet / WalletConnect.
 
 ## Install
