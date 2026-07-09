@@ -338,6 +338,15 @@ export 'src/mcp/mcp.dart'
 export 'src/mcp/mcp_sdk_handlers.dart'
     show newMarketDataSnapshotMcpHandler, newSdkReadOnlyMcpHandlers;
 export 'src/openapi/openapi.dart' show openApiSpec;
+export 'src/orders/market_order_pricing.dart'
+    show
+        MarketOrderFillStep,
+        MarketOrderPricePlan,
+        MarketOrderSimulationLevel,
+        MarketOrderSimulationResult,
+        parsePositiveMarketOrderAmount,
+        selectMarketOrderPrice,
+        simulateMarketOrderBook;
 export 'src/orders/amounts.dart'
     show
         OrderAmounts,
@@ -357,11 +366,13 @@ export 'src/orders/order_placement.dart'
         CreateDepositWalletMarketOrderParams,
         CreateLimitOrderParams,
         CreateMarketOrderParams,
+        OrderSignaturePreview,
         createDepositWalletLimitOrder,
         createDepositWalletLimitOrders,
         createDepositWalletMarketOrder,
         createLimitOrder,
-        createMarketOrder;
+        createMarketOrder,
+        previewDepositWalletMarketOrder;
 export 'src/orders/order_signing.dart'
     show
         OrderV2Draft,

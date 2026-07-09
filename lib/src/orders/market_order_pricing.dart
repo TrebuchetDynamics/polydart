@@ -36,6 +36,95 @@ final class MarketOrderPricePlan {
 }
 
 @immutable
+final class MarketOrderSimulationLevel {
+  const MarketOrderSimulationLevel({
+    required this.price,
+    required this.availableSize,
+    required this.filledSize,
+    required this.notional,
+  });
+
+  final String price;
+  final String availableSize;
+  final String filledSize;
+  final String notional;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'price': price,
+    'available_size': availableSize,
+    'filled_size': filledSize,
+    'notional': notional,
+  };
+}
+
+@immutable
+final class MarketOrderSimulationResult {
+  const MarketOrderSimulationResult({
+    required this.tokenId,
+    required this.market,
+    required this.side,
+    required this.inputAmount,
+    required this.inputAmountType,
+    required this.limitPrice,
+    required this.complete,
+    required this.filledSize,
+    required this.notional,
+    required this.averagePrice,
+    required this.expectedFillPrice,
+    required this.bestPrice,
+    required this.worstPrice,
+    required this.slippage,
+    required this.slippageBps,
+    required this.unfilledAmount,
+    required this.bookHash,
+    required this.bookTimestamp,
+    required this.levels,
+  });
+
+  final String tokenId;
+  final String market;
+  final Side side;
+  final String inputAmount;
+  final String inputAmountType;
+  final String limitPrice;
+  final bool complete;
+  final String filledSize;
+  final String notional;
+  final String averagePrice;
+  final String expectedFillPrice;
+  final String bestPrice;
+  final String worstPrice;
+  final String slippage;
+  final String slippageBps;
+  final String unfilledAmount;
+  final String bookHash;
+  final String bookTimestamp;
+  final List<MarketOrderSimulationLevel> levels;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'token_id': tokenId,
+    if (market.isNotEmpty) 'market': market,
+    'side': side.label.toLowerCase(),
+    'input_amount': inputAmount,
+    'input_amount_type': inputAmountType,
+    if (limitPrice.isNotEmpty) 'limit_price': limitPrice,
+    'complete': complete,
+    'filled_size': filledSize,
+    'notional': notional,
+    if (averagePrice.isNotEmpty) 'average_price': averagePrice,
+    if (expectedFillPrice.isNotEmpty) 'expected_fill_price': expectedFillPrice,
+    if (bestPrice.isNotEmpty) 'best_price': bestPrice,
+    if (worstPrice.isNotEmpty) 'worst_price': worstPrice,
+    if (slippage.isNotEmpty) 'slippage': slippage,
+    if (slippageBps.isNotEmpty) 'slippage_bps': slippageBps,
+    'unfilled_amount': unfilledAmount,
+    if (bookHash.isNotEmpty) 'book_hash': bookHash,
+    if (bookTimestamp.isNotEmpty) 'book_timestamp': bookTimestamp,
+    'levels': levels.map((level) => level.toJson()).toList(),
+  };
+}
+
+@immutable
 final class MarketOrderFillStep {
   const MarketOrderFillStep({
     required this.level,
@@ -118,6 +207,91 @@ List<MarketOrderFillStep> marketOrderFillSteps({
   return steps;
 }
 
+MarketOrderSimulationResult simulateMarketOrderBook({
+  required OrderBook book,
+  required String tokenId,
+  required Side side,
+  required String amount,
+  String limitPrice = '',
+}) {
+  final amountValue = parsePositiveMarketOrderAmount(amount);
+  final limit = limitPrice.trim().isEmpty
+      ? null
+      : parsePositiveMarketOrderAmount(limitPrice);
+  final levels = _simulationLevels(book: book, side: side);
+  final bestPrice = levels.isEmpty ? '' : _fmt(levels.first.price);
+  var remaining = amountValue;
+  var filledSize = 0.0;
+  var notional = 0.0;
+  var worstPrice = '';
+  final fills = <MarketOrderSimulationLevel>[];
+  for (final level in levels) {
+    if (limit != null &&
+        ((side == Side.buy && level.price > limit) ||
+            (side == Side.sell && level.price < limit))) {
+      break;
+    }
+    final fillSize = side == Side.buy
+        ? (remaining >= level.size * level.price
+              ? level.size
+              : remaining / level.price)
+        : (remaining < level.size ? remaining : level.size);
+    if (fillSize <= 0) continue;
+    final fillNotional = fillSize * level.price;
+    filledSize += fillSize;
+    notional += fillNotional;
+    fills.add(
+      MarketOrderSimulationLevel(
+        price: _fmt(level.price),
+        availableSize: _fmt(level.size),
+        filledSize: _fmt(fillSize),
+        notional: _fmt(fillNotional),
+      ),
+    );
+    worstPrice = _fmt(level.price);
+    remaining -= side == Side.buy ? fillNotional : fillSize;
+    if (remaining <= 0) {
+      remaining = 0;
+      break;
+    }
+  }
+  var average = '';
+  var slippage = '';
+  var slippageBps = '';
+  if (filledSize > 0) {
+    final avg = notional / filledSize;
+    average = _fmt(avg);
+    if (levels.isNotEmpty && levels.first.price > 0) {
+      final slip = side == Side.buy
+          ? avg - levels.first.price
+          : levels.first.price - avg;
+      slippage = _fmt(slip);
+      slippageBps = (slip / levels.first.price * 10000).toStringAsFixed(4);
+    }
+  }
+  return MarketOrderSimulationResult(
+    tokenId: book.assetId.isNotEmpty ? book.assetId : tokenId,
+    market: book.market,
+    side: side,
+    inputAmount: _fmt(amountValue),
+    inputAmountType: side == Side.buy ? 'usdc' : 'shares',
+    limitPrice: limit == null ? '' : _fmt(limit),
+    complete: remaining == 0,
+    filledSize: _fmt(filledSize),
+    notional: _fmt(notional),
+    averagePrice: average,
+    expectedFillPrice: average,
+    bestPrice: bestPrice,
+    worstPrice: worstPrice,
+    slippage: slippage,
+    slippageBps: slippageBps,
+    unfilledAmount: _fmt(remaining),
+    bookHash: book.hash,
+    bookTimestamp: book.timestamp,
+    levels: List<MarketOrderSimulationLevel>.unmodifiable(fills),
+  );
+}
+
 double parsePositiveMarketOrderAmount(String amount) {
   final decimal = Decimal.tryParse(amount);
   if (decimal == null) {
@@ -149,6 +323,39 @@ void validateMarketOrderAmount(double amount) {
       field: 'amount',
     );
   }
+}
+
+List<_SimulationLevel> _simulationLevels({
+  required OrderBook book,
+  required Side side,
+}) {
+  final raw = side == Side.buy ? book.asks : book.bids;
+  final out = <_SimulationLevel>[];
+  for (final level in raw) {
+    final price = double.tryParse(level.price);
+    final size = double.tryParse(level.size);
+    if (price == null || size == null || price <= 0 || size <= 0) continue;
+    out.add(_SimulationLevel(price: price, size: size));
+  }
+  out.sort(
+    (a, b) => side == Side.buy
+        ? a.price.compareTo(b.price)
+        : b.price.compareTo(a.price),
+  );
+  return out;
+}
+
+String _fmt(double value) {
+  if (value == 0) return '0.000000';
+  return value.toStringAsFixed(6);
+}
+
+@immutable
+final class _SimulationLevel {
+  const _SimulationLevel({required this.price, required this.size});
+
+  final double price;
+  final double size;
 }
 
 double _parsePositiveLevelValue(String raw, String field) {

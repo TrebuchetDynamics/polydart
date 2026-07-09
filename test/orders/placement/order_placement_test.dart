@@ -305,6 +305,49 @@ void main() {
   });
 
   group('createMarketOrder', () {
+    test('previews deposit-wallet market buy without posting', () async {
+      var posted = false;
+      final signer = cannedOrderSigner();
+      final depositWallet = deriveDepositWallet(signer.address);
+      final client = orderTestClient((req) async {
+        switch (req.url.path) {
+          case '/tick-size':
+            return tickSizeResponse();
+          case '/order':
+            posted = true;
+            return http.Response('preview must not post', 500);
+          default:
+            return http.Response('not found', 404);
+        }
+      });
+
+      final preview = await previewDepositWalletMarketOrder(
+        client: client,
+        signer: signer,
+        params: const CreateDepositWalletMarketOrderParams(
+          tokenId: '12345',
+          side: Side.buy,
+          amount: '1.000000',
+          price: '0.640000',
+          negRisk: true,
+        ),
+      );
+
+      expect(posted, isFalse);
+      expect(signer.lastTypedData!['primaryType'], 'TypedDataSign');
+      expect(preview.maker, depositWallet);
+      expect(preview.signer, depositWallet);
+      expect(preview.signatureType, SignatureType.poly1271);
+      expect(preview.makerAmount, '1000000');
+      expect(preview.takerAmount, '1562500');
+      expect(preview.exchangeContract, negRiskExchangeAddressV2);
+      expect(preview.walletOperation, 'TypedDataSign');
+      expect(preview.signatureLength, 636);
+      expect(preview.signatureIncluded, isFalse);
+      expect(preview.note, contains('Unknown Signature Type'));
+      expect(preview.toJson()['signature_included'], isFalse);
+    });
+
     test(
       'uses explicit price for polygolem-compatible market amounts',
       () async {
@@ -446,6 +489,67 @@ void main() {
         expect((order['signature'] as String).length, 636);
       },
     );
+  });
+
+  group('read-only market order simulation', () {
+    test('walks buy asks best first and reports slippage', () {
+      final result = simulateMarketOrderBook(
+        book: const OrderBook(
+          market: 'm1',
+          assetId: 'asset-1',
+          timestamp: '123',
+          hash: 'hash-1',
+          bids: <OrderBookLevel>[],
+          asks: <OrderBookLevel>[
+            OrderBookLevel(price: '0.30', size: '10'),
+            OrderBookLevel(price: '0.20', size: '4'),
+          ],
+        ),
+        tokenId: 'fallback-token',
+        side: Side.buy,
+        amount: '1.400000',
+      );
+
+      expect(result.tokenId, 'asset-1');
+      expect(result.inputAmountType, 'usdc');
+      expect(result.complete, isTrue);
+      expect(result.bestPrice, '0.200000');
+      expect(result.worstPrice, '0.300000');
+      expect(result.filledSize, '6.000000');
+      expect(result.notional, '1.400000');
+      expect(result.averagePrice, '0.233333');
+      expect(result.slippageBps, '1666.6667');
+      expect(result.levels, hasLength(2));
+      expect(result.toJson()['levels'], isA<List<dynamic>>());
+    });
+
+    test('honors sell limit price and reports unfilled shares', () {
+      final result = simulateMarketOrderBook(
+        book: const OrderBook(
+          market: 'm1',
+          assetId: 'asset-1',
+          timestamp: '',
+          hash: '',
+          bids: <OrderBookLevel>[
+            OrderBookLevel(price: '0.40', size: '1'),
+            OrderBookLevel(price: '0.30', size: '2'),
+          ],
+          asks: <OrderBookLevel>[],
+        ),
+        tokenId: 'asset-1',
+        side: Side.sell,
+        amount: '5',
+        limitPrice: '0.35',
+      );
+
+      expect(result.inputAmountType, 'shares');
+      expect(result.complete, isFalse);
+      expect(result.limitPrice, '0.350000');
+      expect(result.filledSize, '1.000000');
+      expect(result.notional, '0.400000');
+      expect(result.unfilledAmount, '4.000000');
+      expect(result.levels.single.price, '0.400000');
+    });
   });
 
   group('market order price discovery plan', () {

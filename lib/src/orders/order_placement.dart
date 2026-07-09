@@ -163,6 +163,64 @@ final class CreateDepositWalletMarketOrderParams {
   final String builderCode;
 }
 
+@immutable
+final class OrderSignaturePreview {
+  const OrderSignaturePreview({
+    required this.tokenId,
+    required this.side,
+    required this.orderType,
+    required this.price,
+    required this.makerAmount,
+    required this.takerAmount,
+    required this.maker,
+    required this.signer,
+    required this.signatureType,
+    required this.negRisk,
+    required this.exchangeContract,
+    required this.walletDomain,
+    required this.walletOperation,
+    required this.signatureLength,
+    required this.signatureIncluded,
+    required this.note,
+  });
+
+  final String tokenId;
+  final Side side;
+  final OrderType orderType;
+  final String price;
+  final String makerAmount;
+  final String takerAmount;
+  final String maker;
+  final String signer;
+  final SignatureType signatureType;
+  final bool negRisk;
+  final String exchangeContract;
+  final String walletDomain;
+  final String walletOperation;
+  final int signatureLength;
+  final bool signatureIncluded;
+  final String note;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'token_id': tokenId,
+    'side': side.label,
+    'order_type': orderType.label,
+    'price': price,
+    'maker_amount': makerAmount,
+    'taker_amount': takerAmount,
+    'maker': maker,
+    'signer': signer,
+    'signature_type': signatureType.code,
+    'neg_risk': negRisk,
+    'exchange_contract': exchangeContract,
+    'wallet_domain': walletDomain,
+    'wallet_operation': walletOperation,
+    'signature_length': signatureLength,
+    'signature_included': signatureIncluded,
+    'note': note,
+  };
+}
+
 /// End-to-end limit-order placement: looks up tick size, builds + signs
 /// the V2 order, and POSTs `/order`. Returns the CLOB's
 /// [OrderResponse]. Throws [ValidationException] on input errors.
@@ -367,6 +425,60 @@ Future<OrderResponse> createMarketOrder({
 /// The EOA [signer] approves the ERC-7739 envelope. The order body uses
 /// signatureType=3 with `maker == signer == depositWallet`, while CLOB HMAC
 /// authentication remains bound to the EOA address.
+Future<OrderSignaturePreview> previewDepositWalletMarketOrder({
+  required ClobClient client,
+  required WalletSigner signer,
+  required CreateDepositWalletMarketOrderParams params,
+}) async {
+  final depositWallet = deriveDepositWallet(signer.address);
+  final tick = await client.tickSize(params.tokenId);
+  final price = params.price.trim().isEmpty
+      ? await _marketOrderPrice(
+          client: client,
+          tokenId: params.tokenId,
+          side: params.side,
+          amount: params.amount,
+          orderType: params.orderType,
+        )
+      : params.price;
+  final intent =
+      (OrderBuilder(tokenId: params.tokenId, side: params.side)
+            ..price(price)
+            ..amountUsdc(params.amount)
+            ..orderType(params.orderType)
+            ..signatureType(SignatureType.poly1271)
+            ..tickSize(tick.tickSize)
+            ..negRisk(params.negRisk)
+            ..feeRateBps(params.feeRateBps)
+            ..funder(depositWallet))
+          .build();
+  final signed = await signDepositWalletOrderV2(
+    intent: intent,
+    signer: signer,
+    depositWallet: depositWallet,
+    builderCode: params.builderCode,
+  );
+  return OrderSignaturePreview(
+    tokenId: signed.tokenId,
+    side: signed.side,
+    orderType: params.orderType,
+    price: price,
+    makerAmount: signed.makerAmount,
+    takerAmount: signed.takerAmount,
+    maker: signed.maker,
+    signer: signed.signer,
+    signatureType: signed.signatureType,
+    negRisk: params.negRisk,
+    exchangeContract: OrderV2Draft.verifyingContract(negRisk: params.negRisk),
+    walletDomain: 'DepositWallet v1 chain 137',
+    walletOperation: 'TypedDataSign',
+    signatureLength: signed.signature.length,
+    signatureIncluded: false,
+    note:
+        'POLY_1271 orders use signatureType=3 and a DepositWallet TypedDataSign wrapper; some wallet UIs label this as Unknown Signature Type. The signed order is not printed or submitted by this preview.',
+  );
+}
+
 Future<OrderResponse> createDepositWalletMarketOrder({
   required ClobClient client,
   required WalletSigner signer,
