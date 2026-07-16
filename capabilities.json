@@ -1,0 +1,3509 @@
+{
+  "schemaVersion": 1,
+  "taxonomyVersion": "1.0.0",
+  "sdk": "polydart",
+  "reference": {
+    "project": "polymarket-cli",
+    "commit": "9b18b5f"
+  },
+  "capabilities": [
+    {
+      "id": "approve.check",
+      "tier": "execution",
+      "service": "approve",
+      "operation": "read",
+      "transport": "rpc",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "approve",
+        "check"
+      ],
+      "extension": false,
+      "summary": "Approve check.",
+      "status": "implemented",
+      "api": [
+        "isApprovedForAll"
+      ],
+      "tests": [
+        "test/rpc/rpc_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "approve.set",
+      "tier": "execution",
+      "service": "approve",
+      "operation": "submit",
+      "transport": "rpc",
+      "auth": [
+        "none"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "approve",
+        "set"
+      ],
+      "extension": false,
+      "summary": "Approve set.",
+      "status": "dtoOnly",
+      "api": [
+        "buildEnableTradingApprovalCalls"
+      ],
+      "tests": [
+        "test/enabletrading/enable_trading_test.dart"
+      ],
+      "guard": null,
+      "notes": "Typed call planning exists, but no network submission operation is implemented."
+    },
+    {
+      "id": "auth.l1.headers.create",
+      "tier": "authenticated",
+      "service": "auth",
+      "operation": "create",
+      "transport": "local",
+      "auth": [
+        "l1"
+      ],
+      "signing": "wallet",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Auth l1 headers create.",
+      "status": "implemented",
+      "api": [
+        "buildL1Headers"
+      ],
+      "tests": [
+        "test/auth/headers/clob_auth_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "auth.l2.headers.create",
+      "tier": "authenticated",
+      "service": "auth",
+      "operation": "create",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Auth l2 headers create.",
+      "status": "implemented",
+      "api": [
+        "buildL2Headers"
+      ],
+      "tests": [
+        "test/auth/headers/l2_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "auth.siwe.session.create",
+      "tier": "authenticated",
+      "service": "auth",
+      "operation": "create",
+      "transport": "local",
+      "auth": [
+        "siwe"
+      ],
+      "signing": "wallet",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Auth siwe session create.",
+      "status": "implemented",
+      "api": [
+        "SIWESession.login"
+      ],
+      "tests": [
+        "test/auth/siwe/siwe_login_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "bridge.assets.read",
+      "tier": "bridge",
+      "service": "bridge",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "bridge",
+        "supported-assets"
+      ],
+      "extension": false,
+      "summary": "Bridge assets read.",
+      "status": "implemented",
+      "api": [
+        "BridgeClient.supportedAssets"
+      ],
+      "tests": [
+        "test/bridge/bridge_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "bridge.depositAddress.create",
+      "tier": "bridge",
+      "service": "bridge",
+      "operation": "create",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "bridge",
+        "deposit"
+      ],
+      "extension": false,
+      "summary": "Bridge deposit address create.",
+      "status": "implemented",
+      "api": [
+        "BridgeClient.createDepositAddress"
+      ],
+      "tests": [
+        "test/bridge/bridge_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "bridge.quote.read",
+      "tier": "bridge",
+      "service": "bridge",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Bridge quote read.",
+      "status": "implemented",
+      "api": [
+        "BridgeClient.quote"
+      ],
+      "tests": [
+        "test/bridge/bridge_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "bridge.status.read",
+      "tier": "bridge",
+      "service": "bridge",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "bridge",
+        "status"
+      ],
+      "extension": false,
+      "summary": "Bridge status read.",
+      "status": "implemented",
+      "api": [
+        "BridgeClient.depositStatus"
+      ],
+      "tests": [
+        "test/bridge/bridge_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "bridge.withdraw.simulate",
+      "tier": "bridge",
+      "service": "bridge",
+      "operation": "simulate",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Bridge withdraw simulate.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "bridge.withdraw.submit",
+      "tier": "bridge",
+      "service": "bridge",
+      "operation": "submit",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Bridge withdraw submit.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "chainlink.price.read",
+      "tier": "public",
+      "service": "chainlink",
+      "operation": "read",
+      "transport": "rpc",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Chainlink price read.",
+      "status": "implemented",
+      "api": [
+        "ChainlinkPriceFeedClient.latest"
+      ],
+      "tests": [
+        "test/chainlink/chainlink_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.accountStatus.read",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "account-status"
+      ],
+      "extension": false,
+      "summary": "Clob account status read.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "clob.apiKey.createOrDerive",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "create",
+      "transport": "https",
+      "auth": [
+        "l1"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "clob",
+        "create-api-key"
+      ],
+      "extension": false,
+      "summary": "Clob api key create or derive.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.createOrDeriveApiKey"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.apiKey.delete",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "update",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": true,
+      "cliCommand": [
+        "clob",
+        "delete-api-key"
+      ],
+      "extension": false,
+      "summary": "Clob api key delete.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "clob.apiKeys.list",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "api-keys"
+      ],
+      "extension": false,
+      "summary": "Clob api keys list.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "clob.balance.read",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "balance"
+      ],
+      "extension": false,
+      "summary": "Clob balance read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.balanceAllowance"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.balance.update",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "update",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": true,
+      "cliCommand": [
+        "clob",
+        "update-balance"
+      ],
+      "extension": false,
+      "summary": "Clob balance update.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.updateBalanceAllowance"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.book.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "book"
+      ],
+      "extension": false,
+      "summary": "Clob book read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.orderBook"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.books.batchRead",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "books"
+      ],
+      "extension": false,
+      "summary": "Clob books batch read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.orderBooks"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.builderFeeKey.create",
+      "tier": "public",
+      "service": "clob",
+      "operation": "create",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Clob builder fee key create.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.createBuilderFeeKey"
+      ],
+      "tests": [
+        "test/clob/reads/clob_analytics_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.builderFeeKey.revoke",
+      "tier": "public",
+      "service": "clob",
+      "operation": "update",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Clob builder fee key revoke.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.revokeBuilderFeeKey"
+      ],
+      "tests": [
+        "test/clob/reads/clob_analytics_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.builderFeeKeys.list",
+      "tier": "public",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Clob builder fee keys list.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.listBuilderFeeKeys"
+      ],
+      "tests": [
+        "test/clob/reads/clob_analytics_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.builderTrades.list",
+      "tier": "public",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Clob builder trades list.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.builderTrades"
+      ],
+      "tests": [
+        "test/clob/reads/clob_analytics_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.currentRewards.list",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "current-rewards"
+      ],
+      "extension": false,
+      "summary": "Clob current rewards list.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.rewardsConfig"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.earnings.read",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "earnings"
+      ],
+      "extension": false,
+      "summary": "Clob earnings read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.totalEarnings"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.earningsByMarket.list",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "earnings-markets"
+      ],
+      "extension": false,
+      "summary": "Clob earnings by market list.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.userRewardsByMarket"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.feeRate.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "fee-rate"
+      ],
+      "extension": false,
+      "summary": "Clob fee rate read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.feeRateBps"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.geoblock.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "geoblock"
+      ],
+      "extension": false,
+      "summary": "Clob geoblock read.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "clob.health.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "ok"
+      ],
+      "extension": false,
+      "summary": "Clob health read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.health"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.lastTrade.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "last-trade"
+      ],
+      "extension": false,
+      "summary": "Clob last trade read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.lastTradePrice"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.lastTrades.batchRead",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "last-trades"
+      ],
+      "extension": false,
+      "summary": "Clob last trades batch read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.lastTradesPrices"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.market.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "market"
+      ],
+      "extension": false,
+      "summary": "Clob market read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.market"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.marketOutcome.resolve",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Clob market outcome resolve.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.marketOutcome"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.marketReward.read",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "market-reward"
+      ],
+      "extension": false,
+      "summary": "Clob market reward read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.userRewardsByMarket"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.markets.list",
+      "tier": "public",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "markets"
+      ],
+      "extension": false,
+      "summary": "Clob markets list.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.markets"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.midpoint.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "midpoint"
+      ],
+      "extension": false,
+      "summary": "Clob midpoint read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.midpoint"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.midpoints.batchRead",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "midpoints"
+      ],
+      "extension": false,
+      "summary": "Clob midpoints batch read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.midpoints"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.negRisk.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "neg-risk"
+      ],
+      "extension": false,
+      "summary": "Clob neg risk read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.negRisk"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.notifications.delete",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "update",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": true,
+      "cliCommand": [
+        "clob",
+        "delete-notifications"
+      ],
+      "extension": false,
+      "summary": "Clob notifications delete.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "clob.notifications.list",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "notifications"
+      ],
+      "extension": false,
+      "summary": "Clob notifications list.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "clob.order.cancel",
+      "tier": "execution",
+      "service": "clob",
+      "operation": "cancel",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "clob",
+        "cancel"
+      ],
+      "extension": false,
+      "summary": "Clob order cancel.",
+      "status": "implemented",
+      "api": [
+        "ClobWrites.cancelOrder"
+      ],
+      "tests": [
+        "test/clob/writes/clob_writes_test.dart",
+        "test/orders/placement/order_placement_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.order.read",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "order"
+      ],
+      "extension": false,
+      "summary": "Clob order read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.order"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.orderScoring.read",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "order-scoring"
+      ],
+      "extension": false,
+      "summary": "Clob order scoring read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.orderScoring"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.orders.all.cancel",
+      "tier": "execution",
+      "service": "clob",
+      "operation": "cancel",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "clob",
+        "cancel-all"
+      ],
+      "extension": false,
+      "summary": "Clob orders all cancel.",
+      "status": "implemented",
+      "api": [
+        "ClobWrites.cancelAllOrders"
+      ],
+      "tests": [
+        "test/clob/writes/clob_writes_test.dart",
+        "test/orders/placement/order_placement_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.orders.batch.cancel",
+      "tier": "execution",
+      "service": "clob",
+      "operation": "cancel",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "clob",
+        "cancel-orders"
+      ],
+      "extension": false,
+      "summary": "Clob orders batch cancel.",
+      "status": "implemented",
+      "api": [
+        "ClobWrites.cancelOrders"
+      ],
+      "tests": [
+        "test/clob/writes/clob_writes_test.dart",
+        "test/orders/placement/order_placement_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.orders.batch.submit",
+      "tier": "execution",
+      "service": "clob",
+      "operation": "submit",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "clob",
+        "post-orders"
+      ],
+      "extension": false,
+      "summary": "Clob orders batch submit.",
+      "status": "implemented",
+      "api": [
+        "ClobWrites.createOrders"
+      ],
+      "tests": [
+        "test/clob/writes/clob_writes_test.dart",
+        "test/orders/placement/order_placement_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.orders.limit.submit",
+      "tier": "execution",
+      "service": "clob",
+      "operation": "submit",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "clob",
+        "create-order"
+      ],
+      "extension": false,
+      "summary": "Clob orders limit submit.",
+      "status": "implemented",
+      "api": [
+        "createDepositWalletLimitOrder"
+      ],
+      "tests": [
+        "test/clob/writes/clob_writes_test.dart",
+        "test/orders/placement/order_placement_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.orders.list",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "orders"
+      ],
+      "extension": false,
+      "summary": "Clob orders list.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.listOrders"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.orders.market.cancel",
+      "tier": "execution",
+      "service": "clob",
+      "operation": "cancel",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "clob",
+        "cancel-market"
+      ],
+      "extension": false,
+      "summary": "Clob orders market cancel.",
+      "status": "implemented",
+      "api": [
+        "ClobWrites.cancelMarket"
+      ],
+      "tests": [
+        "test/clob/writes/clob_writes_test.dart",
+        "test/orders/placement/order_placement_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.orders.market.submit",
+      "tier": "execution",
+      "service": "clob",
+      "operation": "submit",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "clob",
+        "market-order"
+      ],
+      "extension": false,
+      "summary": "Clob orders market submit.",
+      "status": "implemented",
+      "api": [
+        "createDepositWalletMarketOrder"
+      ],
+      "tests": [
+        "test/clob/writes/clob_writes_test.dart",
+        "test/orders/placement/order_placement_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.ordersScoring.read",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "orders-scoring"
+      ],
+      "extension": false,
+      "summary": "Clob orders scoring read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.ordersScoring"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.price.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "price"
+      ],
+      "extension": false,
+      "summary": "Clob price read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.price"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.priceHistory.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "price-history"
+      ],
+      "extension": false,
+      "summary": "Clob price history read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.pricesHistory"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.prices.batchRead",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "batch-prices"
+      ],
+      "extension": false,
+      "summary": "Clob prices batch read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.prices"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.publicTrades.list",
+      "tier": "public",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Clob public trades list.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.publicTrades"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.rewardPercentages.read",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "reward-percentages"
+      ],
+      "extension": false,
+      "summary": "Clob reward percentages read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.rewardPercentages"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.rewards.list",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "rewards"
+      ],
+      "extension": false,
+      "summary": "Clob rewards list.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.rawRewards"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.samplingMarkets.list",
+      "tier": "public",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "sampling-markets"
+      ],
+      "extension": false,
+      "summary": "Clob sampling markets list.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.samplingMarkets"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.simplifiedMarkets.list",
+      "tier": "public",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "simplified-markets"
+      ],
+      "extension": false,
+      "summary": "Clob simplified markets list.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.simplifiedMarkets"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.simplifiedSamplingMarkets.list",
+      "tier": "public",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "sampling-simp-markets"
+      ],
+      "extension": false,
+      "summary": "Clob simplified sampling markets list.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.samplingSimplifiedMarkets"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.spread.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "spread"
+      ],
+      "extension": false,
+      "summary": "Clob spread read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.spread"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.spreads.batchRead",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "spreads"
+      ],
+      "extension": false,
+      "summary": "Clob spreads batch read.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "clob.tickSize.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "tick-size"
+      ],
+      "extension": false,
+      "summary": "Clob tick size read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.tickSize"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.time.read",
+      "tier": "public",
+      "service": "clob",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "time"
+      ],
+      "extension": false,
+      "summary": "Clob time read.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.serverTime"
+      ],
+      "tests": [
+        "test/clob/reads/clob_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "clob.trades.list",
+      "tier": "authenticated",
+      "service": "clob",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "clob",
+        "trades"
+      ],
+      "extension": false,
+      "summary": "Clob trades list.",
+      "status": "implemented",
+      "api": [
+        "ClobClient.listTrades"
+      ],
+      "tests": [
+        "test/clob/auth/clob_auth_reads_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "comments.byUser.list",
+      "tier": "public",
+      "service": "comments",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "comments",
+        "by-user"
+      ],
+      "extension": false,
+      "summary": "Comments by user list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.commentsByUser"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "comments.get",
+      "tier": "public",
+      "service": "comments",
+      "operation": "get",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "comments",
+        "get"
+      ],
+      "extension": false,
+      "summary": "Comments get.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.commentById"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "comments.list",
+      "tier": "public",
+      "service": "comments",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "comments",
+        "list"
+      ],
+      "extension": false,
+      "summary": "Comments list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.comments"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "ctf.collectionId.derive",
+      "tier": "execution",
+      "service": "ctf",
+      "operation": "derive",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "ctf",
+        "collection-id"
+      ],
+      "extension": false,
+      "summary": "Ctf collection id derive.",
+      "status": "implemented",
+      "api": [
+        "collectionId"
+      ],
+      "tests": [
+        "test/ctf/ctf_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "ctf.conditionId.derive",
+      "tier": "execution",
+      "service": "ctf",
+      "operation": "derive",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "ctf",
+        "condition-id"
+      ],
+      "extension": false,
+      "summary": "Ctf condition id derive.",
+      "status": "implemented",
+      "api": [
+        "conditionId"
+      ],
+      "tests": [
+        "test/ctf/ctf_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "ctf.merge",
+      "tier": "execution",
+      "service": "ctf",
+      "operation": "submit",
+      "transport": "rpc",
+      "auth": [
+        "none"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "ctf",
+        "merge"
+      ],
+      "extension": false,
+      "summary": "Ctf merge.",
+      "status": "dtoOnly",
+      "api": [
+        "mergePositionsData"
+      ],
+      "tests": [
+        "test/ctf/ctf_test.dart"
+      ],
+      "guard": null,
+      "notes": "Typed call planning exists, but no network submission operation is implemented."
+    },
+    {
+      "id": "ctf.positionId.derive",
+      "tier": "execution",
+      "service": "ctf",
+      "operation": "derive",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "ctf",
+        "position-id"
+      ],
+      "extension": false,
+      "summary": "Ctf position id derive.",
+      "status": "implemented",
+      "api": [
+        "positionId"
+      ],
+      "tests": [
+        "test/ctf/ctf_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "ctf.redeem",
+      "tier": "execution",
+      "service": "ctf",
+      "operation": "submit",
+      "transport": "rpc",
+      "auth": [
+        "none"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "ctf",
+        "redeem"
+      ],
+      "extension": false,
+      "summary": "Ctf redeem.",
+      "status": "dtoOnly",
+      "api": [
+        "redeemPositionsData"
+      ],
+      "tests": [
+        "test/ctf/ctf_test.dart"
+      ],
+      "guard": null,
+      "notes": "Typed call planning exists, but no network submission operation is implemented."
+    },
+    {
+      "id": "ctf.redeemNegRisk",
+      "tier": "execution",
+      "service": "ctf",
+      "operation": "submit",
+      "transport": "rpc",
+      "auth": [
+        "none"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "ctf",
+        "redeem-neg-risk"
+      ],
+      "extension": false,
+      "summary": "Ctf redeem neg risk.",
+      "status": "dtoOnly",
+      "api": [
+        "buildRedeemCall"
+      ],
+      "tests": [
+        "test/settlement/settlement_test.dart"
+      ],
+      "guard": null,
+      "notes": "Typed call planning exists, but no network submission operation is implemented."
+    },
+    {
+      "id": "ctf.split",
+      "tier": "execution",
+      "service": "ctf",
+      "operation": "submit",
+      "transport": "rpc",
+      "auth": [
+        "none"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": [
+        "ctf",
+        "split"
+      ],
+      "extension": false,
+      "summary": "Ctf split.",
+      "status": "dtoOnly",
+      "api": [
+        "splitPositionData"
+      ],
+      "tests": [
+        "test/ctf/ctf_test.dart"
+      ],
+      "guard": null,
+      "notes": "Typed call planning exists, but no network submission operation is implemented."
+    },
+    {
+      "id": "data.activity.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "data",
+        "activity"
+      ],
+      "extension": false,
+      "summary": "Data activity read.",
+      "status": "implemented",
+      "api": [
+        "DataApiClient.activity"
+      ],
+      "tests": [
+        "test/dataapi/dataapi_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "data.builderLeaderboard.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "data",
+        "builder-leaderboard"
+      ],
+      "extension": false,
+      "summary": "Data builder leaderboard read.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "data.builderVolume.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "data",
+        "builder-volume"
+      ],
+      "extension": false,
+      "summary": "Data builder volume read.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "data.closedPositions.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "data",
+        "closed-positions"
+      ],
+      "extension": false,
+      "summary": "Data closed positions read.",
+      "status": "implemented",
+      "api": [
+        "DataApiClient.closedPositions"
+      ],
+      "tests": [
+        "test/dataapi/dataapi_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "data.holders.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "data",
+        "holders"
+      ],
+      "extension": false,
+      "summary": "Data holders read.",
+      "status": "implemented",
+      "api": [
+        "DataApiClient.topHolders"
+      ],
+      "tests": [
+        "test/dataapi/dataapi_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "data.leaderboard.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "data",
+        "leaderboard"
+      ],
+      "extension": false,
+      "summary": "Data leaderboard read.",
+      "status": "implemented",
+      "api": [
+        "DataApiClient.traderLeaderboard"
+      ],
+      "tests": [
+        "test/dataapi/dataapi_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "data.marketTrades.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Data market trades read.",
+      "status": "implemented",
+      "api": [
+        "DataApiClient.marketTrades"
+      ],
+      "tests": [
+        "test/dataapi/dataapi_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "data.marketsTraded.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "data",
+        "traded"
+      ],
+      "extension": false,
+      "summary": "Data markets traded read.",
+      "status": "implemented",
+      "api": [
+        "DataApiClient.marketsTraded"
+      ],
+      "tests": [
+        "test/dataapi/dataapi_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "data.openInterest.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "data",
+        "open-interest"
+      ],
+      "extension": false,
+      "summary": "Data open interest read.",
+      "status": "implemented",
+      "api": [
+        "DataApiClient.openInterest"
+      ],
+      "tests": [
+        "test/dataapi/dataapi_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "data.positions.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "data",
+        "positions"
+      ],
+      "extension": false,
+      "summary": "Data positions read.",
+      "status": "implemented",
+      "api": [
+        "DataApiClient.currentPositions"
+      ],
+      "tests": [
+        "test/dataapi/dataapi_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "data.smartWalletTrades.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Data smart wallet trades read.",
+      "status": "implemented",
+      "api": [
+        "DataApiClient.smartWalletTrades"
+      ],
+      "tests": [
+        "test/dataapi/dataapi_smart_wallet_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "data.trades.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "data",
+        "trades"
+      ],
+      "extension": false,
+      "summary": "Data trades read.",
+      "status": "implemented",
+      "api": [
+        "DataApiClient.trades"
+      ],
+      "tests": [
+        "test/dataapi/dataapi_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "data.value.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "data",
+        "value"
+      ],
+      "extension": false,
+      "summary": "Data value read.",
+      "status": "implemented",
+      "api": [
+        "DataApiClient.totalValue"
+      ],
+      "tests": [
+        "test/dataapi/dataapi_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "data.volume.read",
+      "tier": "public",
+      "service": "data",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "data",
+        "volume"
+      ],
+      "extension": false,
+      "summary": "Data volume read.",
+      "status": "implemented",
+      "api": [
+        "DataApiClient.liveVolume"
+      ],
+      "tests": [
+        "test/dataapi/dataapi_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "events.get",
+      "tier": "public",
+      "service": "events",
+      "operation": "get",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "events",
+        "get"
+      ],
+      "extension": false,
+      "summary": "Events get.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.eventById"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "events.list",
+      "tier": "public",
+      "service": "events",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "events",
+        "list"
+      ],
+      "extension": false,
+      "summary": "Events list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.events"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "events.tags.list",
+      "tier": "public",
+      "service": "events",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "events",
+        "tags"
+      ],
+      "extension": false,
+      "summary": "Events tags list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.eventById"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "intel.marketFlow.read",
+      "tier": "public",
+      "service": "intel",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Intel market flow read.",
+      "status": "implemented",
+      "api": [
+        "WalletIntelService.marketFlow"
+      ],
+      "tests": [
+        "test/intel/intel_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "intel.wallet.alerts",
+      "tier": "public",
+      "service": "intel",
+      "operation": "read",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Intel wallet alerts.",
+      "status": "implemented",
+      "api": [
+        "WalletIntelService.alerts"
+      ],
+      "tests": [
+        "test/intel/intel_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "intel.wallet.dossier",
+      "tier": "public",
+      "service": "intel",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Intel wallet dossier.",
+      "status": "implemented",
+      "api": [
+        "WalletIntelService.walletDossier"
+      ],
+      "tests": [
+        "test/intel/intel_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "intel.wallet.score",
+      "tier": "public",
+      "service": "intel",
+      "operation": "read",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Intel wallet score.",
+      "status": "implemented",
+      "api": [
+        "scoreWallet"
+      ],
+      "tests": [
+        "test/intel/intel_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "market.discover",
+      "tier": "public",
+      "service": "market",
+      "operation": "search",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Market discover.",
+      "status": "implemented",
+      "api": [
+        "MarketDiscovery.discover"
+      ],
+      "tests": [
+        "test/marketdiscovery/market_discovery_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "market.resolve",
+      "tier": "public",
+      "service": "market",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Market resolve.",
+      "status": "implemented",
+      "api": [
+        "MarketResolver.resolveBySlug"
+      ],
+      "tests": [
+        "test/marketresolver/market_resolver_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "marketDetail.bundle.read",
+      "tier": "public",
+      "service": "marketDetail",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Market detail bundle read.",
+      "status": "implemented",
+      "api": [
+        "MarketDetailFetcher.fetch"
+      ],
+      "tests": [
+        "test/marketdetail/market_detail_bundle_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "markets.get",
+      "tier": "public",
+      "service": "markets",
+      "operation": "get",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "markets",
+        "get"
+      ],
+      "extension": false,
+      "summary": "Markets get.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.marketById"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "markets.list",
+      "tier": "public",
+      "service": "markets",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "markets",
+        "list"
+      ],
+      "extension": false,
+      "summary": "Markets list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.markets"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "markets.search",
+      "tier": "public",
+      "service": "markets",
+      "operation": "search",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "markets",
+        "search"
+      ],
+      "extension": false,
+      "summary": "Markets search.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.search"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "markets.tags.list",
+      "tier": "public",
+      "service": "markets",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "markets",
+        "tags"
+      ],
+      "extension": false,
+      "summary": "Markets tags list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.marketById"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "opportunities.scan",
+      "tier": "public",
+      "service": "opportunities",
+      "operation": "search",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Opportunities scan.",
+      "status": "implemented",
+      "api": [
+        "OpportunityRunner.run"
+      ],
+      "tests": [
+        "test/opportunities/opportunities_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "orderfills.read",
+      "tier": "public",
+      "service": "orderfills",
+      "operation": "read",
+      "transport": "rpc",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Orderfills read.",
+      "status": "implemented",
+      "api": [
+        "RpcOrderFillsReader.read"
+      ],
+      "tests": [
+        "test/orderfills/orderfills_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "paper.order.cancel",
+      "tier": "public",
+      "service": "paper",
+      "operation": "cancel",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Paper order cancel.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "paper.order.submit",
+      "tier": "public",
+      "service": "paper",
+      "operation": "submit",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Paper order submit.",
+      "status": "implemented",
+      "api": [
+        "PaperState.buy"
+      ],
+      "tests": [
+        "test/paper/paper_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "profiles.get",
+      "tier": "public",
+      "service": "profiles",
+      "operation": "get",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "profiles",
+        "get"
+      ],
+      "extension": false,
+      "summary": "Profiles get.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.publicProfile"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "relayer.transaction.read",
+      "tier": "execution",
+      "service": "relayer",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "siwe"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Relayer transaction read.",
+      "status": "implemented",
+      "api": [
+        "RelayerClient.getTransaction"
+      ],
+      "tests": [
+        "test/relayer/client/relayer_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "relayer.transaction.submit",
+      "tier": "execution",
+      "service": "relayer",
+      "operation": "submit",
+      "transport": "https",
+      "auth": [
+        "siwe"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Relayer transaction submit.",
+      "status": "implemented",
+      "api": [
+        "RelayerClient.submitWalletBatch"
+      ],
+      "tests": [
+        "test/relayer/client/relayer_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "relayer.wallet.deploy",
+      "tier": "execution",
+      "service": "relayer",
+      "operation": "submit",
+      "transport": "https",
+      "auth": [
+        "siwe"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Relayer wallet deploy.",
+      "status": "implemented",
+      "api": [
+        "RelayerClient.submitWalletCreate"
+      ],
+      "tests": [
+        "test/relayer/client/relayer_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "relayer.wallet.status.read",
+      "tier": "execution",
+      "service": "relayer",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "siwe"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Relayer wallet status read.",
+      "status": "implemented",
+      "api": [
+        "RelayerClient.isDeployed"
+      ],
+      "tests": [
+        "test/relayer/client/relayer_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "rfq.submit",
+      "tier": "execution",
+      "service": "rfq",
+      "operation": "submit",
+      "transport": "https",
+      "auth": [
+        "l2"
+      ],
+      "signing": "wallet",
+      "mutates": true,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Rfq submit.",
+      "status": "unsupported",
+      "api": [
+        "RfqClient.submit"
+      ],
+      "tests": [
+        "test/rfq/rfq_test.dart"
+      ],
+      "guard": "RfqClient.submit",
+      "notes": "The callable guard validates input and rejects live RFQ submission."
+    },
+    {
+      "id": "series.get",
+      "tier": "public",
+      "service": "series",
+      "operation": "get",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "series",
+        "get"
+      ],
+      "extension": false,
+      "summary": "Series get.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.seriesById"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "series.list",
+      "tier": "public",
+      "service": "series",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "series",
+        "list"
+      ],
+      "extension": false,
+      "summary": "Series list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.series"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "settlement.readiness.check",
+      "tier": "wallet",
+      "service": "settlement",
+      "operation": "read",
+      "transport": "rpc",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Settlement readiness check.",
+      "status": "implemented",
+      "api": [
+        "checkReadiness"
+      ],
+      "tests": [
+        "test/settlement/settlement_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "settlement.redeem.plan",
+      "tier": "wallet",
+      "service": "settlement",
+      "operation": "create",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Settlement redeem plan.",
+      "status": "implemented",
+      "api": [
+        "buildRedeemCall"
+      ],
+      "tests": [
+        "test/settlement/settlement_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "settlement.redeemables.read",
+      "tier": "public",
+      "service": "settlement",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Settlement redeemables read.",
+      "status": "implemented",
+      "api": [
+        "findRedeemable"
+      ],
+      "tests": [
+        "test/settlement/settlement_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "simulation.book.execute",
+      "tier": "public",
+      "service": "simulation",
+      "operation": "simulate",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Simulation book execute.",
+      "status": "implemented",
+      "api": [
+        "simulateMarketOrderBook"
+      ],
+      "tests": [
+        "test/orders/placement/order_placement_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "sports.list",
+      "tier": "public",
+      "service": "sports",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "sports",
+        "list"
+      ],
+      "extension": false,
+      "summary": "Sports list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.sportsMetadata"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "sports.marketTypes.list",
+      "tier": "public",
+      "service": "sports",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "sports",
+        "market-types"
+      ],
+      "extension": false,
+      "summary": "Sports market types list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.sportsMarketTypes"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "sports.teams.list",
+      "tier": "public",
+      "service": "sports",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "sports",
+        "teams"
+      ],
+      "extension": false,
+      "summary": "Sports teams list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.teams"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "stream.market.subscribe",
+      "tier": "public",
+      "service": "stream",
+      "operation": "stream",
+      "transport": "wss",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Stream market subscribe.",
+      "status": "implemented",
+      "api": [
+        "MarketClient.connect"
+      ],
+      "tests": [
+        "test/stream/market_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "stream.user.subscribe",
+      "tier": "authenticated",
+      "service": "stream",
+      "operation": "stream",
+      "transport": "wss",
+      "auth": [
+        "l2"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Stream user subscribe.",
+      "status": "implemented",
+      "api": [
+        "UserClient.connect"
+      ],
+      "tests": [
+        "test/stream/user_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "tags.get",
+      "tier": "public",
+      "service": "tags",
+      "operation": "get",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "tags",
+        "get"
+      ],
+      "extension": false,
+      "summary": "Tags get.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.tagById"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "tags.list",
+      "tier": "public",
+      "service": "tags",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "tags",
+        "list"
+      ],
+      "extension": false,
+      "summary": "Tags list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.tags"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "tags.related.list",
+      "tier": "public",
+      "service": "tags",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "tags",
+        "related"
+      ],
+      "extension": false,
+      "summary": "Tags related list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.relatedTagsById"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "tags.relatedTags.list",
+      "tier": "public",
+      "service": "tags",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "tags",
+        "related-tags"
+      ],
+      "extension": false,
+      "summary": "Tags related tags list.",
+      "status": "implemented",
+      "api": [
+        "GammaClient.relatedTagsBySlug"
+      ],
+      "tests": [
+        "test/gamma/client/gamma_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "wallet.address.read",
+      "tier": "wallet",
+      "service": "wallet",
+      "operation": "read",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": [
+        "wallet",
+        "address"
+      ],
+      "extension": false,
+      "summary": "Wallet address read.",
+      "status": "planned",
+      "api": [],
+      "tests": [],
+      "guard": null,
+      "notes": "No callable Polydart operation is implemented."
+    },
+    {
+      "id": "wallet.batch.sign",
+      "tier": "wallet",
+      "service": "wallet",
+      "operation": "sign",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "wallet",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Wallet batch sign.",
+      "status": "implemented",
+      "api": [
+        "signWalletBatch"
+      ],
+      "tests": [
+        "test/wallet/deposit_wallet_signing_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "wallet.deposit.derive",
+      "tier": "wallet",
+      "service": "wallet",
+      "operation": "derive",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Wallet deposit derive.",
+      "status": "implemented",
+      "api": [
+        "deriveDepositWallet"
+      ],
+      "tests": [
+        "test/auth/crypto/wallets/create2_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "wallet.proxy.derive",
+      "tier": "wallet",
+      "service": "wallet",
+      "operation": "derive",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Wallet proxy derive.",
+      "status": "implemented",
+      "api": [
+        "deriveProxyWallet"
+      ],
+      "tests": [
+        "test/auth/crypto/wallets/create2_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "wallet.readiness.check",
+      "tier": "wallet",
+      "service": "wallet",
+      "operation": "read",
+      "transport": "rpc",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Wallet readiness check.",
+      "status": "implemented",
+      "api": [
+        "DepositWalletReadinessService.check"
+      ],
+      "tests": [
+        "test/wallet/deposit_wallet_readiness_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "wallet.safe.derive",
+      "tier": "wallet",
+      "service": "wallet",
+      "operation": "derive",
+      "transport": "local",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Wallet safe derive.",
+      "status": "implemented",
+      "api": [
+        "deriveSafeWallet"
+      ],
+      "tests": [
+        "test/auth/crypto/wallets/create2_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
+      "id": "web.cryptoMarkets.read",
+      "tier": "public",
+      "service": "web",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Web crypto markets read.",
+      "status": "implemented",
+      "api": [
+        "PolymarketWebClient.cryptoMarkets"
+      ],
+      "tests": [
+        "test/web/web_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    }
+  ]
+}

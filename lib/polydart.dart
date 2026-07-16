@@ -4,6 +4,16 @@
 /// `docs/PLAN.md`.
 library;
 
+export 'src/capabilities.dart'
+    show
+        AuthRequirement,
+        Capability,
+        CapabilityCatalog,
+        CapabilityOperation,
+        CapabilityStatus,
+        CapabilityTier,
+        CapabilityTransport,
+        SigningRequirement;
 export 'src/auth/clob_auth.dart'
     show
         buildClobAuthTypedData,
