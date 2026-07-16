@@ -5,6 +5,14 @@ Polydart is the Dart peer of [polygolem](https://github.com/TrebuchetDynamics/po
 
 > **Status:** alpha-ready, not finished. Public reads, paper-mode, and guarded protocol-building blocks are available now; Polydart is not yet a stable production-live-trading SDK. APIs may change before a stable release. Live trading paths are explicit, signer-mediated, and gated.
 
+## Capability taxonomy
+
+[`capabilities.json`](capabilities.json) shares operation IDs and semantics with
+Polyrover, using Polymarket CLI commit `9b18b5f` as a read-only naming
+reference. Its statuses are `implemented`, `dtoOnly`, `unsupported`, and
+`planned`. Taxonomy parity does not imply implementation parity. Polygolem
+remains the protocol-behavior reference for authenticated and execution work.
+
 ## What you can build today
 
 - Read public Gamma markets, events, profiles, tags, curated Polymarket category feeds, and search results.

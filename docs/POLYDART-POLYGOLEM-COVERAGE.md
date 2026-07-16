@@ -8,6 +8,13 @@ on Dart/Flutter SDK custody architecture as described in
 `docs/adr/0001-wallet-mediated-eoa-signing.md`, but each divergence must be
 explicit in this matrix.
 
+Polydart separately shares the operation taxonomy in
+[`capabilities.json`](../capabilities.json) with Polyrover, anchored to
+Polymarket CLI commit `9b18b5f`. That catalog uses `implemented`, `dtoOnly`,
+`unsupported`, and `planned`; these statuses do not replace this document's
+Polygolem coverage vocabulary.
+Taxonomy parity does not imply implementation parity.
+
 - Canonical upstream source: `polygolem/`
 - Last scaffolded Polygolem commit: `2b7cde7`
 - Last fidelity sync commit: `fb092d8b`

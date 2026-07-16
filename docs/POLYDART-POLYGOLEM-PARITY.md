@@ -12,6 +12,11 @@ Tracking against Polygolem HEAD `5094bec4+local-parity-slices`; last full fideli
 
 Status vocabulary: `implemented`, `partial`, `missing`, `intentional`, `safety_gated`, `not_applicable`.
 
+## Shared SDK capability taxonomy
+
+[`capabilities.json`](../capabilities.json) shares operation IDs and semantics with Polyrover, anchored to Polymarket CLI commit `9b18b5f`.
+Its independent statuses are `implemented`, `dtoOnly`, `unsupported`, and `planned`. Taxonomy parity does not imply implementation parity.
+
 Summary: implemented: 31, intentional: 1, safety_gated: 1, missing: 0.
 
 | ID | Domain | Feature | Status | Gated | Polygolem APIs/tests | Polydart APIs/tests | Evidence | Notes |

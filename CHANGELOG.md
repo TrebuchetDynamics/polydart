@@ -6,6 +6,8 @@ All notable changes documented here. Follows [Keep a Changelog](https://keepacha
 
 ### Added
 
+- Added the shared operation-level capability taxonomy through
+  `capabilities.json`, `CapabilityCatalog.all`, and `CapabilityCatalog.byId`.
 - Added current Polygolem read-only order simulation parity via
   `simulateMarketOrderBook`, including fill levels, average price, slippage,
   and unfilled amount without signing or submitting.

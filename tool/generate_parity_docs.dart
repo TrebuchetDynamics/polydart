@@ -126,6 +126,17 @@ String _render(YamlMap data) {
       '`intentional`, `safety_gated`, `not_applicable`.',
     )
     ..writeln()
+    ..writeln('## Shared SDK capability taxonomy')
+    ..writeln()
+    ..writeln(
+      '[`capabilities.json`](../capabilities.json) shares operation IDs and '
+      'semantics with Polyrover, anchored to Polymarket CLI commit `9b18b5f`.',
+    )
+    ..writeln(
+      'Its independent statuses are `implemented`, `dtoOnly`, `unsupported`, '
+      'and `planned`. Taxonomy parity does not imply implementation parity.',
+    )
+    ..writeln()
     ..writeln('Summary: $summary.')
     ..writeln()
     ..writeln(
