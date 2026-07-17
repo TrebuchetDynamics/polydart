@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-labelledby="title desc">
+  <title id="title">Polydart — Dart-native Polymarket SDK</title>
+  <desc id="desc">Polydart routes public Gamma, CLOB, Data API, and Chainlink data through typed Dart clients for Dart, Flutter, web, and server apps, with read-only-first operating modes.</desc>
+  <defs>
+    <linearGradient id="route" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#40C4FF"/>
+      <stop offset="1" stop-color="#00D2A0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="400" rx="24" fill="#07131D"/>
+  <path d="M710 52V348" stroke="#233746"/>
+
+  <g id="title-block" transform="translate(64 54)">
+    <text x="0" y="0" fill="#40C4FF" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" font-weight="700" letter-spacing="2">DART · FLUTTER · POLYMARKET</text>
+    <text x="0" y="82" fill="#F4F7FB" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="74" font-weight="800" letter-spacing="-3">polydart</text>
+    <text x="0" y="132" fill="#C6D2DC" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="500">Typed market data and signer-mediated flows</text>
+    <text x="0" y="164" fill="#C6D2DC" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="500">for Dart, Flutter, web, and server apps.</text>
+
+    <g transform="translate(0 214)" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" font-weight="700">
+      <rect width="112" height="38" rx="19" fill="#0D2B3C" stroke="#287FA6"/>
+      <text x="56" y="24" fill="#A8E5FF" text-anchor="middle">ALPHA</text>
+      <rect x="124" width="174" height="38" rx="19" fill="#0A302C" stroke="#218777"/>
+      <text x="211" y="24" fill="#9AF2DF" text-anchor="middle">READ-ONLY FIRST</text>
+      <rect x="310" width="168" height="38" rx="19" fill="#102231" stroke="#405B70"/>
+      <text x="394" y="24" fill="#C6D2DC" text-anchor="middle">WALLET ADAPTERS</text>
+    </g>
+
+    <g transform="translate(0 290)">
+      <rect width="10" height="10" rx="2" fill="#00D2A0"/>
+      <text x="22" y="10" fill="#8FA4B7" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14">READONLY() · PAPER() · EXPLICIT LIVE GATES</text>
+    </g>
+  </g>
+
+  <g id="typed-route" transform="translate(758 52)">
+    <text x="0" y="0" fill="#8FA4B7" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" font-weight="700" letter-spacing="1.5">THE TYPED ROUTE</text>
+
+    <g transform="translate(0 24)" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14">
+      <rect width="168" height="44" rx="8" fill="#102231" stroke="#405B70"/>
+      <text x="84" y="27" fill="#E4EBF0" text-anchor="middle">GAMMA · CLOB</text>
+      <rect x="180" width="198" height="44" rx="8" fill="#102231" stroke="#405B70"/>
+      <text x="279" y="27" fill="#E4EBF0" text-anchor="middle">DATA · CHAINLINK</text>
+    </g>
+
+    <path d="M84 68V92M279 68V92M84 92H279M189 92V116" fill="none" stroke="url(#route)" stroke-width="2"/>
+    <circle cx="189" cy="92" r="4" fill="#00D2A0"/>
+
+    <g transform="translate(0 116)">
+      <rect width="378" height="70" rx="12" fill="#0D2B3C" stroke="#40C4FF" stroke-width="1.5"/>
+      <text x="20" y="28" fill="#8FDFFF" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14">Polydart</text>
+      <text x="20" y="52" fill="#F4F7FB" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" font-weight="700">.readOnly()</text>
+      <circle cx="342" cy="35" r="11" fill="#00D2A0"/>
+      <path d="M337 35l4 4 7-9" fill="none" stroke="#07131D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <path d="M189 186V214" stroke="url(#route)" stroke-width="2"/>
+    <g transform="translate(0 214)" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14">
+      <rect width="84" height="44" rx="8" fill="#0A302C" stroke="#218777"/>
+      <text x="42" y="27" fill="#9AF2DF" text-anchor="middle">DART</text>
+      <rect x="96" width="88" height="44" rx="8" fill="#0A302C" stroke="#218777"/>
+      <text x="140" y="27" fill="#9AF2DF" text-anchor="middle">FLUTTER</text>
+      <rect x="196" width="82" height="44" rx="8" fill="#0A302C" stroke="#218777"/>
+      <text x="237" y="27" fill="#9AF2DF" text-anchor="middle">WEB</text>
+      <rect x="290" width="88" height="44" rx="8" fill="#0A302C" stroke="#218777"/>
+      <text x="334" y="27" fill="#9AF2DF" text-anchor="middle">SERVER</text>
+    </g>
+
+    <path d="M0 290H378" stroke="#233746"/>
+    <g transform="translate(0 310)">
+      <path d="M0 0h12M6-6v12" stroke="#40C4FF" stroke-width="2"/>
+      <text x="24" y="5" fill="#8FA4B7" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13">TYPED DTOs · STREAMS · SIMULATION</text>
+    </g>
+  </g>
+</svg>
