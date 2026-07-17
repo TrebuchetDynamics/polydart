@@ -803,7 +803,7 @@ void main() {
   });
 
   group('publicProfile', () {
-    test('GETs /profiles/{addr}', () async {
+    test('GETs /public-profile with the EOA address', () async {
       Uri? captured;
       final client = gammaTestClient((req) async {
         captured = req.url;
@@ -815,7 +815,8 @@ void main() {
         });
       });
       final p = await client.publicProfile('0xWallet');
-      expect(captured!.path, '/profiles/0xWallet');
+      expect(captured!.path, '/public-profile');
+      expect(captured!.queryParameters, {'address': '0xWallet'});
       expect(p!.proxyWallet, '0xproxy');
     });
   });

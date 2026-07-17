@@ -551,7 +551,10 @@ final class GammaClient {
 
   /// Returns the public profile for a wallet address.
   Future<Profile?> publicProfile(String walletAddress) async {
-    final body = await _transport.getJson('/profiles/$walletAddress');
+    final body = await _transport.getJson(
+      '/public-profile',
+      query: <String, dynamic>{'address': walletAddress},
+    );
     if (body.isEmpty) return null;
     return Profile.fromJson(body);
   }

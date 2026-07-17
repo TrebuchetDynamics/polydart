@@ -497,7 +497,7 @@ export 'src/risk/breaker.dart'
         defaultPolicy,
         tripReasonFromString;
 export 'src/rpc/rpc.dart'
-    show erc20Allowance, hasCode, isApprovedForAll, polygonRpc;
+    show erc20Allowance, erc20BalanceOf, hasCode, isApprovedForAll, polygonRpc;
 export 'src/signers/signers.dart'
     show
         HttpSigner,
