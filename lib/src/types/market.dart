@@ -39,6 +39,7 @@ final class Tag {
     this.forceShow = false,
     this.forceHide = false,
     this.isCarousel = false,
+    this.activeEventsCount = 0,
     this.publishedAt,
     this.createdBy = 0,
     this.updatedBy = 0,
@@ -53,6 +54,7 @@ final class Tag {
     forceShow: json['forceShow'] == true,
     forceHide: json['forceHide'] == true,
     isCarousel: json['isCarousel'] == true,
+    activeEventsCount: _int(json['activeEventsCount']),
     publishedAt: parseNormalizedDateTime(json['publishedAt']),
     createdBy: _int(json['createdBy']),
     updatedBy: _int(json['updatedBy']),
@@ -66,6 +68,7 @@ final class Tag {
   final bool forceShow;
   final bool forceHide;
   final bool isCarousel;
+  final int activeEventsCount;
   final DateTime? publishedAt;
   final int createdBy;
   final int updatedBy;
