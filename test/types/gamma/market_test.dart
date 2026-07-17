@@ -5,6 +5,17 @@ import 'package:test/test.dart';
 import '../shared/json_contracts.dart';
 
 void main() {
+  test('Tag.fromJson preserves active event counts', () {
+    final tag = Tag.fromJson(<String, dynamic>{
+      'id': 'crypto-id',
+      'label': 'Crypto',
+      'slug': 'crypto',
+      'activeEventsCount': 17,
+    });
+
+    expect(tag.activeEventsCount, 17);
+  });
+
   group('Market.fromJson', () {
     test('handles outcomes encoded as a string-of-array', () {
       const raw = '''
