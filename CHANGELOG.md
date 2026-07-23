@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add Bridge withdrawal address creation for signed pUSD withdrawal flows.
+
 All notable changes documented here. Follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]

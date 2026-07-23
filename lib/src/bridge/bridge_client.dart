@@ -35,6 +35,15 @@ final class BridgeClient {
     return CreateDepositAddressResponse.fromJson(body);
   }
 
+  /// Creates addresses that receive pUSD from [request.address] and bridge it
+  /// to the requested destination chain, token, and recipient.
+  Future<CreateWithdrawalAddressResponse> createWithdrawalAddress(
+    CreateWithdrawalAddressRequest request,
+  ) async {
+    final body = await _transport.postJson('/withdraw', request.toJson());
+    return CreateWithdrawalAddressResponse.fromJson(body);
+  }
+
   /// Returns the assets the Bridge currently accepts as deposit collateral.
   Future<SupportedAssetsResponse> supportedAssets() async {
     final body = await _transport.getJson('/supported-assets');
@@ -80,6 +89,44 @@ final class CreateDepositAddressResponse {
 
   factory CreateDepositAddressResponse.fromJson(Map<String, dynamic> json) {
     return CreateDepositAddressResponse(
+      address: DepositAddress.fromJson(_map(json['address'])),
+      note: _string(json['note']),
+    );
+  }
+
+  final DepositAddress address;
+  final String note;
+}
+
+final class CreateWithdrawalAddressRequest {
+  const CreateWithdrawalAddressRequest({
+    required this.address,
+    required this.toChainId,
+    required this.toTokenAddress,
+    required this.recipientAddress,
+  });
+
+  final String address;
+  final String toChainId;
+  final String toTokenAddress;
+  final String recipientAddress;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'address': address,
+    'toChainId': toChainId,
+    'toTokenAddress': toTokenAddress,
+    'recipientAddr': recipientAddress,
+  };
+}
+
+final class CreateWithdrawalAddressResponse {
+  const CreateWithdrawalAddressResponse({
+    required this.address,
+    required this.note,
+  });
+
+  factory CreateWithdrawalAddressResponse.fromJson(Map<String, dynamic> json) {
+    return CreateWithdrawalAddressResponse(
       address: DepositAddress.fromJson(_map(json['address'])),
       note: _string(json['note']),
     );

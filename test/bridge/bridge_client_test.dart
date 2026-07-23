@@ -56,6 +56,48 @@ void main() {
     });
   });
 
+  group('createWithdrawalAddress', () {
+    test('POSTs /withdraw and decodes the pUSD destination', () async {
+      http.BaseRequest? captured;
+      final client = _client((req) async {
+        captured = req;
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'address': <String, dynamic>{
+              'evm': '0xwithdraw',
+              'svm': 'svm-withdraw',
+              'btc': 'bc1withdraw',
+            },
+            'note': 'send pUSD to the address for the source chain',
+          }),
+          201,
+        );
+      });
+
+      final response = await client.createWithdrawalAddress(
+        const CreateWithdrawalAddressRequest(
+          address: '0xsource',
+          toChainId: '1',
+          toTokenAddress: '0xusdc',
+          recipientAddress: '0xrecipient',
+        ),
+      );
+
+      expect(captured!.method, 'POST');
+      expect(captured!.url.path, '/withdraw');
+      expect(_body(captured!), <String, dynamic>{
+        'address': '0xsource',
+        'toChainId': '1',
+        'toTokenAddress': '0xusdc',
+        'recipientAddr': '0xrecipient',
+      });
+      expect(response.address.evm, '0xwithdraw');
+      expect(response.address.svm, 'svm-withdraw');
+      expect(response.address.btc, 'bc1withdraw');
+      expect(response.note, 'send pUSD to the address for the source chain');
+    });
+  });
+
   group('supportedAssets', () {
     test('SupportedAsset parses string numeric fields', () {
       final asset = SupportedAsset.fromJson(<String, dynamic>{

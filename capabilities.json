@@ -272,11 +272,20 @@
       "cliCommand": null,
       "extension": true,
       "summary": "Bridge withdraw submit.",
-      "status": "planned",
-      "api": [],
-      "tests": [],
+      "status": "implemented",
+      "api": [
+        "BridgeClient.createWithdrawalAddress",
+        "buildPusdTransferCall",
+        "signWalletBatch",
+        "RelayerClient.v2.submitWalletBatch"
+      ],
+      "tests": [
+        "test/bridge/bridge_client_test.dart",
+        "test/funding/funding_test.dart",
+        "test/relayer/client/relayer_client_test.dart"
+      ],
       "guard": null,
-      "notes": "No callable Polydart operation is implemented."
+      "notes": "Create the route, then send pUSD to its source-chain address with the existing signed wallet batch flow."
     },
     {
       "id": "chainlink.price.read",

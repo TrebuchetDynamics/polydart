@@ -222,7 +222,7 @@ abstract final class CapabilityCatalog {
       cliCommand: null,
       extension: true,
       summary: "Bridge withdraw submit.",
-      status: CapabilityStatus.planned,
+      status: CapabilityStatus.implemented,
     ),
     Capability(
       id: "chainlink.price.read",
