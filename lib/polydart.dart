@@ -87,6 +87,8 @@ export 'src/bridge/bridge_client.dart'
     show
         BridgeClient,
         CreateDepositAddressResponse,
+        CreateWithdrawalAddressRequest,
+        CreateWithdrawalAddressResponse,
         DepositAddress,
         DepositStatusResponse,
         DepositTransaction,

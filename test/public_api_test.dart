@@ -50,6 +50,13 @@ void main() {
     expect(planEoaPusdFundingRoute, isA<Function>());
     expect(erc20BalanceOf, isA<Function>());
     expect(waitForDepositWalletFundingReadiness, isA<Function>());
+    const withdrawal = CreateWithdrawalAddressRequest(
+      address: '0xsource',
+      toChainId: '1',
+      toTokenAddress: '0xtoken',
+      recipientAddress: '0xrecipient',
+    );
+    expect(withdrawal.recipientAddress, '0xrecipient');
     const candidateInspection = CryptoMarketCandidateInspection(
       rejections: <CryptoMarketCandidateRejection>{
         CryptoMarketCandidateRejection.ambiguousUpOutcome,
