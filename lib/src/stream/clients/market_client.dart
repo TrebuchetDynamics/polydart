@@ -101,6 +101,8 @@ final class MarketClient {
   /// Opens the WebSocket and starts the read loop. Safe to call again after
   /// a reconnect bubbles up; the existing stream subscribers are preserved.
   Future<void> connect() async {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
     _reconnects = 0;
     await _dial();
   }
@@ -249,12 +251,14 @@ final class MarketClient {
 
   void _handleSocketError(Object error, StackTrace stack) {
     _emitError(error);
+    if (!_connected) return;
     _connected = false;
     _stats.markDisconnected();
     _scheduleReconnect();
   }
 
   void _handleSocketDone() {
+    if (!_connected) return;
     _connected = false;
     _stats.markDisconnected();
     if (_closed) return;

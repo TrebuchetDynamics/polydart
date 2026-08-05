@@ -43,6 +43,8 @@ class _FakeWebSocketChannel extends StreamChannelMixin<dynamic>
 
   void push(String frame) => _incoming.add(frame);
 
+  void pushError(Object error) => _incoming.addError(error);
+
   Future<void> closeIncoming() => _incoming.close();
 }
 
@@ -191,6 +193,65 @@ void main() {
       expect(body['type'], 'user');
       expect(body['markets'], isEmpty);
     });
+
+    test('manual connect cancels a pending automatic reconnect', () async {
+      final channels = <_FakeWebSocketChannel>[];
+      final reconnectingClient = UserClient(
+        config: const StreamConfig(
+          url: defaultUserStreamUrl,
+          reconnect: true,
+          reconnectDelay: Duration(milliseconds: 50),
+          reconnectMaxDelay: Duration(milliseconds: 50),
+          reconnectMax: 1,
+        ),
+        credentials: _apiKey,
+        channelFactory: (_) {
+          final next = _FakeWebSocketChannel();
+          channels.add(next);
+          return next;
+        },
+      );
+      addTearDown(reconnectingClient.close);
+
+      await reconnectingClient.connect();
+      await channels.single.closeIncoming();
+      await reconnectingClient.connect();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(channels, hasLength(2));
+    });
+
+    test(
+      'socket error followed by done consumes one reconnect attempt',
+      () async {
+        final channels = <_FakeWebSocketChannel>[];
+        final reconnectingClient = UserClient(
+          config: const StreamConfig(
+            url: defaultUserStreamUrl,
+            reconnect: true,
+            reconnectDelay: Duration(milliseconds: 50),
+            reconnectMaxDelay: Duration(milliseconds: 50),
+            reconnectMax: 2,
+          ),
+          credentials: _apiKey,
+          channelFactory: (_) {
+            final next = _FakeWebSocketChannel();
+            channels.add(next);
+            return next;
+          },
+        );
+        addTearDown(reconnectingClient.close);
+
+        await reconnectingClient.connect();
+        channels.single.pushError(StateError('socket failed'));
+        await Future<void>.delayed(Duration.zero);
+        await channels.single.closeIncoming();
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        expect(channels, hasLength(2));
+        expect(reconnectingClient.stats.reconnects, 1);
+      },
+    );
 
     test('connect again detaches the stale socket read loop', () async {
       final channels = <_FakeWebSocketChannel>[];
