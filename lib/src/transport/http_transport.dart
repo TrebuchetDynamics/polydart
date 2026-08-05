@@ -205,26 +205,29 @@ final class HttpTransport {
         lastError = e;
         if (!_isRetryable(e, method)) rethrow;
       } on TimeoutException catch (e) {
-        lastError = TransportException(
+        final error = TransportException(
           code: ErrorCode.timeout,
           message: 'request timed out',
           cause: e,
         );
-        if (method != 'GET') rethrow;
+        lastError = error;
+        if (method != 'GET') throw error;
       } on http.ClientException catch (e) {
-        lastError = TransportException(
+        final error = TransportException(
           code: ErrorCode.connectionFailed,
           message: 'request failed',
           cause: e,
         );
-        if (method != 'GET') rethrow;
+        lastError = error;
+        if (method != 'GET') throw error;
       } on Exception catch (e) {
-        lastError = TransportException(
+        final error = TransportException(
           code: ErrorCode.connectionFailed,
           message: 'request failed',
           cause: e,
         );
-        if (method != 'GET') rethrow;
+        lastError = error;
+        if (method != 'GET') throw error;
       }
     }
 

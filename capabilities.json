@@ -613,12 +613,12 @@
     },
     {
       "id": "clob.currentRewards.list",
-      "tier": "authenticated",
+      "tier": "public",
       "service": "clob",
       "operation": "list",
       "transport": "https",
       "auth": [
-        "l2"
+        "none"
       ],
       "signing": "none",
       "mutates": false,
@@ -630,10 +630,10 @@
       "summary": "Clob current rewards list.",
       "status": "implemented",
       "api": [
-        "ClobClient.rewardsConfig"
+        "ClobClient.currentRewardMarkets"
       ],
       "tests": [
-        "test/clob/auth/clob_auth_reads_test.dart"
+        "test/clob/reads/clob_analytics_test.dart"
       ],
       "guard": null,
       "notes": null
@@ -736,11 +736,15 @@
       ],
       "extension": false,
       "summary": "Clob geoblock read.",
-      "status": "planned",
-      "api": [],
-      "tests": [],
+      "status": "implemented",
+      "api": [
+        "PolymarketWebClient.geoblock"
+      ],
+      "tests": [
+        "test/web/web_client_test.dart"
+      ],
       "guard": null,
-      "notes": "No callable Polydart operation is implemented."
+      "notes": null
     },
     {
       "id": "clob.health.read",
@@ -2814,6 +2818,30 @@
       "notes": null
     },
     {
+      "id": "perps.instruments.list",
+      "tier": "public",
+      "service": "perps",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Perps instruments list.",
+      "status": "implemented",
+      "api": [
+        "PerpsClient.instruments"
+      ],
+      "tests": [
+        "test/perps/perps_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
       "id": "profiles.get",
       "tier": "public",
       "service": "profiles",
@@ -2937,6 +2965,30 @@
       "notes": null
     },
     {
+      "id": "rfq.comboMarkets.list",
+      "tier": "public",
+      "service": "rfq",
+      "operation": "list",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "RFQ combo markets list.",
+      "status": "implemented",
+      "api": [
+        "RfqClient.comboMarkets"
+      ],
+      "tests": [
+        "test/rfq/rfq_test.dart"
+      ],
+      "guard": null,
+      "notes": null
+    },
+    {
       "id": "rfq.submit",
       "tier": "execution",
       "service": "rfq",
@@ -2959,6 +3011,30 @@
       ],
       "guard": "RfqClient.submit",
       "notes": "The callable guard validates input and rejects live RFQ submission."
+    },
+    {
+      "id": "rtds.cryptoPrices.stream",
+      "tier": "public",
+      "service": "rtds",
+      "operation": "stream",
+      "transport": "wss",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "RTDS crypto prices stream.",
+      "status": "implemented",
+      "api": [
+        "RtdsClient.subscribeCryptoPrices"
+      ],
+      "tests": [
+        "test/stream/rtds_client_test.dart"
+      ],
+      "guard": null,
+      "notes": null
     },
     {
       "id": "series.get",
@@ -3491,6 +3567,30 @@
       "notes": null
     },
     {
+      "id": "web.biggestMovers.read",
+      "tier": "public",
+      "service": "web",
+      "operation": "read",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": false,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Web biggest movers read.",
+      "status": "implemented",
+      "api": [
+        "PolymarketWebClient.biggestMovers"
+      ],
+      "tests": [
+        "test/web/web_client_test.dart"
+      ],
+      "guard": null,
+      "notes": "Unstable polymarket.com web extension."
+    },
+    {
       "id": "web.cryptoMarkets.read",
       "tier": "public",
       "service": "web",
@@ -3513,6 +3613,30 @@
       ],
       "guard": null,
       "notes": null
+    },
+    {
+      "id": "web.dailyUpdates.subscribe",
+      "tier": "public",
+      "service": "web",
+      "operation": "submit",
+      "transport": "https",
+      "auth": [
+        "none"
+      ],
+      "signing": "none",
+      "mutates": true,
+      "cliCommand": null,
+      "extension": true,
+      "summary": "Web daily updates subscription.",
+      "status": "implemented",
+      "api": [
+        "PolymarketWebClient.subscribeDailyUpdates"
+      ],
+      "tests": [
+        "test/web/web_client_test.dart"
+      ],
+      "guard": null,
+      "notes": "Unstable polymarket.com native extension; browser consumers may require their own relay."
     }
   ]
 }

@@ -91,6 +91,44 @@ void main() {
       expect(page.hasMore, isTrue);
     });
 
+    test('categoryEvents forwards keyset filters', () async {
+      Uri? captured;
+      String? method;
+      final client = gammaTestClient((req) async {
+        captured = req.url;
+        method = req.method;
+        return gammaJsonObj(<String, dynamic>{'events': <Object>[]});
+      });
+
+      await client.categoryEvents(
+        'sports',
+        const CategoryEventsParams(
+          active: true,
+          live: true,
+          endDateMin: '2026-08-02T00:00:00.000Z',
+          startTimeMin: '2026-08-02T01:00:00.000Z',
+          startTimeMax: '2026-08-04T01:00:00.000Z',
+        ),
+      );
+
+      expect(method, 'GET');
+      expect(captured!.queryParameters['tag_slug'], 'sports');
+      expect(captured!.queryParameters['active'], 'true');
+      expect(captured!.queryParameters['live'], 'true');
+      expect(
+        captured!.queryParameters['end_date_min'],
+        '2026-08-02T00:00:00.000Z',
+      );
+      expect(
+        captured!.queryParameters['start_time_min'],
+        '2026-08-02T01:00:00.000Z',
+      );
+      expect(
+        captured!.queryParameters['start_time_max'],
+        '2026-08-04T01:00:00.000Z',
+      );
+    });
+
     test('all feed omits tag_slug', () async {
       Uri? captured;
       final client = gammaTestClient((req) async {
@@ -749,10 +787,12 @@ void main() {
   });
 
   group('sports', () {
-    test('sportsMetadata GETs /sports-metadata', () async {
+    test('sportsMetadata GETs /sports', () async {
       Uri? captured;
+      String? method;
       final client = gammaTestClient((req) async {
         captured = req.url;
+        method = req.method;
         return gammaJsonList([
           <String, dynamic>{
             'sport': 'NBA',
@@ -765,7 +805,8 @@ void main() {
         ]);
       });
       final out = await client.sportsMetadata();
-      expect(captured!.path, '/sports-metadata');
+      expect(method, 'GET');
+      expect(captured!.path, '/sports');
       expect(out.first.sport, 'NBA');
     });
 

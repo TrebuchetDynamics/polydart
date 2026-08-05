@@ -532,7 +532,7 @@ final class GammaClient {
 
   /// Returns sports metadata.
   Future<List<SportMetadata>> sportsMetadata() async {
-    final list = await _transport.getJsonList('/sports-metadata');
+    final list = await _transport.getJsonList('/sports');
     return _sportsMetadata(list);
   }
 

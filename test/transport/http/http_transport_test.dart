@@ -209,16 +209,21 @@ void main() {
           return http.Response('{}', 200);
         }),
       );
-      await expectLater(
-        transport.getJson('/x'),
-        throwsA(
-          isA<TransportException>().having(
-            (e) => e.code,
-            'code',
-            ErrorCode.timeout,
+      for (final request in <Future<Object?> Function()>[
+        () => transport.getJson('/get'),
+        () => transport.postJson('/post', const <String, dynamic>{}),
+      ]) {
+        await expectLater(
+          request(),
+          throwsA(
+            isA<TransportException>().having(
+              (e) => e.code,
+              'code',
+              ErrorCode.timeout,
+            ),
           ),
-        ),
-      );
+        );
+      }
     });
   });
 

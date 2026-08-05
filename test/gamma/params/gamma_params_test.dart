@@ -47,6 +47,24 @@ void main() {
     });
   });
 
+  group('CategoryEventsParams.toQuery', () {
+    test('encodes sports and esports keyset filters', () {
+      final query = const CategoryEventsParams(
+        active: true,
+        live: true,
+        endDateMin: '2026-08-02T00:00:00.000Z',
+        startTimeMin: '2026-08-02T01:00:00.000Z',
+        startTimeMax: '2026-08-04T01:00:00.000Z',
+      ).toQuery();
+
+      expect(query['active'], 'true');
+      expect(query['live'], 'true');
+      expect(query['end_date_min'], '2026-08-02T00:00:00.000Z');
+      expect(query['start_time_min'], '2026-08-02T01:00:00.000Z');
+      expect(query['start_time_max'], '2026-08-04T01:00:00.000Z');
+    });
+  });
+
   group('SearchParams.toQuery', () {
     test('q always present', () {
       const p = SearchParams(query: 'btc 5m');

@@ -274,6 +274,11 @@ final class CategoryEventsParams {
     this.order = 'volume24hr',
     this.ascending = false,
     this.closed = false,
+    this.active,
+    this.live,
+    this.endDateMin,
+    this.startTimeMin,
+    this.startTimeMax,
   });
 
   final int? limit;
@@ -281,6 +286,11 @@ final class CategoryEventsParams {
   final String? order;
   final bool? ascending;
   final bool? closed;
+  final bool? active;
+  final bool? live;
+  final String? endDateMin;
+  final String? startTimeMin;
+  final String? startTimeMax;
 
   Map<String, dynamic> toQuery() {
     final q = <String, dynamic>{};
@@ -289,7 +299,12 @@ final class CategoryEventsParams {
       ..addNonEmptyString('after_cursor', cursor)
       ..addNonEmptyString('order', order)
       ..addBool('ascending', ascending)
-      ..addBool('closed', closed);
+      ..addBool('closed', closed)
+      ..addBool('active', active)
+      ..addBool('live', live)
+      ..addNonEmptyString('end_date_min', endDateMin)
+      ..addNonEmptyString('start_time_min', startTimeMin)
+      ..addNonEmptyString('start_time_max', startTimeMax);
     return q;
   }
 }

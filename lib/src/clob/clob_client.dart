@@ -442,6 +442,19 @@ final class ClobClient {
     );
   }
 
+  /// One public cursor page of current active reward markets.
+  Future<CurrentRewardMarketsPage> currentRewardMarkets({
+    String? nextCursor,
+  }) async {
+    final body = await _transport.getJson(
+      '/rewards/markets/current',
+      query: nextCursor == null || nextCursor.isEmpty
+          ? null
+          : <String, dynamic>{'next_cursor': nextCursor},
+    );
+    return CurrentRewardMarketsPage.fromJson(body);
+  }
+
   /// Raw rewards series for a market (`market` is the condition id).
   Future<List<RawRewards>> rawRewards(String market) async {
     final list = await _transport.getJsonList(

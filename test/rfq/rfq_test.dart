@@ -1,5 +1,11 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:polydart/src/errors/errors.dart';
+import 'package:polydart/src/transport/http_transport.dart';
+import 'package:polydart/src/transport/transport_config.dart';
 import 'package:polydart/src/rfq/rfq.dart';
 import 'package:test/test.dart';
 
@@ -108,6 +114,94 @@ void main() {
         () => client.submit(req, now: now),
         throwsA(isA<ValidationException>()),
       );
+    });
+  });
+
+  group('RfqClient.comboMarkets', () {
+    test('GETs the public combo catalog and preserves its cursor', () async {
+      Uri? captured;
+      String? method;
+      final client = RfqClient(
+        transport: HttpTransport(
+          config: const TransportConfig(baseUrl: RfqClient.defaultBaseUrl),
+          inner: MockClient((request) async {
+            captured = request.url;
+            method = request.method;
+            return http.Response(
+              jsonEncode(<String, dynamic>{
+                'markets': [
+                  <String, dynamic>{
+                    'id': '1897034',
+                    'condition_id': '0xcondition',
+                    'position_ids': ['yes-id', 'no-id'],
+                    'slug': 'mexico-win',
+                    'title': 'Will Mexico win?',
+                    'outcomes': ['Yes', 'No'],
+                    'outcome_prices': ['0.685', '0.315'],
+                    'image': 'https://example.com/image.png',
+                    'volume': '330327.7128580074',
+                    'tags': ['sports', 'soccer'],
+                  },
+                ],
+                'next_cursor': ' opaque cursor ',
+              }),
+              200,
+            );
+          }),
+        ),
+      );
+
+      final page = await client.comboMarkets(
+        limit: 25,
+        cursor: 'CUR',
+        exclude: const ['0xa', '0xb'],
+      );
+
+      expect(method, 'GET');
+      expect(captured!.path, '/v1/rfq/combo-markets');
+      expect(captured!.queryParameters['limit'], '25');
+      expect(captured!.queryParameters['cursor'], 'CUR');
+      expect(captured!.queryParameters['exclude'], '0xa,0xb');
+      expect(page.markets.single.conditionId, '0xcondition');
+      expect(page.markets.single.positionIds, ['yes-id', 'no-id']);
+      expect(page.markets.single.outcomePrices, ['0.685', '0.315']);
+      expect(page.markets.single.volume, '330327.7128580074');
+      expect(page.nextCursor, ' opaque cursor ');
+    });
+
+    test('surfaces non-success responses as transport errors', () async {
+      final client = RfqClient(
+        transport: HttpTransport(
+          config: const TransportConfig(baseUrl: RfqClient.defaultBaseUrl),
+          inner: MockClient((_) async => http.Response('unavailable', 400)),
+        ),
+      );
+
+      await expectLater(
+        client.comboMarkets(),
+        throwsA(isA<TransportException>()),
+      );
+    });
+
+    test('validates limits and preserves a null terminal cursor', () async {
+      final client = RfqClient(
+        transport: HttpTransport(
+          config: const TransportConfig(baseUrl: RfqClient.defaultBaseUrl),
+          inner: MockClient(
+            (_) async => http.Response(
+              jsonEncode(<String, dynamic>{
+                'markets': <Object>[],
+                'next_cursor': null,
+              }),
+              200,
+            ),
+          ),
+        ),
+      );
+
+      expect(() => client.comboMarkets(limit: 0), throwsArgumentError);
+      expect(() => client.comboMarkets(limit: 101), throwsArgumentError);
+      expect((await client.comboMarkets()).nextCursor, isNull);
     });
   });
 

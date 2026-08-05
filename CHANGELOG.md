@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Add Bridge withdrawal address creation for signed pUSD withdrawal flows.
+- Add typed geoblock, Gamma sports filters, Combo catalog, RTDS crypto prices,
+  Perps instruments, current reward markets, unstable biggest-movers reads,
+  and native daily-update subscriptions; correct Gamma sports metadata routing
+  to `/sports`.
 
 All notable changes documented here. Follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 

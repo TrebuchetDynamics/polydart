@@ -122,6 +122,8 @@ export 'src/chainlink/chainlink.dart'
         polygonChainlinkUsdFeeds;
 export 'src/clob/clob_analytics_types.dart'
     show
+        CurrentRewardMarket,
+        CurrentRewardMarketsPage,
         RawRewards,
         RebatedFees,
         RewardPercentages,
@@ -456,6 +458,7 @@ export 'src/orderresults/orderresults.dart'
         orderResultStatusWon;
 export 'src/paper/paper.dart'
     show PaperFill, PaperOrder, PaperPosition, PaperState;
+export 'src/perps/perps_client.dart' show PerpsClient, PerpsInstrument;
 export 'src/pagination/pagination.dart'
     show
         CursorPage,
@@ -482,6 +485,8 @@ export 'src/preflight/preflight.dart'
         runPreflight;
 export 'src/rfq/rfq.dart'
     show
+        ComboMarket,
+        ComboMarketsPage,
         RfqClient,
         RfqMetadata,
         RfqQuote,
@@ -490,6 +495,13 @@ export 'src/rfq/rfq.dart'
         rfqSideBuy,
         rfqSideSell,
         validateRfqRequest;
+export 'src/rtds/rtds_client.dart'
+    show
+        RtdsClient,
+        RtdsCryptoPrice,
+        defaultRtdsUrl,
+        rtdsCryptoPricesChainlinkTopic,
+        rtdsCryptoPricesTopic;
 export 'src/risk/breaker.dart'
     show
         Breaker,
@@ -545,8 +557,11 @@ export 'src/transport/transport_config.dart' show TransportConfig;
 export 'src/types/types.dart';
 export 'src/web/web_client.dart'
     show
+        PolymarketBiggestMover,
         PolymarketCryptoCounts,
         PolymarketCryptoMarketsResponse,
+        PolymarketGeoblock,
+        PolymarketMoverHistoryPoint,
         PolymarketWebClient;
 export 'src/wallet/deposit_wallet_signing.dart'
     show
@@ -631,6 +646,8 @@ export 'src/universal/universal_client.dart'
         UniversalHealthException,
         UniversalHealthSummary;
 
+import 'dart:async';
+
 import 'src/clob/clob_client.dart';
 import 'src/config/config.dart';
 import 'src/dataapi/dataapi_client.dart';
@@ -640,6 +657,10 @@ import 'src/intel/intel.dart';
 import 'src/marketdiscovery/market_discovery.dart';
 import 'src/marketresolver/market_resolver.dart';
 import 'src/modes/modes.dart';
+import 'src/perps/perps_client.dart';
+import 'src/rfq/rfq.dart';
+import 'src/rtds/rtds_client.dart';
+import 'src/stream/config/stream_config.dart';
 import 'src/transport/http_transport.dart';
 import 'src/transport/transport_config.dart';
 import 'src/marketdetail/market_detail_bundle.dart';
@@ -670,6 +691,9 @@ final class Polydart {
     required this.clob,
     required this.data,
     required this.web,
+    required this.rfq,
+    required this.perps,
+    required this.rtds,
     required this.intel,
     required this.resolver,
     required this.discovery,
@@ -688,6 +712,9 @@ final class Polydart {
     HttpTransport? clobTransport,
     HttpTransport? dataTransport,
     HttpTransport? webTransport,
+    HttpTransport? rfqTransport,
+    HttpTransport? perpsTransport,
+    RtdsClient? rtdsClient,
   }) {
     final cfg = (config ?? const PolydartConfig()).copyWith(
       mode: PolydartMode.readOnly,
@@ -698,6 +725,9 @@ final class Polydart {
       clobTransport,
       dataTransport,
       webTransport: webTransport,
+      rfqTransport: rfqTransport,
+      perpsTransport: perpsTransport,
+      rtdsClient: rtdsClient,
       eoaAddress: '',
     );
   }
@@ -715,6 +745,9 @@ final class Polydart {
     HttpTransport? clobTransport,
     HttpTransport? dataTransport,
     HttpTransport? webTransport,
+    HttpTransport? rfqTransport,
+    HttpTransport? perpsTransport,
+    RtdsClient? rtdsClient,
   }) {
     if (eoaAddress.trim().isEmpty) {
       throw const ValidationException(
@@ -732,6 +765,9 @@ final class Polydart {
       clobTransport,
       dataTransport,
       webTransport: webTransport,
+      rfqTransport: rfqTransport,
+      perpsTransport: perpsTransport,
+      rtdsClient: rtdsClient,
       eoaAddress: eoaAddress,
     );
   }
@@ -756,6 +792,15 @@ final class Polydart {
 
   /// Polymarket web app read surface — crypto feeds, web tags, …
   final PolymarketWebClient web;
+
+  /// Public Combo RFQ catalog. Live quote submission remains blocked.
+  final RfqClient rfq;
+
+  /// Public Perps instrument metadata.
+  final PerpsClient perps;
+
+  /// Public RTDS crypto reference-price streams.
+  final RtdsClient rtds;
 
   /// Wallet intelligence surface — read-only dossiers, scoring, and flows.
   final WalletIntelService intel;
@@ -788,12 +833,15 @@ final class Polydart {
     );
   }
 
-  /// Closes both shared transports. Idempotent.
+  /// Closes owned transports and sockets. Idempotent.
   void close() {
     gamma.close();
     clob.close();
     data.close();
     web.close();
+    rfq.close();
+    perps.close();
+    unawaited(rtds.close());
   }
 
   static Polydart _build(
@@ -802,6 +850,9 @@ final class Polydart {
     HttpTransport? clobTransport,
     HttpTransport? dataTransport, {
     HttpTransport? webTransport,
+    HttpTransport? rfqTransport,
+    HttpTransport? perpsTransport,
+    RtdsClient? rtdsClient,
     required String eoaAddress,
   }) {
     final gt =
@@ -836,6 +887,22 @@ final class Polydart {
             timeout: cfg.requestTimeout,
           ),
         );
+    final rt =
+        rfqTransport ??
+        HttpTransport(
+          config: TransportConfig(
+            baseUrl: cfg.rfqBaseUrl,
+            timeout: cfg.requestTimeout,
+          ),
+        );
+    final pt =
+        perpsTransport ??
+        HttpTransport(
+          config: TransportConfig(
+            baseUrl: cfg.perpsBaseUrl,
+            timeout: cfg.requestTimeout,
+          ),
+        );
     final gamma = GammaClient(transport: gt);
     final clob = ClobClient(
       transport: ct,
@@ -844,6 +911,16 @@ final class Polydart {
     );
     final data = DataApiClient(transport: dt);
     final web = PolymarketWebClient(transport: wt);
+    final rfq = RfqClient(transport: rt);
+    final perps = PerpsClient(transport: pt);
+    final rtds =
+        rtdsClient ??
+        RtdsClient(
+          config: StreamConfig(
+            url: cfg.rtdsUrl,
+            pingInterval: const Duration(seconds: 5),
+          ),
+        );
     return Polydart._(
       config: cfg,
       eoaAddress: eoaAddress,
@@ -851,6 +928,9 @@ final class Polydart {
       clob: clob,
       data: data,
       web: web,
+      rfq: rfq,
+      perps: perps,
+      rtds: rtds,
       intel: WalletIntelService.fromDataApi(data),
       resolver: MarketResolver(gamma: gamma),
       discovery: MarketDiscovery(gamma: gamma, clob: clob),

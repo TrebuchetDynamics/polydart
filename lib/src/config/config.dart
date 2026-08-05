@@ -18,6 +18,9 @@ final class PolydartConfig {
     this.clobBaseUrl = defaultClobBaseUrl,
     this.dataBaseUrl = defaultDataBaseUrl,
     this.webBaseUrl = defaultWebBaseUrl,
+    this.rfqBaseUrl = defaultRfqBaseUrl,
+    this.perpsBaseUrl = defaultPerpsBaseUrl,
+    this.rtdsUrl = defaultRtdsUrl,
     this.requestTimeout = const Duration(seconds: 10),
     this.liveTradingEnabled = false,
     this.paperStatePath = '',
@@ -34,6 +37,17 @@ final class PolydartConfig {
 
   /// Public Polymarket web app base.
   static const String defaultWebBaseUrl = 'https://polymarket.com';
+
+  /// Public Polymarket Combo RFQ catalog base.
+  static const String defaultRfqBaseUrl =
+      'https://combos-rfq-api.polymarket.com';
+
+  /// Public Polymarket Perps API base.
+  static const String defaultPerpsBaseUrl =
+      'https://api.perpetuals.polymarket.com';
+
+  /// Public Polymarket Real-Time Data Service endpoint.
+  static const String defaultRtdsUrl = 'wss://ws-live-data.polymarket.com';
 
   /// Reads config from an environment map. Keys are looked up as
   /// `${prefix}_${UPPER_SNAKE}` (e.g. `POLYMARKET_MODE`).
@@ -67,6 +81,9 @@ final class PolydartConfig {
       clobBaseUrl: get('CLOB_BASE_URL') ?? defaultClobBaseUrl,
       dataBaseUrl: get('DATA_BASE_URL') ?? defaultDataBaseUrl,
       webBaseUrl: get('WEB_BASE_URL') ?? defaultWebBaseUrl,
+      rfqBaseUrl: get('RFQ_BASE_URL') ?? defaultRfqBaseUrl,
+      perpsBaseUrl: get('PERPS_BASE_URL') ?? defaultPerpsBaseUrl,
+      rtdsUrl: get('RTDS_URL') ?? defaultRtdsUrl,
       requestTimeout: timeout,
       liveTradingEnabled:
           (get('LIVE_TRADING_ENABLED') ?? 'false').toLowerCase() == 'true',
@@ -79,6 +96,9 @@ final class PolydartConfig {
   final String clobBaseUrl;
   final String dataBaseUrl;
   final String webBaseUrl;
+  final String rfqBaseUrl;
+  final String perpsBaseUrl;
+  final String rtdsUrl;
   final Duration requestTimeout;
   final bool liveTradingEnabled;
   final String paperStatePath;
@@ -89,6 +109,9 @@ final class PolydartConfig {
     String? clobBaseUrl,
     String? dataBaseUrl,
     String? webBaseUrl,
+    String? rfqBaseUrl,
+    String? perpsBaseUrl,
+    String? rtdsUrl,
     Duration? requestTimeout,
     bool? liveTradingEnabled,
     String? paperStatePath,
@@ -99,6 +122,9 @@ final class PolydartConfig {
       clobBaseUrl: clobBaseUrl ?? this.clobBaseUrl,
       dataBaseUrl: dataBaseUrl ?? this.dataBaseUrl,
       webBaseUrl: webBaseUrl ?? this.webBaseUrl,
+      rfqBaseUrl: rfqBaseUrl ?? this.rfqBaseUrl,
+      perpsBaseUrl: perpsBaseUrl ?? this.perpsBaseUrl,
+      rtdsUrl: rtdsUrl ?? this.rtdsUrl,
       requestTimeout: requestTimeout ?? this.requestTimeout,
       liveTradingEnabled: liveTradingEnabled ?? this.liveTradingEnabled,
       paperStatePath: paperStatePath ?? this.paperStatePath,
@@ -113,6 +139,9 @@ final class PolydartConfig {
       'clob=$clobBaseUrl, '
       'data=$dataBaseUrl, '
       'web=$webBaseUrl, '
+      'rfq=$rfqBaseUrl, '
+      'perps=$perpsBaseUrl, '
+      'rtds=$rtdsUrl, '
       'timeout=$requestTimeout, '
       'live=$liveTradingEnabled, '
       'paperPath=${paperStatePath.isEmpty ? "<empty>" : "<set>"})';

@@ -33,6 +33,9 @@ void main() {
       expect(cfg.clobBaseUrl, PolydartConfig.defaultClobBaseUrl);
       expect(cfg.dataBaseUrl, PolydartConfig.defaultDataBaseUrl);
       expect(cfg.webBaseUrl, PolydartConfig.defaultWebBaseUrl);
+      expect(cfg.rfqBaseUrl, PolydartConfig.defaultRfqBaseUrl);
+      expect(cfg.perpsBaseUrl, PolydartConfig.defaultPerpsBaseUrl);
+      expect(cfg.rtdsUrl, PolydartConfig.defaultRtdsUrl);
       expect(cfg.requestTimeout, const Duration(seconds: 10));
       expect(cfg.liveTradingEnabled, isFalse);
       expect(cfg.paperStatePath, isEmpty);
@@ -45,6 +48,9 @@ void main() {
         'POLYMARKET_CLOB_BASE_URL': 'https://clob.test',
         'POLYMARKET_DATA_BASE_URL': 'https://data.test',
         'POLYMARKET_WEB_BASE_URL': 'https://web.test',
+        'POLYMARKET_RFQ_BASE_URL': 'https://rfq.test',
+        'POLYMARKET_PERPS_BASE_URL': 'https://perps.test',
+        'POLYMARKET_RTDS_URL': 'wss://rtds.test',
         'POLYMARKET_REQUEST_TIMEOUT': '500ms',
         'POLYMARKET_LIVE_TRADING_ENABLED': 'true',
         'POLYMARKET_PAPER_STATE_PATH': '/tmp/paper.json',
@@ -54,6 +60,9 @@ void main() {
       expect(cfg.clobBaseUrl, 'https://clob.test');
       expect(cfg.dataBaseUrl, 'https://data.test');
       expect(cfg.webBaseUrl, 'https://web.test');
+      expect(cfg.rfqBaseUrl, 'https://rfq.test');
+      expect(cfg.perpsBaseUrl, 'https://perps.test');
+      expect(cfg.rtdsUrl, 'wss://rtds.test');
       expect(cfg.requestTimeout, const Duration(milliseconds: 500));
       expect(cfg.liveTradingEnabled, isTrue);
       expect(cfg.paperStatePath, '/tmp/paper.json');
@@ -98,9 +107,15 @@ void main() {
     final updated = base.copyWith(
       mode: PolydartMode.paper,
       dataBaseUrl: 'https://data.test',
+      rfqBaseUrl: 'https://rfq.test',
+      perpsBaseUrl: 'https://perps.test',
+      rtdsUrl: 'wss://rtds.test',
     );
     expect(updated.mode, PolydartMode.paper);
     expect(updated.gammaBaseUrl, base.gammaBaseUrl);
     expect(updated.dataBaseUrl, 'https://data.test');
+    expect(updated.rfqBaseUrl, 'https://rfq.test');
+    expect(updated.perpsBaseUrl, 'https://perps.test');
+    expect(updated.rtdsUrl, 'wss://rtds.test');
   });
 }

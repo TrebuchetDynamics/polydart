@@ -11,6 +11,8 @@ library;
 import 'package:meta/meta.dart';
 
 import '../errors/errors.dart';
+import '../transport/http_transport.dart';
+import '../transport/transport_config.dart';
 
 /// Canonical RFQ side values. Mirrors `rfq.SideBuy`/`rfq.SideSell`.
 const String rfqSideBuy = 'BUY';
@@ -204,11 +206,118 @@ void validateRfqRequest(RfqRequest req, {DateTime? now}) {
   }
 }
 
-/// A placeholder RFQ client. It validates inputs but refuses live submission
-/// until endpoint shape, auth requirements, and safety gates are captured in
-/// fixtures. Mirrors `rfq.Client`.
+@immutable
+final class ComboMarket {
+  const ComboMarket({
+    required this.id,
+    required this.conditionId,
+    required this.positionIds,
+    required this.slug,
+    required this.title,
+    required this.outcomes,
+    required this.outcomePrices,
+    required this.image,
+    required this.volume,
+    required this.tags,
+  });
+
+  factory ComboMarket.fromJson(Map<String, dynamic> json) => ComboMarket(
+    id: json['id']?.toString() ?? '',
+    conditionId: json['condition_id']?.toString() ?? '',
+    positionIds: _stringList(json['position_ids']),
+    slug: json['slug']?.toString() ?? '',
+    title: json['title']?.toString() ?? '',
+    outcomes: _stringList(json['outcomes']),
+    outcomePrices: _stringList(json['outcome_prices']),
+    image: json['image']?.toString() ?? '',
+    volume: json['volume']?.toString() ?? '',
+    tags: _stringList(json['tags']),
+  );
+
+  final String id;
+  final String conditionId;
+  final List<String> positionIds;
+  final String slug;
+  final String title;
+  final List<String> outcomes;
+  final List<String> outcomePrices;
+  final String image;
+  final String volume;
+  final List<String> tags;
+}
+
+@immutable
+final class ComboMarketsPage {
+  const ComboMarketsPage({required this.markets, required this.nextCursor});
+
+  factory ComboMarketsPage.fromJson(Map<String, dynamic> json) {
+    final markets = json['markets'];
+    final cursor = json['next_cursor'];
+    return ComboMarketsPage(
+      markets: markets is List
+          ? markets
+                .whereType<Map<dynamic, dynamic>>()
+                .map(
+                  (market) =>
+                      ComboMarket.fromJson(market.cast<String, dynamic>()),
+                )
+                .toList(growable: false)
+          : const <ComboMarket>[],
+      nextCursor: cursor?.toString(),
+    );
+  }
+
+  final List<ComboMarket> markets;
+  final String? nextCursor;
+}
+
+/// RFQ client. Public catalog reads are supported; live submission is not.
 final class RfqClient {
-  const RfqClient();
+  const RfqClient({HttpTransport? transport}) : _transport = transport;
+
+  static const String defaultBaseUrl = 'https://combos-rfq-api.polymarket.com';
+
+  final HttpTransport? _transport;
+
+  void close() => _transport?.close();
+
+  Future<ComboMarketsPage> comboMarkets({
+    int limit = 50,
+    String? cursor,
+    List<String> exclude = const <String>[],
+  }) {
+    if (limit < 1 || limit > 100) {
+      throw ArgumentError.value(limit, 'limit', 'must be between 1 and 100');
+    }
+    return _comboMarkets(limit, cursor, exclude);
+  }
+
+  Future<ComboMarketsPage> _comboMarkets(
+    int limit,
+    String? cursor,
+    List<String> exclude,
+  ) async {
+    final transport =
+        _transport ??
+        HttpTransport(config: const TransportConfig(baseUrl: defaultBaseUrl));
+    final excluded = exclude
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .join(',');
+    try {
+      final body = await transport.getJson(
+        '/v1/rfq/combo-markets',
+        query: <String, dynamic>{
+          'limit': limit,
+          if (cursor?.isNotEmpty == true) 'cursor': cursor,
+          if (excluded.isNotEmpty) 'exclude': excluded,
+        },
+      );
+      return ComboMarketsPage.fromJson(body);
+    } finally {
+      if (_transport == null) transport.close();
+    }
+  }
 
   /// Validates [req] and then refuses: a valid request throws a
   /// [SafetyException] ([ErrorCode.liveDisabled]); an invalid one throws a
@@ -262,6 +371,10 @@ DateTime? _dateTime(Object? raw) {
 }
 
 String _formatDateTime(DateTime value) => value.toUtc().toIso8601String();
+
+List<String> _stringList(Object? value) => value is List
+    ? value.map((item) => item.toString()).toList(growable: false)
+    : const <String>[];
 
 String _string(Map<String, dynamic> json, String first, [String? second]) {
   final a = json[first];

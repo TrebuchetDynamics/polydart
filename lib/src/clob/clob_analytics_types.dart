@@ -41,6 +41,63 @@ final class RewardsConfig {
   final bool active;
 }
 
+@immutable
+final class CurrentRewardMarket {
+  const CurrentRewardMarket({
+    required this.conditionId,
+    required this.rewardsMinSize,
+    required this.rewardsMaxSpread,
+    required this.totalDailyRate,
+    required this.sponsorsCount,
+  });
+
+  factory CurrentRewardMarket.fromJson(Map<String, dynamic> json) =>
+      CurrentRewardMarket(
+        conditionId: clobStringOf(json, const ['condition_id']),
+        rewardsMinSize: clobDouble(json['rewards_min_size']),
+        rewardsMaxSpread: clobDouble(json['rewards_max_spread']),
+        totalDailyRate: clobDouble(json['total_daily_rate']),
+        sponsorsCount: clobInt(json['sponsors_count']),
+      );
+
+  final String conditionId;
+  final double rewardsMinSize;
+  final double rewardsMaxSpread;
+  final double totalDailyRate;
+  final int sponsorsCount;
+}
+
+@immutable
+final class CurrentRewardMarketsPage {
+  const CurrentRewardMarketsPage({
+    required this.markets,
+    required this.nextCursor,
+    required this.count,
+    required this.limit,
+  });
+
+  factory CurrentRewardMarketsPage.fromJson(Map<String, dynamic> json) {
+    final data = json['data'];
+    return CurrentRewardMarketsPage(
+      markets: data is List
+          ? clobDecodeObjectList(
+              data,
+              '/rewards/markets/current.data',
+              CurrentRewardMarket.fromJson,
+            )
+          : const <CurrentRewardMarket>[],
+      nextCursor: json['next_cursor']?.toString() ?? '',
+      count: clobInt(json['count']),
+      limit: clobInt(json['limit']),
+    );
+  }
+
+  final List<CurrentRewardMarket> markets;
+  final String nextCursor;
+  final int count;
+  final int limit;
+}
+
 /// Raw rewards for a market on a given date.
 @immutable
 final class RawRewards {

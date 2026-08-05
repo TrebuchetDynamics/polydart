@@ -13,6 +13,9 @@ void main() {
       expect(p.config.gammaBaseUrl, PolydartConfig.defaultGammaBaseUrl);
       expect(p.config.clobBaseUrl, PolydartConfig.defaultClobBaseUrl);
       expect(p.config.dataBaseUrl, PolydartConfig.defaultDataBaseUrl);
+      expect(p.config.rfqBaseUrl, PolydartConfig.defaultRfqBaseUrl);
+      expect(p.config.perpsBaseUrl, PolydartConfig.defaultPerpsBaseUrl);
+      expect(p.config.rtdsUrl, PolydartConfig.defaultRtdsUrl);
       expect(p.eoaAddress, isEmpty);
       p.close();
     });
@@ -22,24 +25,36 @@ void main() {
         gammaBaseUrl: 'https://gamma.test',
         clobBaseUrl: 'https://clob.test',
         dataBaseUrl: 'https://data.test',
+        rfqBaseUrl: 'https://rfq.test',
+        perpsBaseUrl: 'https://perps.test',
+        rtdsUrl: 'wss://rtds.test',
         requestTimeout: Duration(seconds: 5),
       );
       final p = Polydart.readOnly(config: cfg);
       expect(p.config.gammaBaseUrl, 'https://gamma.test');
       expect(p.config.clobBaseUrl, 'https://clob.test');
       expect(p.config.dataBaseUrl, 'https://data.test');
+      expect(p.config.rfqBaseUrl, 'https://rfq.test');
+      expect(p.config.perpsBaseUrl, 'https://perps.test');
+      expect(p.config.rtdsUrl, 'wss://rtds.test');
       expect(p.mode, PolydartMode.readOnly);
       p.close();
     });
 
-    test('exposes resolver, discovery, data, and intel surfaces', () {
-      final p = Polydart.readOnly();
-      expect(p.resolver, isNotNull);
-      expect(p.discovery, isNotNull);
-      expect(p.data, isNotNull);
-      expect(p.intel, isA<WalletIntelService>());
-      p.close();
-    });
+    test(
+      'exposes resolver, discovery, data, intel, RFQ, Perps, and RTDS surfaces',
+      () {
+        final p = Polydart.readOnly();
+        expect(p.resolver, isNotNull);
+        expect(p.discovery, isNotNull);
+        expect(p.data, isNotNull);
+        expect(p.intel, isA<WalletIntelService>());
+        expect(p.rfq, isA<RfqClient>());
+        expect(p.perps, isA<PerpsClient>());
+        expect(p.rtds, isA<RtdsClient>());
+        p.close();
+      },
+    );
 
     test('routes data reads through the injected Data API transport', () async {
       Uri? captured;

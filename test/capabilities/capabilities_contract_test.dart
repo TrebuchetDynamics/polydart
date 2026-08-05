@@ -29,13 +29,31 @@ void main() {
   final rows = (manifest['capabilities'] as List).cast<Map<String, dynamic>>();
 
   test('compiled catalog matches manifest', () {
-    expect(rows, hasLength(136));
+    expect(rows, hasLength(141));
     expect(
       CapabilityCatalog.all
           .map((capability) => project(capability.toJson()))
           .toList(),
       rows.map(project).toList(),
     );
+  });
+
+  test('migration capabilities are implemented', () {
+    for (final id in const <String>[
+      'clob.geoblock.read',
+      'clob.currentRewards.list',
+      'perps.instruments.list',
+      'rfq.comboMarkets.list',
+      'rtds.cryptoPrices.stream',
+      'web.biggestMovers.read',
+      'web.dailyUpdates.subscribe',
+    ]) {
+      expect(
+        rows.singleWhere((row) => row['id'] == id)['status'],
+        'implemented',
+        reason: id,
+      );
+    }
   });
 
   test('implemented evidence paths exist', () {

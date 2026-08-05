@@ -207,4 +207,48 @@ void main() {
       DepositWalletReadinessStatus.needsApproval,
     );
   });
+
+  test('package root exports Polymarket migration types', () {
+    const geoblock = PolymarketGeoblock(
+      blocked: false,
+      country: 'US',
+      region: 'CA',
+    );
+    const comboPage = ComboMarketsPage(
+      markets: <ComboMarket>[],
+      nextCursor: null,
+    );
+    const rewardsPage = CurrentRewardMarketsPage(
+      markets: <CurrentRewardMarket>[],
+      nextCursor: '',
+      count: 0,
+      limit: 500,
+    );
+    const instrument = PerpsInstrument(
+      instrumentId: 1,
+      category: 'crypto',
+      symbol: 'BTC-USDC',
+      baseAsset: 'BTC',
+      quoteAsset: 'USDC',
+      fundingInterval: '1h',
+      minNotional: '1.00',
+      maxLeverage: 20,
+      isolatedOnly: true,
+    );
+    const price = RtdsCryptoPrice(
+      topic: rtdsCryptoPricesChainlinkTopic,
+      symbol: 'btc/usd',
+      timestamp: 1,
+      price: '1.00',
+    );
+    PolymarketBiggestMover? mover;
+
+    expect(geoblock.blocked, isFalse);
+    expect(comboPage.nextCursor, isNull);
+    expect(rewardsPage.limit, 500);
+    expect(instrument.symbol, 'BTC-USDC');
+    expect(price.topic, rtdsCryptoPricesChainlinkTopic);
+    expect(mover, isNull);
+    expect(const CategoryEventsParams(active: true).active, isTrue);
+  });
 }

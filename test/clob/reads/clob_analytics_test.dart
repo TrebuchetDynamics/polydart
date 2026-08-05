@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:polydart/src/clob/clob_analytics_types.dart';
 import 'package:polydart/src/clob/clob_params.dart';
+import 'package:polydart/src/errors/errors.dart';
 import 'package:test/test.dart';
 
 import '../support/clob_test_client.dart';
@@ -348,6 +349,78 @@ void main() {
       expect(result.first.assetAddress, '0xasset');
       expect(result.first.rewardsMinSize, 100.0);
       expect(result.first.active, isTrue);
+    });
+  });
+
+  group('currentRewardMarkets', () {
+    test('GETs one public cursor page and preserves reward fields', () async {
+      Uri? captured;
+      String? method;
+      final client = clobTestClient((req) async {
+        captured = req.url;
+        method = req.method;
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'limit': 500,
+            'count': '1',
+            'next_cursor': 'LTE=',
+            'data': [
+              <String, dynamic>{
+                'condition_id': '0xcondition',
+                'rewards_min_size': '10',
+                'rewards_max_spread': 3.5,
+                'total_daily_rate': '25.25',
+                'sponsors_count': '2',
+              },
+            ],
+          }),
+          200,
+        );
+      });
+
+      final page = await client.currentRewardMarkets(nextCursor: 'CUR');
+
+      expect(method, 'GET');
+      expect(captured!.path, '/rewards/markets/current');
+      expect(captured!.queryParameters['next_cursor'], 'CUR');
+      expect(page.limit, 500);
+      expect(page.count, 1);
+      expect(page.nextCursor, 'LTE=');
+      expect(page.markets.single.conditionId, '0xcondition');
+      expect(page.markets.single.rewardsMinSize, 10);
+      expect(page.markets.single.rewardsMaxSpread, 3.5);
+      expect(page.markets.single.totalDailyRate, 25.25);
+      expect(page.markets.single.sponsorsCount, 2);
+    });
+
+    test('surfaces non-success responses as transport errors', () async {
+      final client = clobTestClient(
+        (_) async => http.Response('unavailable', 400),
+      );
+
+      await expectLater(
+        client.currentRewardMarkets(),
+        throwsA(isA<TransportException>()),
+      );
+    });
+
+    test('omits an empty cursor', () async {
+      Uri? captured;
+      final client = clobTestClient((req) async {
+        captured = req.url;
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'limit': 500,
+            'count': 0,
+            'next_cursor': '',
+            'data': <Object>[],
+          }),
+          200,
+        );
+      });
+
+      await client.currentRewardMarkets(nextCursor: '');
+      expect(captured!.queryParameters, isEmpty);
     });
   });
 

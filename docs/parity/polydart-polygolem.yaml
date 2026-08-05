@@ -184,6 +184,7 @@ rows:
     polydart:
       apis:
         - 'ClobClient.rewardsConfig'
+        - 'ClobClient.currentRewardMarkets'
         - 'ClobClient.rawRewards'
         - 'ClobClient.userEarnings'
         - 'ClobClient.rewardPercentages'
@@ -194,7 +195,8 @@ rows:
       - 'camel aliases'
       - 'string numerics'
       - 'string bool active'
-    notes: 'Analytics-only; no custody/trading mutation.'
+      - 'public current-reward cursor pages'
+    notes: 'Analytics-only; no custody/trading mutation. `currentRewardMarkets` is a Polydart public-read extension for `/rewards/markets/current`.'
   - id: 'clob.scoring'
     domain: 'clob'
     feature: 'Single and batch order scoring'
@@ -604,6 +606,7 @@ rows:
       - 'routing'
       - 'params'
       - 'profile creation helper'
+      - 'sports metadata `/sports` route'
       - 'DTO decode coverage'
     notes: 'Public read API parity; profile creation helper is request-shape/local-test only.'
   - id: 'gamma.website_categories'
@@ -632,6 +635,7 @@ rows:
       - '18 curated nav rows'
       - 'mentions -> tweets-markets'
       - 'all/trending omit tag_slug'
+      - 'active/live/date keyset filters'
       - 'breaking route-only'
     notes: 'There is no observed single public category-list endpoint; both Go and Dart use a curated mapping plus Gamma `/events/keyset` feeds where a stable `tag_slug` exists.'
   - id: 'marketresolver.discovery'
@@ -836,6 +840,9 @@ rows:
         - 'pkg/rfq/rfq_test.go'
     polydart:
       apis:
+        - 'ComboMarket'
+        - 'ComboMarketsPage'
+        - 'RfqClient.comboMarkets'
         - 'RfqRequest'
         - 'RfqQuote'
         - 'RfqResponse'
@@ -844,11 +851,12 @@ rows:
       tests:
         - 'test/rfq/rfq_test.dart'
     evidence:
+      - 'public combo catalog cursor pages'
       - 'request/quote DTOs'
       - 'positive-decimal validation'
       - 'strictly-future expiration'
       - 'submit refuses via SafetyException'
-    notes: 'Upstream `766b58be`. DTOs/validation are local-test covered; `RfqClient.submit` validates then throws `SafetyException` (`liveDisabled`) — no live submission path, matching Go''s `ErrSubmitUnsupported` and ADR 0001.'
+    notes: 'Upstream `766b58be`. DTOs/validation are local-test covered; the public combo catalog is a Polydart extension; `RfqClient.submit` validates then throws `SafetyException` (`liveDisabled`) — no live submission path, matching Go''s `ErrSubmitUnsupported` and ADR 0001.'
   - id: 'signers.remote'
     domain: 'signers'
     feature: 'HTTP/KMS/Turnkey remote-signer abstraction'
