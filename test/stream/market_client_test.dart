@@ -175,6 +175,63 @@ void main() {
       expect(body['assets_ids'], <String>['t1', 't2']);
     });
 
+    test('manual connect cancels a pending automatic reconnect', () async {
+      final channels = <_FakeWebSocketChannel>[];
+      final reconnectingClient = MarketClient(
+        config: const StreamConfig(
+          url: defaultStreamUrl,
+          reconnect: true,
+          reconnectDelay: Duration(milliseconds: 50),
+          reconnectMaxDelay: Duration(milliseconds: 50),
+          reconnectMax: 1,
+        ),
+        channelFactory: (_) {
+          final next = _FakeWebSocketChannel();
+          channels.add(next);
+          return next;
+        },
+      );
+      addTearDown(reconnectingClient.close);
+
+      await reconnectingClient.connect();
+      await channels.single.closeIncoming();
+      await reconnectingClient.connect();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(channels, hasLength(2));
+    });
+
+    test(
+      'socket error followed by done consumes one reconnect attempt',
+      () async {
+        final channels = <_FakeWebSocketChannel>[];
+        final reconnectingClient = MarketClient(
+          config: const StreamConfig(
+            url: defaultStreamUrl,
+            reconnect: true,
+            reconnectDelay: Duration(milliseconds: 50),
+            reconnectMaxDelay: Duration(milliseconds: 50),
+            reconnectMax: 2,
+          ),
+          channelFactory: (_) {
+            final next = _FakeWebSocketChannel();
+            channels.add(next);
+            return next;
+          },
+        );
+        addTearDown(reconnectingClient.close);
+
+        await reconnectingClient.connect();
+        channels.single.pushError(StateError('socket failed'));
+        await Future<void>.delayed(Duration.zero);
+        await channels.single.closeIncoming();
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        expect(channels, hasLength(2));
+        expect(reconnectingClient.stats.reconnects, 1);
+      },
+    );
+
     test('subscribeAssets before connect throws StateError', () async {
       expect(
         () => client.subscribeAssets(<String>['t1']),
