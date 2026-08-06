@@ -438,6 +438,29 @@ void main() {
       expect(out.first.id, 'e1');
     });
 
+    test('events GETs /events with tag_slug + active filters', () async {
+      Uri? captured;
+      final client = gammaTestClient((req) async {
+        captured = req.url;
+        return gammaJsonList([
+          <String, dynamic>{'id': 'e1', 'slug': 'midterms-1'},
+        ]);
+      });
+      final out = await client.events(
+        const GetEventsParams(
+          tagSlug: 'midterms',
+          active: true,
+          limit: 50,
+          offset: 0,
+        ),
+      );
+      expect(captured!.path, '/events');
+      expect(captured!.queryParameters['tag_slug'], 'midterms');
+      expect(captured!.queryParameters['active'], 'true');
+      expect(out, hasLength(1));
+      expect(out.first.id, 'e1');
+    });
+
     test('eventById GETs /events/{id}', () async {
       Uri? captured;
       final client = gammaTestClient((req) async {

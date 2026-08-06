@@ -1355,7 +1355,7 @@ abstract final class CapabilityCatalog {
       mutates: false,
       cliCommand: ["events", "list"],
       extension: false,
-      summary: "Events list.",
+      summary: "Events list with tag and active filters.",
       status: CapabilityStatus.implemented,
     ),
     Capability(

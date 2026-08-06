@@ -141,6 +141,8 @@ final class GetEventsParams {
     this.slug = const <String>[],
     this.tagId,
     this.closed,
+    this.tagSlug,
+    this.active,
   });
 
   final int? limit;
@@ -150,6 +152,8 @@ final class GetEventsParams {
   final List<String> slug;
   final int? tagId;
   final bool? closed;
+  final String? tagSlug;
+  final bool? active;
 
   Map<String, dynamic> toQuery() {
     final q = <String, dynamic>{};
@@ -160,7 +164,9 @@ final class GetEventsParams {
       ..addInt('tag_id', tagId)
       ..addNonEmptyString('order', order)
       ..addBool('ascending', ascending)
-      ..addStringList('slug', slug);
+      ..addStringList('slug', slug)
+      ..addNonEmptyString('tag_slug', tagSlug)
+      ..addBool('active', active);
     return q;
   }
 }

@@ -121,5 +121,29 @@ void main() {
         'closed': 'false',
       });
     });
+
+    test('GetEventsParams encodes tag slug and active filters', () {
+      expect(
+        const GetEventsParams(
+          tagSlug: 'midterms',
+          active: true,
+          closed: false,
+          order: 'volume',
+          ascending: false,
+          limit: 100,
+          offset: 200,
+        ).toQuery(),
+        {
+          'tag_slug': 'midterms',
+          'active': 'true',
+          'closed': 'false',
+          'order': 'volume',
+          'ascending': 'false',
+          'limit': '100',
+          'offset': '200',
+        },
+      );
+      expect(const GetEventsParams(tagSlug: '').toQuery(), isEmpty);
+    });
   });
 }

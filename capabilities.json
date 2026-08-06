@@ -2411,7 +2411,7 @@
         "list"
       ],
       "extension": false,
-      "summary": "Events list.",
+      "summary": "Events list with tag and active filters.",
       "status": "implemented",
       "api": [
         "GammaClient.events"
