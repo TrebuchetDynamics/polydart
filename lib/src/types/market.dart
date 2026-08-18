@@ -1524,6 +1524,43 @@ final class SportsMarketType {
   final String slug;
 }
 
+/// A market clarification (Gamma view).
+///
+/// Official clarifications posted by Polymarket for a specific market.
+@immutable
+final class MarketClarification {
+  const MarketClarification({
+    required this.id,
+    required this.title,
+    required this.body,
+    this.createdAt,
+  });
+
+  factory MarketClarification.fromJson(Map<String, dynamic> json) {
+    String pick(List<String> keys) {
+      for (final key in keys) {
+        final value = json[key];
+        if (value != null) return value.toString();
+      }
+      return '';
+    }
+
+    return MarketClarification(
+      id: pick(const ['id', 'clarificationId']),
+      title: pick(const ['title', 'subject']),
+      body: pick(const ['body', 'content', 'description', 'clarification']),
+      createdAt: parseNormalizedDateTime(
+        json['createdAt'] ?? json['created_at'],
+      ),
+    );
+  }
+
+  final String id;
+  final String title;
+  final String body;
+  final DateTime? createdAt;
+}
+
 /// A relationship edge between two tags.
 @immutable
 final class TagRelationship {

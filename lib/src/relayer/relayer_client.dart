@@ -61,6 +61,24 @@ final class RelayerClient {
            ),
        _authHeaders = _v2AuthHeaders(apiKey);
 
+  /// Anonymous relayer client for unauthenticated endpoints.
+  ///
+  /// Supports `getNonce`, `getTransaction`, `pollTransaction`,
+  /// `submitWalletCreate`, and `submitWalletBatch` without builder or V2
+  /// API key credentials. The Polymarket relayer accepts these endpoints
+  /// without authentication for the deposit-wallet onboarding flow.
+
+  RelayerClient.anonymous({
+    int chainId = 137,
+    HttpTransport? transport,
+  }) : _chainId = chainId,
+       _transport =
+           transport ??
+           HttpTransport(
+             config: const TransportConfig(baseUrl: defaultRelayerBaseUrl),
+           ),
+       _authHeaders = _noAuthHeaders;
+
   final HttpTransport _transport;
   final _AuthHeaderBuilder _authHeaders;
   final int _chainId;
@@ -105,6 +123,14 @@ final class RelayerClient {
     return ({required String method, required String path, String? body}) {
       return normalized.v2Headers();
     };
+  }
+
+  static Map<String, String> _noAuthHeaders({
+    required String method,
+    required String path,
+    String? body,
+  }) {
+    return const <String, String>{};
   }
 
   /// `POST /submit` with `type: "WALLET-CREATE"` — deploys a deposit wallet

@@ -559,6 +559,27 @@ final class GammaClient {
     return Profile.fromJson(body);
   }
 
+  /// Returns market clarifications for a given market id.
+  ///
+  /// `GET /market-clarifications?market_id=…` returns a list of official
+  /// clarifications posted by Polymarket for the specified market.
+  Future<List<MarketClarification>> marketClarifications(
+    String marketId, {
+    int limit = 20,
+  }) async {
+    final normalized = marketId.trim();
+    if (normalized.isEmpty) return const <MarketClarification>[];
+    final boundedLimit = limit.clamp(1, 100);
+    final list = await _transport.getJsonList(
+      '/market-clarifications',
+      query: <String, dynamic>{
+        'market_id': normalized,
+        'limit': '$boundedLimit',
+      },
+    );
+    return _marketClarifications(list);
+  }
+
   /// Returns a keyset-paginated event feed for a curated polymarket.com category.
   Future<CategoryEventsPage> categoryEvents(
     String slug, [
@@ -639,6 +660,13 @@ final class GammaClient {
 
   static List<SportsMarketType> _sportsMarketTypes(List<dynamic> raw) =>
       _decodeObjectList(raw, 'sportsMarketTypes', SportsMarketType.fromJson);
+
+  static List<MarketClarification> _marketClarifications(List<dynamic> raw) =>
+      _decodeObjectList(
+        raw,
+        'marketClarifications',
+        MarketClarification.fromJson,
+      );
 }
 
 List<T> _decodeObjectList<T>(
