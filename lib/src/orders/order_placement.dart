@@ -20,6 +20,8 @@ import '../clob/clob_writes.dart';
 import '../errors/errors.dart';
 import '../types/enums.dart';
 import 'deposit_wallet_order_signing.dart';
+import 'amounts.dart';
+import 'core/decimal_math.dart';
 import 'order_builder.dart';
 import 'market_order_pricing.dart';
 import 'order_intent.dart';
@@ -245,6 +247,7 @@ Future<OrderResponse> createLimitOrder({
             ..postOnly(params.postOnly))
           .build();
 
+  await _validateLimitBuyMinimum(client, intent);
   final signed = intent.signatureType == SignatureType.poly1271
       ? await signDepositWalletOrderV2(
           intent: intent,
@@ -345,6 +348,7 @@ Future<BatchOrderResponse> createDepositWalletLimitOrders({
               ..postOnly(params.postOnly))
             .build();
 
+    await _validateLimitBuyMinimum(client, intent);
     final signed = await signDepositWalletOrderV2(
       intent: intent,
       signer: signer,
@@ -368,8 +372,37 @@ Future<BatchOrderResponse> createDepositWalletLimitOrders({
   );
 }
 
-/// End-to-end market-order placement. For BUY, `amount` is the USDC budget;
-/// for SELL, `amount` is the share size to sell at the best available bids.
+/// Applies the BUY notional minimum only when the limit can execute immediately.
+Future<void> _validateLimitBuyMinimum(
+  ClobClient client,
+  OrderIntent intent,
+) async {
+  if (intent.side != Side.buy || intent.postOnly) return;
+  final amount = computeAmounts(intent).makerAmount;
+  if (amount >= BigInt.from(minimumMarketableBuyAmount) * pow10(usdcDecimals)) {
+    return;
+  }
+  if (intent.orderType == OrderType.fok || intent.orderType == OrderType.fak) {
+    validateMarketableBuyAmount(amount);
+    return;
+  }
+  // Only small BUYs need this extra read. A resting limit is not subject to
+  // the marketable minimum; the server remains authoritative if the book moves.
+  final book = await client.orderBook(intent.tokenId);
+  final limit = decimalRatio(intent.price.raw);
+  for (final ask in book.asks) {
+    final price = decimalRatio(ask.price);
+    final size = decimalRatio(ask.size);
+    if (price.numerator > BigInt.zero &&
+        size.numerator > BigInt.zero &&
+        price.numerator * limit.denominator <=
+            limit.numerator * price.denominator) {
+      validateMarketableBuyAmount(amount);
+    }
+  }
+}
+
+/// End-to-end market placement; BUY amount is collateral, SELL amount is shares.
 Future<OrderResponse> createMarketOrder({
   required ClobClient client,
   required WalletSigner signer,

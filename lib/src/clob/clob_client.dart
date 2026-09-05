@@ -658,13 +658,13 @@ final class ClobClient {
   /// Mirrors `internal/clob/orders.go::ListOrders`. Caller must supply a
   /// derived [ApiKey] — use [createOrDeriveApiKey] to mint one.
   Future<List<OrderRecord>> listOrders({required ApiKey apiKey}) async {
-    final list = await _l2GetList(path: '/data/orders', apiKey: apiKey);
+    final list = await _l2GetPages(path: '/data/orders', apiKey: apiKey);
     return clobDecodeObjectList(list, '/data/orders', OrderRecord.fromJson);
   }
 
   /// Returns the trade history for the API-key wallet.
   Future<List<TradeRecord>> listTrades({required ApiKey apiKey}) async {
-    final list = await _l2GetList(path: '/data/trades', apiKey: apiKey);
+    final list = await _l2GetPages(path: '/data/trades', apiKey: apiKey);
     return clobDecodeObjectList(list, '/data/trades', TradeRecord.fromJson);
   }
 
@@ -717,7 +717,7 @@ final class ClobClient {
       apiKey: apiKey,
       timestamp: ts,
       method: 'GET',
-      path: _pathForSig(path, query),
+      path: path,
     );
     return _transport.getJson(path, query: query, headers: headers);
   }
@@ -732,27 +732,46 @@ final class ClobClient {
       apiKey: apiKey,
       timestamp: ts,
       method: 'GET',
-      path: _pathForSig(path, query),
+      path: path,
     );
     return _transport.getJsonList(path, query: query, headers: headers);
   }
 
-  /// HMAC over the path + query for L2 GETs. Matches polygolem's
-  /// `internal/auth.SignHMAC` input where `path` is the full URL path
-  /// including query string.
-  String _pathForSig(String path, Map<String, String>? query) {
-    if (query == null || query.isEmpty) return path;
-    final sb = StringBuffer(path)..write('?');
-    var first = true;
-    query.forEach((k, v) {
-      if (!first) sb.write('&');
-      sb
-        ..write(Uri.encodeQueryComponent(k))
-        ..write('=')
-        ..write(Uri.encodeQueryComponent(v));
-      first = false;
-    });
-    return sb.toString();
+  /// The official client signs only the endpoint path, never GET query
+  /// parameters or an app proxy prefix. Consume every page of private orders
+  /// and trades; also accept the unwrapped arrays used by existing adapters.
+  Future<List<dynamic>> _l2GetPages({
+    required String path,
+    required ApiKey apiKey,
+  }) async {
+    final results = <dynamic>[];
+    final seenCursors = <String>{};
+    String? cursor;
+    for (var page = 0; page < 1000; page++) {
+      final headers = buildL2Headers(
+        apiKey: apiKey,
+        timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        method: 'GET',
+        path: path,
+      );
+      final body = await _transport.getJsonValue(
+        path,
+        query: cursor == null ? null : {'next_cursor': cursor},
+        headers: headers,
+      );
+      if (body is List) return [...results, ...body];
+      if (body is! Map || body['data'] is! List) {
+        throw FormatException('$path response must contain a data list');
+      }
+      results.addAll(body['data'] as List);
+      final next = body['next_cursor'];
+      if (next == null || next == '' || next == 'LTE=') return results;
+      if (next is! String || !seenCursors.add(next)) {
+        throw FormatException('$path returned an invalid or repeated cursor');
+      }
+      cursor = next;
+    }
+    throw FormatException('$path pagination exceeded the page limit');
   }
 
   /// Flattens `{"<token>": {"<inner>": "<value>"}}` to

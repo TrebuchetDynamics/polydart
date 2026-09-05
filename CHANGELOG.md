@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Reject marketable BUY notional below $1 before wallet signing, preserving
+  sub-dollar resting limit orders and SELLs. Export the minimum for client UI.
+
+- Correct CLOB salt generation to 53-bit JSON-safe random integers before
+  signing, serialize salt as a number, and reject unsafe salts without rounding.
+- Match the official V2 order body by omitting V1-only nonce and feeRateBps.
+- Parse official minimum_tick_size-only metadata for order builders.
+- Sign authenticated GET endpoint paths without query parameters, and consume
+  private order/trade data envelopes through their final cursor with loop guards.
+- Add mock contract regressions against Polymarket/clob-client-v2 serializers
+  and read paths inspected on 2026-09-04. These are compatibility checks, not
+  evidence of live-order acceptance.
+
 - Add Bridge withdrawal address creation for signed pUSD withdrawal flows.
 - Add typed geoblock, Gamma sports filters, Combo catalog, RTDS crypto prices,
   Perps instruments, current reward markets, unstable biggest-movers reads,

@@ -138,7 +138,12 @@ final class TickSize {
       'minimum_order_size',
       'minimumOrderSize',
     ]),
-    tickSize: _stringOf(json, const ['tick_size', 'tickSize']),
+    tickSize: _stringOf(json, const [
+      'tick_size',
+      'tickSize',
+      'minimum_tick_size',
+      'minimumTickSize',
+    ]),
   );
 
   final String minimumTickSize;

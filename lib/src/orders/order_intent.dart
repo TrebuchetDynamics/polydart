@@ -139,7 +139,8 @@ final class SignedOrder {
     this.builder,
   });
 
-  /// Salt uniquely identifying this order; stringified uint256.
+  /// Salt uniquely identifying this order. Kept as decimal text for EIP-712;
+  /// the CLOB wire format requires a JSON-safe integer (at most 2^53 - 1).
   final String salt;
 
   final String maker;
@@ -171,8 +172,19 @@ final class SignedOrder {
 
   /// Wire JSON shape the CLOB expects on `POST /order`.
   Map<String, dynamic> toJson() {
+    final numericSalt = RegExp(r'^[0-9]+$').hasMatch(salt)
+        ? BigInt.tryParse(salt)
+        : null;
+    if (numericSalt == null || numericSalt > BigInt.parse('9007199254740991')) {
+      // Never truncate, round, or regenerate a salt after signing.
+      throw const ValidationException(
+        code: ErrorCode.invalidValue,
+        message: 'salt must be a non-negative JSON-safe integer',
+        field: 'salt',
+      );
+    }
     final out = <String, dynamic>{
-      'salt': salt,
+      'salt': numericSalt.toInt(),
       'maker': maker,
       'signer': signer,
       'taker': taker,
@@ -182,8 +194,8 @@ final class SignedOrder {
       'side': side.label,
       'signatureType': signatureType.code,
       'expiration': expiration.toString(),
-      'nonce': nonce.toString(),
-      'feeRateBps': feeRateBps.toString(),
+      if (timestamp == null) 'nonce': nonce.toString(),
+      if (timestamp == null) 'feeRateBps': feeRateBps.toString(),
       'signature': signature,
     };
     if (timestamp != null) out['timestamp'] = timestamp!.toString();

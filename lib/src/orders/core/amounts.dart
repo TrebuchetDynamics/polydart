@@ -16,6 +16,21 @@ import 'decimal_math.dart';
 /// in this fixed-point form (1 USDC = 1_000_000 wei).
 const int usdcDecimals = 6;
 
+/// CLOB minimum collateral notional for a marketable BUY (not a share minimum).
+const int minimumMarketableBuyAmount = 1;
+
+/// Validates the computed collateral amount without increasing the user's order.
+void validateMarketableBuyAmount(BigInt makerAmount) {
+  if (makerAmount <
+      BigInt.from(minimumMarketableBuyAmount) * pow10(usdcDecimals)) {
+    throw const ValidationException(
+      code: ErrorCode.invalidValue,
+      message: r'Minimum marketable buy amount is $1.',
+      field: 'amount',
+    );
+  }
+}
+
 /// Pair of (makerAmount, takerAmount) for an order, in canonical USDC
 /// fixed-point (BigInt, in 1e6 units).
 typedef OrderAmounts = ({BigInt makerAmount, BigInt takerAmount});
@@ -80,6 +95,7 @@ OrderAmounts _computeMarketAmounts(OrderIntent intent) {
         field: 'amount',
       );
     }
+    validateMarketableBuyAmount(makerAmount);
     final targetTaker =
         (makerAmount * price.denominator * targetScale) ~/
         (fixedScale * price.numerator);
@@ -151,10 +167,11 @@ String buildSalt(int seed) => seed.toString();
 final Random _rand = Random.secure();
 const int _uint32ExclusiveMax = 0x100000000;
 
-/// Generates a fresh random uint64-style salt suitable for new orders.
+/// Generates a cryptographically random salt exactly representable as a JSON
+/// number in JavaScript (0 through 2^53 - 1), before the order is signed.
 String generateOrderSalt() {
-  // Two 32-bit halves combined into a 64-bit positive int.
-  final hi = _rand.nextInt(_uint32ExclusiveMax);
+  // Use BigInt for the shift: JavaScript bitwise operations truncate to 32 bits.
+  final hi = _rand.nextInt(0x200000);
   final lo = _rand.nextInt(_uint32ExclusiveMax);
   final combined = (BigInt.from(hi) << 32) | BigInt.from(lo);
   return combined.toString();

@@ -368,6 +368,8 @@ export 'src/orders/amounts.dart'
         computeAmounts,
         defaultExpiration,
         generateOrderSalt,
+        minimumMarketableBuyAmount,
+        validateMarketableBuyAmount,
         roundToTick,
         usdcDecimals,
         validatePriceAgainstTick;
