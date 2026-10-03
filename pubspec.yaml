@@ -12,7 +12,8 @@ dependencies:
   collection: ^1.18.0
   convert: ^3.1.0
   crypto: ^3.0.0
-  http: ^1.2.0
+  # AbortableRequest lets complete-attempt deadlines release in-flight requests.
+  http: ^1.5.0
   meta: ^1.12.0
   # Used directly for Keccak-256 so Flutter apps do not inherit a web3dart
   # major-version constraint only for crypto helpers.

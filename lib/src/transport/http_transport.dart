@@ -7,6 +7,7 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -244,7 +245,12 @@ final class HttpTransport {
     Object? body,
     Map<String, String>? headers,
   ) async {
-    final req = http.Request(method, Uri.parse(url));
+    final abort = Completer<void>();
+    final req = http.AbortableRequest(
+      method,
+      Uri.parse(url),
+      abortTrigger: abort.future,
+    );
     req.headers['Accept'] = 'application/json';
     if (body != null) {
       req.headers['Content-Type'] = 'application/json';
@@ -260,8 +266,52 @@ final class HttpTransport {
       req.headers.removeWhere((name, _) => name.toLowerCase() == 'user-agent');
     }
 
-    final streamed = await _inner.send(req).timeout(config.timeout);
-    return http.Response.fromStream(streamed);
+    var expired = false;
+    StreamIterator<List<int>>? reader;
+
+    Future<http.Response> readResponse() async {
+      final streamed = await _inner.send(req);
+      if (expired) {
+        // Injected clients may ignore abortTrigger and return headers late.
+        // Cancel their body without consuming it or closing the shared client.
+        streamed.stream.listen(null).cancel().ignore();
+        throw TimeoutException('request timed out', config.timeout);
+      }
+
+      final iterator = StreamIterator(streamed.stream);
+      reader = iterator;
+      final bytes = BytesBuilder();
+      try {
+        while (await iterator.moveNext()) {
+          bytes.add(iterator.current);
+        }
+        return http.Response.bytes(
+          bytes.takeBytes(),
+          streamed.statusCode,
+          request: streamed.request,
+          headers: streamed.headers,
+          isRedirect: streamed.isRedirect,
+          persistentConnection: streamed.persistentConnection,
+          reasonPhrase: streamed.reasonPhrase,
+        );
+      } finally {
+        await iterator.cancel();
+      }
+    }
+
+    // One deadline covers both headers and the entire body, not each phase or
+    // chunk separately. Future.timeout alone would leave the read running.
+    return readResponse().timeout(
+      config.timeout,
+      onTimeout: () {
+        expired = true;
+        abort.complete();
+        // Stop consumption even for clients that do not support abortion.
+        // Cleanup must not extend the deadline if cancellation itself stalls.
+        reader?.cancel().ignore();
+        throw TimeoutException('request timed out', config.timeout);
+      },
+    );
   }
 
   String _buildUrl(String path, Map<String, dynamic>? query) {

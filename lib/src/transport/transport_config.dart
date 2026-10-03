@@ -21,7 +21,8 @@ final class TransportConfig {
   /// Base URL for all requests. Trailing slashes are stripped at use site.
   final String baseUrl;
 
-  /// Per-attempt timeout.
+  /// Per-attempt deadline covering request send and the complete response body.
+  /// GET retries each receive this budget; retry backoff is separate.
   final Duration timeout;
 
   /// User-Agent header value.
